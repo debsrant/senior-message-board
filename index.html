@@ -62,11 +62,14 @@
 							00:00
 						</div>
 					</div>
+
 					<div class="text-right">
-						<span
-							class="text-xs uppercase tracking-wider bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-bold"
-							>Status: Live Sync</span
+						<div
+							id="connection-status"
+							class="text-xs uppercase tracking-wider bg-slate-700 text-slate-400 px-3 py-1 rounded-full font-bold transition-colors"
 						>
+							Connecting...
+						</div>
 					</div>
 				</div>
 
@@ -235,19 +238,44 @@
 		<!-- JavaScript Application Logic -->
 		<script>
 			// TODO: Replace with your actual Firebase project configuration keys
-  const firebaseConfig = {
-    apiKey: "AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk",
-    authDomain: "seniormessageboard.firebaseapp.com",
-    databaseURL: "https://seniormessageboard-default-rtdb.firebaseio.com",
-    projectId: "seniormessageboard",
-    storageBucket: "seniormessageboard.firebasestorage.app",
-    messagingSenderId: "431774663721",
-    appId: "1:431774663721:web:8db38395147b6501060838"
-  };
+			const firebaseConfig = {
+				apiKey: 'AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk',
+				authDomain: 'seniormessageboard.firebaseapp.com',
+				databaseURL: 'https://seniormessageboard-default-rtdb.firebaseio.com',
+				projectId: 'seniormessageboard',
+				storageBucket: 'seniormessageboard.firebasestorage.app',
+				messagingSenderId: '431774663721',
+				appId: '1:431774663721:web:8db38395147b6501060838',
+			};
 
 			// Initialize Firebase
+			if (firebaseConfig.apiKey === 'YOUR_API_KEY') {
+				console.error(
+					"FIREBASE ERROR: You must replace the placeholders in 'firebaseConfig' with your actual keys from the Firebase Console."
+				);
+				alert(
+					'Configuration Missing: Please update index.html with your Firebase API keys.'
+				);
+			}
+
 			firebase.initializeApp(firebaseConfig);
 			const database = firebase.database();
+
+			// Connection Monitor
+			const statusEl = document.getElementById('connection-status');
+			database.ref('.info/connected').on('value', (snap) => {
+				if (snap.val() === true) {
+					statusEl.innerText = 'Status: Live Sync';
+					statusEl.className =
+						'text-xs uppercase tracking-wider bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-bold';
+					console.log('Firebase: Connected to Realtime Database.');
+				} else {
+					statusEl.innerText = 'Status: Disconnected';
+					statusEl.className =
+						'text-xs uppercase tracking-wider bg-rose-900 text-rose-300 px-3 py-1 rounded-full font-bold';
+					console.warn('Firebase: Disconnected.');
+				}
+			});
 
 			// Clock Functionality
 			function updateClock() {
@@ -287,6 +315,8 @@
 			// Real-Time Listeners (Syncs automatically when data changes in Firebase)
 			database.ref('board').on('value', (snapshot) => {
 				const data = snapshot.val();
+				console.log('Firebase Update Received:', data);
+
 				if (data) {
 					// Update Display Screen Elements
 					document.getElementById('disp-announcement').innerText =
@@ -339,16 +369,25 @@
 			});
 
 			// Medication Interaction Logic
+
 			function markMedsTaken() {
-				// We update Firebase; the listener above will handle the UI change
-				database.ref('board').update({
-					medsTaken: true,
-					medsTakenTime: Date.now(),
-				});
+				console.log('Marking meds as taken...');
+				database.ref('board').update(
+					{
+						medsTaken: true,
+						medsTakenTime: Date.now(),
+					},
+					(error) => {
+						if (error) console.error('Error marking meds taken:', error);
+						else console.log('Meds status updated successfully.');
+					}
+				);
 			}
 
 			// Save Data to Firebase
+
 			function saveData() {
+				console.log('Attempting to save board data...');
 				const announcement = document.getElementById('input-announcement').value;
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
@@ -366,8 +405,10 @@
 					},
 					(error) => {
 						if (error) {
-							alert('Failed to save changes. Check Firebase configuration.');
+							console.error('Firebase Save Error:', error);
+							alert('Failed to save changes. ERROR: ' + error.message);
 						} else {
+							console.log('Board data saved successfully.');
 							alert('Changes published successfully! Tablet will update instantly.');
 							switchView('display');
 						}
