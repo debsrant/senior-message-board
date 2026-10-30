@@ -98,16 +98,40 @@
 
 					<!-- Medications -->
 					<div
-						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
+						id="card-medications"
+						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3 transition-all duration-500"
 					>
-						<h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
-							<span>💊</span> Medications
-						</h2>
+						<div class="flex justify-between items-start">
+							<h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
+								<span>💊</span> Medications
+							</h2>
+							<div id="meds-status-badge" class="hidden">
+								<span
+									class="bg-emerald-900 text-emerald-300 text-xs font-bold px-2 py-1 rounded-full border border-emerald-500"
+									>TAKEN</span
+								>
+							</div>
+						</div>
 						<p
 							id="disp-medications"
 							class="text-2xl text-slate-200 whitespace-pre-line"
 						>
 							Loading medications...
+						</p>
+
+						<!-- Interactive Check-off Button -->
+						<button
+							id="btn-take-meds"
+							onclick="markMedsTaken()"
+							class="w-full mt-4 py-4 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-xl"
+						>
+							<span>✅</span> I took my meds
+						</button>
+						<p
+							id="meds-taken-time"
+							class="text-center text-sm text-slate-400 mt-2 hidden"
+						>
+							Last taken: --:--
 						</p>
 					</div>
 
@@ -180,6 +204,22 @@
 							rows="3"
 							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
 						></textarea>
+					</div>
+
+					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								id="input-meds-taken"
+								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+							/>
+							<span class="text-slate-300 font-bold"
+								>Reset "Medications Taken" status for tomorrow</span
+							>
+						</label>
+						<p class="text-xs text-slate-500 mt-2">
+							Uncheck this to clear the green "Taken" badge on the tablet.
+						</p>
 					</div>
 
 					<button
@@ -258,13 +298,54 @@
 					document.getElementById('disp-contacts').innerText =
 						data.contacts || 'No contacts set.';
 
+					// Update Medication Card State
+					const medCard = document.getElementById('card-medications');
+					const medBtn = document.getElementById('btn-take-meds');
+					const medBadge = document.getElementById('meds-status-badge');
+					const medTime = document.getElementById('meds-taken-time');
+
+					if (data.medsTaken) {
+						medCard.classList.add('border-emerald-500', 'bg-slate-800');
+						medCard.classList.remove('border-slate-700');
+						medBtn.classList.add('bg-slate-700', 'opacity-50');
+						medBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
+						medBtn.innerHTML = '<span>✔️</span> Medications Logged';
+						medBadge.classList.remove('hidden');
+						medTime.classList.remove('hidden');
+						if (data.medsTakenTime) {
+							const time = new Date(data.medsTakenTime).toLocaleTimeString([], {
+								hour: '2-digit',
+								minute: '2-digit',
+							});
+							medTime.innerText = `Last taken today at ${time}`;
+						}
+					} else {
+						medCard.classList.remove('border-emerald-500');
+						medCard.classList.add('border-slate-700');
+						medBtn.classList.add('bg-rose-600', 'hover:bg-rose-500');
+						medBtn.classList.remove('bg-slate-700', 'opacity-50');
+						medBtn.innerHTML = '<span>✅</span> I took my meds';
+						medBadge.classList.add('hidden');
+						medTime.classList.add('hidden');
+					}
+
 					// Populate Admin Inputs to match current live state
 					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
 					document.getElementById('input-medications').value = data.medications || '';
 					document.getElementById('input-contacts').value = data.contacts || '';
+					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
 				}
 			});
+
+			// Medication Interaction Logic
+			function markMedsTaken() {
+				// We update Firebase; the listener above will handle the UI change
+				database.ref('board').update({
+					medsTaken: true,
+					medsTakenTime: Date.now(),
+				});
+			}
 
 			// Save Data to Firebase
 			function saveData() {
@@ -272,13 +353,15 @@
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
 				const contacts = document.getElementById('input-contacts').value;
+				const medsTaken = document.getElementById('input-meds-taken').checked;
 
-				database.ref('board').set(
+				database.ref('board').update(
 					{
 						announcement: announcement,
 						reminders: reminders,
 						medications: medications,
 						contacts: contacts,
+						medsTaken: medsTaken,
 						updatedAt: Date.now(),
 					},
 					(error) => {
