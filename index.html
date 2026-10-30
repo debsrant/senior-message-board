@@ -209,6 +209,18 @@
 						></textarea>
 					</div>
 
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Zipcode (for Local Time):</label
+						>
+						<input
+							type="text"
+							id="input-zipcode"
+							placeholder="e.g. 90210"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						/>
+					</div>
+
 					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
 						<label class="flex items-center gap-3 cursor-pointer">
 							<input
@@ -343,11 +355,17 @@
 						medBadge.classList.remove('hidden');
 						medTime.classList.remove('hidden');
 						if (data.medsTakenTime) {
-							const time = new Date(data.medsTakenTime).toLocaleTimeString([], {
+							const dateObj = new Date(data.medsTakenTime);
+							const time = dateObj.toLocaleTimeString([], {
 								hour: '2-digit',
 								minute: '2-digit',
 							});
-							medTime.innerText = `Last taken today at ${time}`;
+							const dayDate = dateObj.toLocaleDateString([], {
+								weekday: 'short',
+								month: 'short',
+								day: 'numeric',
+							});
+							medTime.innerText = `Taken ${dayDate} at ${time}`;
 						}
 					} else {
 						medCard.classList.remove('border-emerald-500');
@@ -365,8 +383,27 @@
 					document.getElementById('input-medications').value = data.medications || '';
 					document.getElementById('input-contacts').value = data.contacts || '';
 					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
+					document.getElementById('input-zipcode').value = data.zipcode || '';
+
+					// Auto-Reset Check
+					checkAutoReset(data.medsTaken, data.medsTakenTime);
 				}
 			});
+
+			// Auto-reset meds status if it's a new day
+			function checkAutoReset(isTaken, takenTime) {
+				if (isTaken && takenTime) {
+					const lastTakenDate = new Date(takenTime).toDateString();
+					const todayDate = new Date().toDateString();
+
+					if (lastTakenDate !== todayDate) {
+						console.log('New day detected. Resetting medication status...');
+						database.ref('board').update({
+							medsTaken: false,
+						});
+					}
+				}
+			}
 
 			// Medication Interaction Logic
 
@@ -393,6 +430,7 @@
 				const medications = document.getElementById('input-medications').value;
 				const contacts = document.getElementById('input-contacts').value;
 				const medsTaken = document.getElementById('input-meds-taken').checked;
+				const zipcode = document.getElementById('input-zipcode').value;
 
 				database.ref('board').update(
 					{
@@ -401,6 +439,7 @@
 						medications: medications,
 						contacts: contacts,
 						medsTaken: medsTaken,
+						zipcode: zipcode,
 						updatedAt: Date.now(),
 					},
 					(error) => {
