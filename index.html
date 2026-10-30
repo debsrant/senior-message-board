@@ -10,76 +10,14 @@
 		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 		<style>
-						.high-contrast {
-							background-color: #000;
-							color: #fff;
-						}
-						.text-huge {
-							font-size: 2.5rem;
-							line-height: 1.2;<!-- ... existing code ... -->
-			        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			            <!-- Reminders Card -->
-			            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-			                <div class="flex items-center justify-between mb-4">
-			                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
-			                        <span class="material-icons-outlined mr-2 text-yellow-500">notifications_active</span>
-			                        Reminders
-			                    </h2>
-			                    <button class="text-blue-600 hover:bg-blue-50 p-1 rounded-full transition-colors">
-			                        <span class="material-icons-outlined">add_circle</span>
-			                    </button>
-			                </div>
-			                <ul class="space-y-3">
-			                    <li class="flex items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-			                        <input type="checkbox" class="w-5 h-5 rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500 mr-3">
-			                        <span class="text-gray-700 font-medium">Water the garden</span>
-			                    </li>
-			                    <li class="flex items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-			                        <input type="checkbox" class="w-5 h-5 rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500 mr-3">
-			                        <span class="text-gray-700 font-medium">Call the grandkids @ 4:00 PM</span>
-			                    </li>
-			                </ul>
-			            </div>
-
-			            <!-- Medications Card -->
-			            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-			                <div class="flex items-center justify-between mb-4">
-			                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
-			                        <span class="material-icons-outlined mr-2 text-red-500">medication</span>
-			                        Medications
-			                    </h2>
-			                    <button class="text-blue-600 hover:bg-blue-50 p-1 rounded-full transition-colors">
-			                        <span class="material-icons-outlined">settings</span>
-			                    </button>
-			                </div>
-			                <ul class="space-y-3">
-			                    <li class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
-			                        <div class="flex items-center">
-			                            <span class="material-icons-outlined text-red-400 mr-3">pill</span>
-			                            <div>
-			                                <p class="font-bold text-gray-800 leading-none">Morning Meds</p>
-			                                <p class="text-xs text-gray-500 mt-1">2 pills • After breakfast</p>
-			                            </div>
-			                        </div>
-			                        <span class="text-sm font-bold text-red-600">8:00 AM</span>
-			                    </li>
-			                    <li class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
-			                        <div class="flex items-center">
-			                            <span class="material-icons-outlined text-red-400 mr-3">pill</span>
-			                            <div>
-			                                <p class="font-bold text-gray-800 leading-none">Blood Pressure</p>
-			                                <p class="text-xs text-gray-500 mt-1">1 pill</p>
-			                            </div>
-			                        </div>
-			                        <span class="text-sm font-bold text-red-600">9:00 PM</span>
-			                    </li>
-			                </ul>
-			            </div>
-
-			            <!-- ... existing cards like Messages or Weather ... -->
-			        </div>
-			<!-- ... rest of code ... -->
-						}
+			.high-contrast {
+				background-color: #000;
+				color: #fff;
+			}
+			.text-huge {
+				font-size: 2.5rem;
+				line-height: 1.2;
+			}
 		</style>
 	</head>
 	<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
@@ -144,17 +82,32 @@
 					</p>
 				</div>
 
-				<!-- Two Column Layout: Reminders & Emergency Contacts -->
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<!-- Reminders / Medications -->
+				<!-- Three Column Layout: Reminders, Medications, & Emergency Contacts -->
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<!-- Reminders -->
 					<div
 						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
 					>
 						<h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
-							<span>⏰</span> Reminders & Medications
+							<span>⏰</span> Reminders
 						</h2>
 						<p id="disp-reminders" class="text-2xl text-slate-200 whitespace-pre-line">
 							Loading reminders...
+						</p>
+					</div>
+
+					<!-- Medications -->
+					<div
+						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
+					>
+						<h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
+							<span>💊</span> Medications
+						</h2>
+						<p
+							id="disp-medications"
+							class="text-2xl text-slate-200 whitespace-pre-line"
+						>
+							Loading medications...
 						</p>
 					</div>
 
@@ -198,11 +151,22 @@
 
 					<div>
 						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Reminders & Medications:</label
+							>Reminders:</label
 						>
 						<textarea
 							id="input-reminders"
-							rows="4"
+							rows="3"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+					</div>
+
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Medications:</label
+						>
+						<textarea
+							id="input-medications"
+							rows="3"
 							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
 						></textarea>
 					</div>
@@ -232,13 +196,13 @@
 		<script>
 			// TODO: Replace with your actual Firebase project configuration keys
 			const firebaseConfig = {
-				apiKey: 'AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk',
-				authDomain: 'seniormessageboard.firebaseapp.com',
-				databaseURL: 'https://seniormessageboard-default-rtdb.firebaseio.com',
-				projectId: 'seniormessageboard',
-				storageBucket: 'seniormessageboard.firebasestorage.app',
-				messagingSenderId: '431774663721',
-				appId: '1:431774663721:web:8db38395147b6501060838',
+				apiKey: 'YOUR_API_KEY',
+				authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
+				databaseURL: 'https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com',
+				projectId: 'YOUR_PROJECT_ID',
+				storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+				messagingSenderId: 'YOUR_SENDER_ID',
+				appId: 'YOUR_APP_ID',
 			};
 
 			// Initialize Firebase
@@ -289,12 +253,15 @@
 						data.announcement || 'No current announcement.';
 					document.getElementById('disp-reminders').innerText =
 						data.reminders || 'No reminders set.';
+					document.getElementById('disp-medications').innerText =
+						data.medications || 'No medications set.';
 					document.getElementById('disp-contacts').innerText =
 						data.contacts || 'No contacts set.';
 
 					// Populate Admin Inputs to match current live state
 					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
+					document.getElementById('input-medications').value = data.medications || '';
 					document.getElementById('input-contacts').value = data.contacts || '';
 				}
 			});
@@ -303,12 +270,14 @@
 			function saveData() {
 				const announcement = document.getElementById('input-announcement').value;
 				const reminders = document.getElementById('input-reminders').value;
+				const medications = document.getElementById('input-medications').value;
 				const contacts = document.getElementById('input-contacts').value;
 
 				database.ref('board').set(
 					{
 						announcement: announcement,
 						reminders: reminders,
+						medications: medications,
 						contacts: contacts,
 						updatedAt: Date.now(),
 					},
