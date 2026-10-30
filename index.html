@@ -1,176 +1,327 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Senior Message Board & Admin</title>
-    <!-- Tailwind CSS for clean, high-contrast styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase App (Compat) & Realtime Database SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-        .high-contrast { background-color: #000; color: #fff; }
-        .text-huge { font-size: 2.5rem; line-height: 1.2; }
-    </style>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Senior Message Board & Admin</title>
+		<!-- Tailwind CSS for clean, high-contrast styling -->
+		<script src="https://cdn.tailwindcss.com"></script>
+		<!-- Firebase App (Compat) & Realtime Database SDKs -->
+		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+		<style>
+						.high-contrast {
+							background-color: #000;
+							color: #fff;
+						}
+						.text-huge {
+							font-size: 2.5rem;
+							line-height: 1.2;<!-- ... existing code ... -->
+			        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+			            <!-- Reminders Card -->
+			            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+			                <div class="flex items-center justify-between mb-4">
+			                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+			                        <span class="material-icons-outlined mr-2 text-yellow-500">notifications_active</span>
+			                        Reminders
+			                    </h2>
+			                    <button class="text-blue-600 hover:bg-blue-50 p-1 rounded-full transition-colors">
+			                        <span class="material-icons-outlined">add_circle</span>
+			                    </button>
+			                </div>
+			                <ul class="space-y-3">
+			                    <li class="flex items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+			                        <input type="checkbox" class="w-5 h-5 rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500 mr-3">
+			                        <span class="text-gray-700 font-medium">Water the garden</span>
+			                    </li>
+			                    <li class="flex items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
+			                        <input type="checkbox" class="w-5 h-5 rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500 mr-3">
+			                        <span class="text-gray-700 font-medium">Call the grandkids @ 4:00 PM</span>
+			                    </li>
+			                </ul>
+			            </div>
 
-    <!-- Top Navigation / Mode Toggle -->
-    <header class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md">
-        <h1 class="text-xl font-bold flex items-center gap-2">
-            <span>📅</span> Senior Message Board
-        </h1>
-        <div class="flex gap-2">
-            <button onclick="switchView('display')" id="btn-display" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition">Hub Display View</button>
-            <button onclick="switchView('admin')" id="btn-admin" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition">Admin Panel</button>
-        </div>
-    </header>
+			            <!-- Medications Card -->
+			            <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+			                <div class="flex items-center justify-between mb-4">
+			                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+			                        <span class="material-icons-outlined mr-2 text-red-500">medication</span>
+			                        Medications
+			                    </h2>
+			                    <button class="text-blue-600 hover:bg-blue-50 p-1 rounded-full transition-colors">
+			                        <span class="material-icons-outlined">settings</span>
+			                    </button>
+			                </div>
+			                <ul class="space-y-3">
+			                    <li class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+			                        <div class="flex items-center">
+			                            <span class="material-icons-outlined text-red-400 mr-3">pill</span>
+			                            <div>
+			                                <p class="font-bold text-gray-800 leading-none">Morning Meds</p>
+			                                <p class="text-xs text-gray-500 mt-1">2 pills • After breakfast</p>
+			                            </div>
+			                        </div>
+			                        <span class="text-sm font-bold text-red-600">8:00 AM</span>
+			                    </li>
+			                    <li class="flex items-center justify-between p-3 bg-red-50 rounded-xl border border-red-100">
+			                        <div class="flex items-center">
+			                            <span class="material-icons-outlined text-red-400 mr-3">pill</span>
+			                            <div>
+			                                <p class="font-bold text-gray-800 leading-none">Blood Pressure</p>
+			                                <p class="text-xs text-gray-500 mt-1">1 pill</p>
+			                            </div>
+			                        </div>
+			                        <span class="text-sm font-bold text-red-600">9:00 PM</span>
+			                    </li>
+			                </ul>
+			            </div>
 
-    <!-- MAIN CONTAINER -->
-    <main class="p-6 max-w-6xl mx-auto">
+			            <!-- ... existing cards like Messages or Weather ... -->
+			        </div>
+			<!-- ... rest of code ... -->
+						}
+		</style>
+	</head>
+	<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+		<!-- Top Navigation / Mode Toggle -->
+		<header
+			class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md"
+		>
+			<h1 class="text-xl font-bold flex items-center gap-2">
+				<span>📅</span> Senior Message Board
+			</h1>
+			<div class="flex gap-2">
+				<button
+					onclick="switchView('display')"
+					id="btn-display"
+					class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition"
+				>
+					Hub Display View
+				</button>
+				<button
+					onclick="switchView('admin')"
+					id="btn-admin"
+					class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition"
+				>
+					Admin Panel
+				</button>
+			</div>
+		</header>
 
-        <!-- ================= DISPLAY VIEW ================= -->
-        <div id="view-display" class="space-y-6">
-            <!-- Clock & Date Header -->
-            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg">
-                <div>
-                    <div id="display-date" class="text-2xl text-blue-400 font-medium">Loading date...</div>
-                    <div id="display-time" class="text-6xl font-extrabold tracking-tight mt-1">00:00</div>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs uppercase tracking-wider bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-bold">Status: Live Sync</span>
-                </div>
-            </div>
+		<!-- MAIN CONTAINER -->
+		<main class="p-6 max-w-6xl mx-auto">
+			<!-- ================= DISPLAY VIEW ================= -->
+			<div id="view-display" class="space-y-6">
+				<!-- Clock & Date Header -->
+				<div
+					class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg"
+				>
+					<div>
+						<div id="display-date" class="text-2xl text-blue-400 font-medium">
+							Loading date...
+						</div>
+						<div id="display-time" class="text-6xl font-extrabold tracking-tight mt-1">
+							00:00
+						</div>
+					</div>
+					<div class="text-right">
+						<span
+							class="text-xs uppercase tracking-wider bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-bold"
+							>Status: Live Sync</span
+						>
+					</div>
+				</div>
 
-            <!-- Main Message Card -->
-            <div class="bg-slate-800 p-8 rounded-2xl border-2 border-blue-500 shadow-xl space-y-4">
-                <h2 class="text-blue-400 font-bold uppercase tracking-wide text-sm">Today's Important Message</h2>
-                <p id="disp-announcement" class="text-huge font-medium text-white">Loading announcement...</p>
-            </div>
+				<!-- Main Message Card -->
+				<div
+					class="bg-slate-800 p-8 rounded-2xl border-2 border-blue-500 shadow-xl space-y-4"
+				>
+					<h2 class="text-blue-400 font-bold uppercase tracking-wide text-sm">
+						Today's Important Message
+					</h2>
+					<p id="disp-announcement" class="text-huge font-medium text-white">
+						Loading announcement...
+					</p>
+				</div>
 
-            <!-- Two Column Layout: Reminders & Emergency Contacts -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Reminders / Medications -->
-                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3">
-                    <h2 class="text-xl font-bold text-amber-400 flex items-center gap-2"><span>⏰</span> Reminders & Medications</h2>
-                    <p id="disp-reminders" class="text-2xl text-slate-200 whitespace-pre-line">Loading reminders...</p>
-                </div>
+				<!-- Two Column Layout: Reminders & Emergency Contacts -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<!-- Reminders / Medications -->
+					<div
+						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
+					>
+						<h2 class="text-xl font-bold text-amber-400 flex items-center gap-2">
+							<span>⏰</span> Reminders & Medications
+						</h2>
+						<p id="disp-reminders" class="text-2xl text-slate-200 whitespace-pre-line">
+							Loading reminders...
+						</p>
+					</div>
 
-                <!-- Emergency / Family Contacts -->
-                <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3">
-                    <h2 class="text-xl font-bold text-emerald-400 flex items-center gap-2"><span>📞</span> Important Contacts</h2>
-                    <p id="disp-contacts" class="text-2xl text-slate-200 whitespace-pre-line">Loading contacts...</p>
-                </div>
-            </div>
-        </div>
+					<!-- Emergency / Family Contacts -->
+					<div
+						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
+					>
+						<h2 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+							<span>📞</span> Important Contacts
+						</h2>
+						<p id="disp-contacts" class="text-2xl text-slate-200 whitespace-pre-line">
+							Loading contacts...
+						</p>
+					</div>
+				</div>
+			</div>
 
-        <!-- ================= ADMIN PANEL ================= -->
-        <div id="view-admin" class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl">
-            <h2 class="text-2xl font-bold text-white border-b border-slate-700 pb-3">Remote Administration Panel</h2>
-            <p class="text-sm text-slate-400">Changes made here will instantly update on the tablet screen via Firebase.</p>
+			<!-- ================= ADMIN PANEL ================= -->
+			<div
+				id="view-admin"
+				class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
+			>
+				<h2 class="text-2xl font-bold text-white border-b border-slate-700 pb-3">
+					Remote Administration Panel
+				</h2>
+				<p class="text-sm text-slate-400">
+					Changes made here will instantly update on the tablet screen via Firebase.
+				</p>
 
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-slate-300">Main Announcement / Note:</label>
-                    <textarea id="input-announcement" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                </div>
+				<div class="space-y-4">
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Main Announcement / Note:</label
+						>
+						<textarea
+							id="input-announcement"
+							rows="3"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+					</div>
 
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-slate-300">Reminders & Medications:</label>
-                    <textarea id="input-reminders" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                </div>
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Reminders & Medications:</label
+						>
+						<textarea
+							id="input-reminders"
+							rows="4"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+					</div>
 
-                <div>
-                    <label class="block text-sm font-bold mb-2 text-slate-300">Important Contacts:</label>
-                    <textarea id="input-contacts" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                </div>
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Important Contacts:</label
+						>
+						<textarea
+							id="input-contacts"
+							rows="3"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+					</div>
 
-                <button onclick="saveData()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition">
-                    Publish Changes Instantly
-                </button>
-            </div>
-        </div>
+					<button
+						onclick="saveData()"
+						class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
+					>
+						Publish Changes Instantly
+					</button>
+				</div>
+			</div>
+		</main>
 
-    </main>
+		<!-- JavaScript Application Logic -->
+		<script>
+			// TODO: Replace with your actual Firebase project configuration keys
+			const firebaseConfig = {
+				apiKey: 'AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk',
+				authDomain: 'seniormessageboard.firebaseapp.com',
+				databaseURL: 'https://seniormessageboard-default-rtdb.firebaseio.com',
+				projectId: 'seniormessageboard',
+				storageBucket: 'seniormessageboard.firebasestorage.app',
+				messagingSenderId: '431774663721',
+				appId: '1:431774663721:web:8db38395147b6501060838',
+			};
 
-    <!-- JavaScript Application Logic -->
-    <script>
-        // TODO: Replace with your actual Firebase project configuration keys
-  const firebaseConfig = {
-    apiKey: "AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk",
-    authDomain: "seniormessageboard.firebaseapp.com",
-    databaseURL: "https://seniormessageboard-default-rtdb.firebaseio.com",
-    projectId: "seniormessageboard",
-    storageBucket: "seniormessageboard.firebasestorage.app",
-    messagingSenderId: "431774663721",
-    appId: "1:431774663721:web:8db38395147b6501060838"
-  };
+			// Initialize Firebase
+			firebase.initializeApp(firebaseConfig);
+			const database = firebase.database();
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+			// Clock Functionality
+			function updateClock() {
+				const now = new Date();
+				document.getElementById('display-time').innerText = now.toLocaleTimeString([], {
+					hour: '2-digit',
+					minute: '2-digit',
+				});
+				document.getElementById('display-date').innerText = now.toLocaleDateString([], {
+					weekday: 'long',
+					month: 'long',
+					day: 'numeric',
+				});
+			}
+			setInterval(updateClock, 1000);
+			updateClock();
 
-        // Clock Functionality
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('display-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('display-date').innerText = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
+			// View Switcher Tabs
+			function switchView(view) {
+				if (view === 'display') {
+					document.getElementById('view-display').classList.remove('hidden');
+					document.getElementById('view-admin').classList.add('hidden');
+					document.getElementById('btn-display').className =
+						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
+					document.getElementById('btn-admin').className =
+						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
+				} else {
+					document.getElementById('view-admin').classList.remove('hidden');
+					document.getElementById('view-display').classList.add('hidden');
+					document.getElementById('btn-admin').className =
+						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
+					document.getElementById('btn-display').className =
+						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
+				}
+			}
 
-        // View Switcher Tabs
-        function switchView(view) {
-            if (view === 'display') {
-                document.getElementById('view-display').classList.remove('hidden');
-                document.getElementById('view-admin').classList.add('hidden');
-                document.getElementById('btn-display').className = "px-4 py-2 bg-blue-600 rounded font-bold text-white transition";
-                document.getElementById('btn-admin').className = "px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition";
-            } else {
-                document.getElementById('view-admin').classList.remove('hidden');
-                document.getElementById('view-display').classList.add('hidden');
-                document.getElementById('btn-admin').className = "px-4 py-2 bg-blue-600 rounded font-bold text-white transition";
-                document.getElementById('btn-display').className = "px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition";
-            }
-        }
+			// Real-Time Listeners (Syncs automatically when data changes in Firebase)
+			database.ref('board').on('value', (snapshot) => {
+				const data = snapshot.val();
+				if (data) {
+					// Update Display Screen Elements
+					document.getElementById('disp-announcement').innerText =
+						data.announcement || 'No current announcement.';
+					document.getElementById('disp-reminders').innerText =
+						data.reminders || 'No reminders set.';
+					document.getElementById('disp-contacts').innerText =
+						data.contacts || 'No contacts set.';
 
-        // Real-Time Listeners (Syncs automatically when data changes in Firebase)
-        database.ref('board').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                // Update Display Screen Elements
-                document.getElementById('disp-announcement').innerText = data.announcement || "No current announcement.";
-                document.getElementById('disp-reminders').innerText = data.reminders || "No reminders set.";
-                document.getElementById('disp-contacts').innerText = data.contacts || "No contacts set.";
+					// Populate Admin Inputs to match current live state
+					document.getElementById('input-announcement').value = data.announcement || '';
+					document.getElementById('input-reminders').value = data.reminders || '';
+					document.getElementById('input-contacts').value = data.contacts || '';
+				}
+			});
 
-                // Populate Admin Inputs to match current live state
-                document.getElementById('input-announcement').value = data.announcement || "";
-                document.getElementById('input-reminders').value = data.reminders || "";
-                document.getElementById('input-contacts').value = data.contacts || "";
-            }
-        });
+			// Save Data to Firebase
+			function saveData() {
+				const announcement = document.getElementById('input-announcement').value;
+				const reminders = document.getElementById('input-reminders').value;
+				const contacts = document.getElementById('input-contacts').value;
 
-        // Save Data to Firebase
-        function saveData() {
-            const announcement = document.getElementById('input-announcement').value;
-            const reminders = document.getElementById('input-reminders').value;
-            const contacts = document.getElementById('input-contacts').value;
-
-            database.ref('board').set({
-                announcement: announcement,
-                reminders: reminders,
-                contacts: contacts,
-                updatedAt: Date.now()
-            }, (error) => {
-                if (error) {
-                    alert("Failed to save changes. Check Firebase configuration.");
-                } else {
-                    alert("Changes published successfully! Tablet will update instantly.");
-                    switchView('display');
-                }
-            });
-        }
-    </script>
-</body>
+				database.ref('board').set(
+					{
+						announcement: announcement,
+						reminders: reminders,
+						contacts: contacts,
+						updatedAt: Date.now(),
+					},
+					(error) => {
+						if (error) {
+							alert('Failed to save changes. Check Firebase configuration.');
+						} else {
+							alert('Changes published successfully! Tablet will update instantly.');
+							switchView('display');
+						}
+					}
+				);
+			}
+		</script>
+	</body>
 </html>
