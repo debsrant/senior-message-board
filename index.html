@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Message Board & Remote Admin</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Ultra-Legibility -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Atkinson Hyperlegible', 'sans-serif'],
+                    },
+                    colors: {
+                        hcYellow: '#FFE600',
+                        hcBlack: '#000000',
+                        hcBlue: '#0055FF',
+                        hcGreen: '#00E676',
+                        hcRed: '#FF1744',
+                        hcOrange: '#FF9100'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Atkinson Hyperlegible', sans-serif;
+            user-select: none;
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        /* High-contrast custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 14px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFE600;
+            border-radius: 6px;
+            border: 3px solid #111;
+        }
+
+        /* Pulsing animation for urgent notifications */
+        @keyframes urgentPulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0.9); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 230, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 230, 0, 0); }
+        }
+
+        .pulse-urgent {
+            animation: urgentPulse 2s infinite;
+        }
+
+        @keyframes emergencyBlink {
+            0%, 100% { background-color: #FF1744; color: #FFFFFF; }
+            50% { background-color: #000000; color: #FF1744; }
+        }
+
+        .emergency-banner {
+            animation: emergencyBlink 1.5s infinite;
+        }
+
+        /* Mode switch transitions */
+        .smooth-transition {
+            transition: all 0.25s ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <!-- TOP CONTROL NAVIGATION BAR (Admin Mode Toggle / View Switch) -->
+    <header class="bg-gray-900 border-b-4 border-yellow-400 p-3 flex flex-wrap justify-between items-center z-50 text-white shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-yellow-400 text-black px-3 py-1 font-bold rounded text-lg flex items-center gap-2">
+                <i class="fa-solid fa-display"></i> Nest Hub Screen Board
+            </div>
+            <span id="syncStatus" class="bg-green-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 font-bold">
+                <span class="w-2 h-2 bg-white rounded-full animate-ping"></span> LIVE CONNECTED
+            </span>
+        </div>
+
+        <!-- Mode Selectors -->
+        <div class="flex items-center space-x-2 my-1 sm:my-0">
+            <button onclick="setViewMode('display')" id="btnViewDisplay" class="px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-yellow-400 text-black text-base flex items-center gap-2 transition hover:opacity-90">
+                <i class="fa-solid fa-tv"></i> Hub Display Only
+            </button>
+            <button onclick="setViewMode('split')" id="btnViewSplit" class="px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-gray-800 text-yellow-400 text-base flex items-center gap-2 transition hover:bg-gray-700">
+                <i class="fa-solid fa-columns"></i> Split Display & Remote Admin
+            </button>
+            <button onclick="setViewMode('admin')" id="btnViewAdmin" class="px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-gray-800 text-yellow-400 text-base flex items-center gap-2 transition hover:bg-gray-700">
+                <i class="fa-solid fa-mobile-screen-button"></i> Remote Admin Panel
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-1 flex overflow-hidden relative">
+
+        <!-- ============================================================== -->
+        <!-- VIEW 1: SMART DISPLAY HUB DISPLAY (Optimized for 1024x600 Nest Hub) -->
+        <!-- ============================================================== -->
+        <section id="displayContainer" class="w-full h-full flex flex-col bg-black text-white p-4 overflow-y-auto smooth-transition border-r-4 border-gray-800">
+            
+            <!-- Urgent Priority Banner Container -->
+            <div id="urgentBanner" class="hidden mb-4 p-4 rounded-2xl border-4 border-yellow-400 emergency-banner text-center shadow-2xl">
+                <div class="flex items-center justify-center gap-3 text-3xl md:text-4xl font-extrabold uppercase tracking-wide">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="urgentBannerText">URGENT REMINDER HERE</span>
+                </div>
+            </div>
+
+            <!-- HEADER DISPLAY: Clock, Date & Weather -->
+            <div class="flex flex-col md:flex-row justify-between items-center bg-gray-950 border-4 border-yellow-400 rounded-3xl p-4 md:p-6 mb-4 shadow-lg">
+                <!-- Clock / Time (Large for visibility from distance) -->
+                <div class="text-center md:text-left mb-3 md:mb-0">
+                    <div id="clockTime" class="text-6xl sm:text-7xl lg:text-8xl font-black text-yellow-400 tracking-tight leading-none">
+                        12:00 <span class="text-4xl text-white">AM</span>
+                    </div>
+                    <div id="clockDate" class="text-2xl sm:text-3xl font-bold text-gray-200 mt-1">
+                        Monday, October 29
+                    </div>
+                </div>
+
+                <!-- Emergency Contact Quick-Badge -->
+                <div class="bg-red-950 border-4 border-red-500 rounded-2xl p-3 md:p-4 text-center min-w-[260px] shadow-md">
+                    <div class="text-red-400 font-bold uppercase tracking-wider text-sm">Need Help? Contact:</div>
+                    <div id="hubEmergencyName" class="text-2xl font-black text-white">Sarah (Daughter)</div>
+                    <div id="hubEmergencyPhone" class="text-3xl font-black text-yellow-300 tracking-wider">
+                        <i class="fa-solid fa-phone"></i> (555) 234-5678
+                    </div>
+                </div>
+            </div>
+
+            <!-- MESSAGES CONTAINER GRID -->
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max overflow-y-auto pr-1">
+                <!-- Dynamic Content Populated via JavaScript -->
+                <div id="hubMessagesList" class="contents">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <!-- DISPLAY FOOTER STATUS -->
+            <footer class="mt-4 pt-3 border-t-2 border-gray-800 flex justify-between items-center text-gray-400 font-bold text-lg">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-yellow-400"></i>
+                    <span>Display Mode: <strong id="currentThemeLabel" class="text-white">Dark High-Contrast</strong></span>
+                </div>
+                <div class="text-sm">
+                    Updated <span id="lastUpdatedTime">Just now</span>
+                </div>
+            </footer>
+        </section>
+
+
+        <!-- ============================================================== -->
+        <!-- VIEW 2: REMOTE ADMIN CONTROLLER PANEL -->
+        <!-- ============================================================== -->
+        <section id="adminContainer" class="hidden w-full h-full bg-gray-900 text-gray-100 flex-col p-4 sm:p-6 overflow-y-auto">
+            
+            <div class="max-w-6xl mx-auto w-full space-y-6">
+                
+                <!-- Admin Header & Quick Controls -->
+                <div class="bg-gray-800 border-2 border-yellow-400 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-yellow-400 flex items-center gap-3">
+                            <i class="fa-solid fa-sliders"></i> Remote Display Admin
+                        </h2>
+                        <p class="text-gray-300 text-lg mt-1">Updates made here immediately reflect on the senior's Nest Hub display screen.</p>
+                    </div>
+
+                    <!-- Remote Sound Chime Trigger -->
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <button onclick="triggerChime()" class="flex-1 md:flex-initial bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold px-5 py-3 rounded-xl text-lg flex items-center justify-center gap-2 border-2 border-black transition shadow-lg">
+                            <i class="fa-solid fa-bell text-xl"></i> Sound Alert Chime
+                        </button>
+                        <button onclick="clearAllMessages()" class="bg-red-800 hover:bg-red-700 text-white font-bold px-4 py-3 rounded-xl text-base flex items-center gap-2 border border-red-500 transition">
+                            <i class="fa-solid fa-trash-can"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MAIN CONTROLS GRID -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- LEFT COLUMN: Create / Edit Message Form -->
+                    <div class="lg:col-span-7 bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-xl space-y-4">
+                        <h3 class="text-2xl font-bold text-white flex items-center gap-2 border-b border-gray-700 pb-3">
+                            <i class="fa-solid fa-pen-to-square text-yellow-400"></i>
+                            <span id="formTitle">Add New Message Card</span>
+                        </h3>
+
+                        <form id="messageForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                            <input type="hidden" id="editCardId" value="">
+
+                            <!-- Message Title -->
+                            <div>
+                                <label class="block text-yellow-400 font-bold text-lg mb-1" for="inputTitle">Title / Headline *</label>
+                                <input type="text" id="inputTitle" required placeholder="e.g., Lunch with Sarah, Take Morning Pills"
+                                       class="w-full bg-gray-900 border-2 border-gray-600 focus:border-yellow-400 text-white rounded-xl p-3 text-xl focus:outline-none font-bold">
+                            </div>
+
+                            <!-- Card Category / Type -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-yellow-400 font-bold text-lg mb-1" for="selectCategory">Category *</label>
+                                    <select id="selectCategory" class="w-full bg-gray-900 border-2 border-gray-600 focus:border-yellow-400 text-white rounded-xl p-3 text-lg font-bold">
+                                        <option value="reminder">🔔 Reminder / Task</option>
+                                        <option value="medication">💊 Medication</option>
+                                        <option value="event">📅 Appointment / Event</option>
+                                        <option value="note">📝 General Note / Family</option>
+                                        <option value="urgent">🚨 URGENT Notice</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-yellow-400 font-bold text-lg mb-1" for="inputTime">Time Details (Optional)</label>
+                                    <input type="text" id="inputTime" placeholder="e.g., 2:30 PM Today"
+                                           class="w-full bg-gray-900 border-2 border-gray-600 focus:border-yellow-400 text-white rounded-xl p-3 text-lg font-bold">
+                                </div>
+                            </div>
+
+                            <!-- Body Description -->
+                            <div>
+                                <label class="block text-yellow-400 font-bold text-lg mb-1" for="inputBody">Message Description / Note</label>
+                                <textarea id="inputBody" rows="3" placeholder="Write clear, easy details here..."
+                                          class="w-full bg-gray-900 border-2 border-gray-600 focus:border-yellow-400 text-white rounded-xl p-3 text-lg focus:outline-none font-medium"></textarea>
+                            </div>
+
+                            <!-- Actions Row -->
+                            <div class="flex items-center justify-between pt-2">
+                                <button type="button" id="btnCancelEdit" onclick="resetForm()" class="hidden bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-3 rounded-xl text-lg">
+                                    Cancel
+                                </button>
+                                <button type="submit" id="btnSubmitForm" class="w-full bg-green-500 hover:bg-green-400 text-black font-black text-xl py-3 px-6 rounded-xl border-2 border-black transition shadow-lg flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i> Publish to Senior Display
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Screen Settings & Contact Management -->
+                    <div class="lg:col-span-5 space-y-6">
+                        
+                        <!-- Screen High Contrast Theme Options -->
+                        <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-xl space-y-4">
+                            <h3 class="text-2xl font-bold text-white flex items-center gap-2 border-b border-gray-700 pb-3">
+                                <i class="fa-solid fa-palette text-yellow-400"></i> Screen Appearance
+                            </h3>
+                            
+                            <div class="space-y-2">
+                                <label class="block text-gray-300 font-bold text-base">Hub Display Theme:</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="setHubTheme('dark')" class="bg-black text-yellow-400 border-2 border-yellow-400 font-bold py-2 px-3 rounded-lg text-sm text-center">
+                                        High-Contrast Dark
+                                    </button>
+                                    <button onclick="setHubTheme('light')" class="bg-white text-black border-2 border-black font-bold py-2 px-3 rounded-lg text-sm text-center">
+                                        High-Contrast Light
+                                    </button>
+                                    <button onclick="setHubTheme('blue')" class="bg-blue-950 text-white border-2 border-blue-400 font-bold py-2 px-3 rounded-lg text-sm text-center">
+                                        Soft Night Blue
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Emergency / Caregiver Contact Settings -->
+                        <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-xl space-y-4">
+                            <h3 class="text-2xl font-bold text-white flex items-center gap-2 border-b border-gray-700 pb-3">
+                                <i class="fa-solid fa-phone text-red-400"></i> Primary Contact Badge
+                            </h3>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-gray-300 font-bold text-sm mb-1">Contact Name & Relation</label>
+                                    <input type="text" id="adminContactName" value="Sarah (Daughter)" 
+                                           class="w-full bg-gray-900 border border-gray-600 focus:border-yellow-400 text-white rounded-lg p-2 text-base font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-300 font-bold text-sm mb-1">Phone Number</label>
+                                    <input type="text" id="adminContactPhone" value="(555) 234-5678" 
+                                           class="w-full bg-gray-900 border border-gray-600 focus:border-yellow-400 text-white rounded-lg p-2 text-base font-bold">
+                                </div>
+                                <button onclick="saveContactInfo()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-base border border-blue-300">
+                                    Update Display Contact Badge
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ADMIN MESSAGES MANAGEMENT LIST -->
+                <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-xl space-y-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-2 border-b border-gray-700 pb-3">
+                        <i class="fa-solid fa-list-check text-yellow-400"></i> Active Messages on Display Screen
+                    </h3>
+
+                    <div id="adminMessagesList" class="space-y-3">
+                        <!-- Administrative message edit cards -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- AUDIO CHIME ELEMENT (Web Audio API Fallback or Synthetic Chime) -->
+    <script>
+        // Default Sample Initial Messages
+        let appState = {
+            theme: 'dark', // 'dark', 'light', 'blue'
+            emergencyContact: {
+                name: "Sarah (Daughter)",
+                phone: "(555) 234-5678"
+            },
+            messages: [
+                {
+                    id: '1',
+                    category: 'medication',
+                    title: 'Take Morning Blood Pressure Medication',
+                    time: '8:00 AM Daily',
+                    body: 'Take 1 pill from the blue morning pill dispenser with a full glass of water.',
+                    timestamp: Date.now()
+                },
+                {
+                    id: '2',
+                    category: 'event',
+                    title: 'Dr. Miller Appointment',
+                    time: 'Today at 2:30 PM',
+                    body: 'Sarah is driving you. Please be ready in the living room by 2:15 PM.',
+                    timestamp: Date.now() - 1000
+                },
+                {
+                    id: '3',
+                    category: 'note',
+                    title: 'Grandkids Visiting Tomorrow!',
+                    time: 'Tomorrow Afternoon',
+                    body: 'Leo and Mia are coming over with homemade cookies!',
+                    timestamp: Date.now() - 2000
+                }
+            ]
+        };
+
+        // Load state from local storage if available
+        function loadState() {
+            const saved = localStorage.getItem('nest_hub_board_state');
+            if (saved) {
+                try {
+                    appState = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Failed to parse saved state", e);
+                }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('nest_hub_board_state', JSON.stringify(appState));
+            renderAll();
+        }
+
+        // Realtime Clock Updater
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // hour '0' should be '12'
+            const strMinutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            const timeStr = `${hours}:${strMinutes} <span class="text-3xl sm:text-4xl text-gray-300 font-bold">${ampm}</span>`;
+            
+            const options = { weekday: 'long', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('en-US', options);
+
+            const clockTimeEl = document.getElementById('clockTime');
+            const clockDateEl = document.getElementById('clockDate');
+            if (clockTimeEl) clockTimeEl.innerHTML = timeStr;
+            if (clockDateEl) clockDateEl.textContent = dateStr;
+        }
+
+        // Category Visual Styling Map (Extra Large Contrast Elements)
+        const categoryStyles = {
+            urgent: {
+                bg: 'bg-red-950',
+                border: 'border-red-500',
+                badgeBg: 'bg-red-600',
+                badgeText: 'text-white',
+                icon: 'fa-triangle-exclamation',
+                label: 'URGENT'
+            },
+            medication: {
+                bg: 'bg-blue-950',
+                border: 'border-blue-400',
+                badgeBg: 'bg-blue-500',
+                badgeText: 'text-white',
+                icon: 'fa-pills',
+                label: 'MEDICATION'
+            },
+            event: {
+                bg: 'bg-purple-950',
+                border: 'border-purple-400',
+                badgeBg: 'bg-purple-500',
+                badgeText: 'text-white',
+                icon: 'fa-calendar-day',
+                label: 'APPOINTMENT'
+            },
+            reminder: {
+                bg: 'bg-amber-950',
+                border: 'border-yellow-400',
+                badgeBg: 'bg-yellow-400',
+                badgeText: 'text-black',
+                icon: 'fa-bell',
+                label: 'REMINDER'
+            },
+            note: {
+                bg: 'bg-gray-900',
+                border: 'border-gray-500',
+                badgeBg: 'bg-gray-200',
+                badgeText: 'text-black',
+                icon: 'fa-heart',
+                label: 'FAMILY NOTE'
+            }
+        };
+
+        // Render Display & Admin Views
+        function renderAll() {
+            renderHubDisplay();
+            renderAdminPanel();
+            updateLastUpdatedTime();
+        }
+
+        function renderHubDisplay() {
+            const listEl = document.getElementById('hubMessagesList');
+            const urgentBanner = document.getElementById('urgentBanner');
+            const urgentText = document.getElementById('urgentBannerText');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+
+            // Check if there are urgent notifications
+            const urgentMsg = appState.messages.find(m => m.category === 'urgent');
+            if (urgentMsg) {
+                urgentBanner.classList.remove('hidden');
+                urgentText.textContent = `${urgentMsg.title.toUpperCase()} ${urgentMsg.time ? '- ' + urgentMsg.time : ''}`;
+            } else {
+                urgentBanner.classList.add('hidden');
+            }
+
+            // Filter out non-urgent or display all in structured cards
+            if (appState.messages.length === 0) {
+                listEl.innerHTML = `
+                    <div class="col-span-full border-4 border-dashed border-gray-700 rounded-3xl p-12 text-center text-gray-400">
+                        <i class="fa-solid fa-face-smile text-6xl mb-4 text-yellow-400"></i>
+                        <h3 class="text-3xl font-bold text-white">No messages or reminders right now!</h3>
+                        <p class="text-2xl mt-2">Have a wonderful day.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            appState.messages.forEach(msg => {
+                const style = categoryStyles[msg.category] || categoryStyles.note;
+                
+                const card = document.createElement('div');
+                card.className = `${style.bg} border-4 ${style.border} rounded-3xl p-5 md:p-6 shadow-2xl flex flex-col justify-between space-y-4 relative overflow-hidden`;
+
+                card.innerHTML = `
+                    <div>
+                        <!-- Category Pill Header -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="${style.badgeBg} ${style.badgeText} font-black text-lg px-4 py-1 rounded-full uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid ${style.icon}"></i> ${style.label}
+                            </span>
+                            ${msg.time ? `
+                                <span class="bg-black/60 border border-yellow-400 text-yellow-300 font-bold text-lg px-3 py-1 rounded-xl">
+                                    <i class="fa-regular fa-clock"></i> ${msg.time}
+                                </span>
+                            ` : ''}
+                        </div>
+
+                        <!-- Card Main Title -->
+                        <h3 class="text-3xl md:text-4xl font-extrabold text-white leading-tight mb-2">
+                            ${escapeHtml(msg.title)}
+                        </h3>
+
+                        <!-- Body Description -->
+                        ${msg.body ? `
+                            <p class="text-2xl md:text-2xl text-gray-100 font-medium leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/10 mt-3">
+                                ${escapeHtml(msg.body)}
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+
+                listEl.appendChild(card);
+            });
+
+            // Update Emergency Badge
+            document.getElementById('hubEmergencyName').textContent = appState.emergencyContact.name;
+            document.getElementById('hubEmergencyPhone').innerHTML = `<i class="fa-solid fa-phone"></i> ${appState.emergencyContact.phone}`;
+            
+            // Apply Theme to Hub Display
+            applyTheme(appState.theme);
+        }
+
+        function renderAdminPanel() {
+            const adminListEl = document.getElementById('adminMessagesList');
+            if (!adminListEl) return;
+
+            adminListEl.innerHTML = '';
+
+            if (appState.messages.length === 0) {
+                adminListEl.innerHTML = `<p class="text-gray-400 text-lg italic p-4 text-center">No active messages currently on the Nest Hub display.</p>`;
+                return;
+            }
+
+            appState.messages.forEach(msg => {
+                const item = document.createElement('div');
+                item.className = 'bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4';
+
+                item.innerHTML = `
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold uppercase px-2 py-1 rounded bg-yellow-400 text-black">
+                                ${msg.category}
+                            </span>
+                            ${msg.time ? `<span class="text-sm font-semibold text-gray-400"><i class="fa-regular fa-clock"></i> ${escapeHtml(msg.time)}</span>` : ''}
+                        </div>
+                        <h4 class="text-xl font-bold text-white">${escapeHtml(msg.title)}</h4>
+                        ${msg.body ? `<p class="text-gray-300 text-base">${escapeHtml(msg.body)}</p>` : ''}
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full md:w-auto justify-end border-t border-gray-800 md:border-none pt-2 md:pt-0">
+                        <button onclick="editMessage('${msg.id}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-2 rounded-lg text-sm flex items-center gap-1">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button onclick="deleteMessage('${msg.id}')" class="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-2 rounded-lg text-sm flex items-center gap-1">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                `;
+
+                adminListEl.appendChild(item);
+            });
+
+            // Populate contact input fields
+            document.getElementById('adminContactName').value = appState.emergencyContact.name;
+            document.getElementById('adminContactPhone').value = appState.emergencyContact.phone;
+        }
+
+        // Form Submit Handler
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editCardId').value;
+            const title = document.getElementById('inputTitle').value.trim();
+            const category = document.getElementById('selectCategory').value;
+            const time = document.getElementById('inputTime').value.trim();
+            const body = document.getElementById('inputBody').value.trim();
+
+            if (!title) return;
+
+            if (editId) {
+                // Update existing card
+                const index = appState.messages.findIndex(m => m.id === editId);
+                if (index !== -1) {
+                    appState.messages[index] = {
+                        ...appState.messages[index],
+                        title,
+                        category,
+                        time,
+                        body
+                    };
+                }
+            } else {
+                // Add new card
+                const newMsg = {
+                    id: Date.now().toString(),
+                    title,
+                    category,
+                    time,
+                    body,
+                    timestamp: Date.now()
+                };
+                appState.messages.unshift(newMsg); // add to top
+            }
+
+            saveState();
+            resetForm();
+            triggerChime(); // Play subtle alert when updated remotely
+        }
+
+        function editMessage(id) {
+            const msg = appState.messages.find(m => m.id === id);
+            if (!msg) return;
+
+            document.getElementById('editCardId').value = msg.id;
+            document.getElementById('inputTitle').value = msg.title;
+            document.getElementById('selectCategory').value = msg.category;
+            document.getElementById('inputTime').value = msg.time || '';
+            document.getElementById('inputBody').value = msg.body || '';
+
+            document.getElementById('formTitle').textContent = 'Edit Message Card';
+            document.getElementById('btnSubmitForm').innerHTML = `<i class="fa-solid fa-check"></i> Save Changes to Display`;
+            document.getElementById('btnCancelEdit').classList.remove('hidden');
+
+            // Scroll to form
+            document.getElementById('messageForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('editCardId').value = '';
+            document.getElementById('messageForm').reset();
+            document.getElementById('formTitle').textContent = 'Add New Message Card';
+            document.getElementById('btnSubmitForm').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Publish to Senior Display`;
+            document.getElementById('btnCancelEdit').classList.add('hidden');
+        }
+
+        function deleteMessage(id) {
+            appState.messages = appState.messages.filter(m => m.id !== id);
+            saveState();
+        }
+
+        function clearAllMessages() {
+            if (confirm("Are you sure you want to clear all active messages from the senior display?")) {
+                appState.messages = [];
+                saveState();
+            }
+        }
+
+        function saveContactInfo() {
+            const name = document.getElementById('adminContactName').value.trim();
+            const phone = document.getElementById('adminContactPhone').value.trim();
+            
+            if (name && phone) {
+                appState.emergencyContact = { name, phone };
+                saveState();
+            }
+        }
+
+        function setHubTheme(theme) {
+            appState.theme = theme;
+            saveState();
+        }
+
+        function applyTheme(theme) {
+            const displayContainer = document.getElementById('displayContainer');
+            const themeLabel = document.getElementById('currentThemeLabel');
+            if (!displayContainer) return;
+
+            if (theme === 'light') {
+                displayContainer.style.backgroundColor = '#FFFFFF';
+                displayContainer.style.color = '#000000';
+                if (themeLabel) themeLabel.textContent = 'High-Contrast Light';
+            } else if (theme === 'blue') {
+                displayContainer.style.backgroundColor = '#0B132B';
+                displayContainer.style.color = '#FFFFFF';
+                if (themeLabel) themeLabel.textContent = 'Soft Night Blue';
+            } else {
+                // dark default
+                displayContainer.style.backgroundColor = '#000000';
+                displayContainer.style.color = '#FFFFFF';
+                if (themeLabel) themeLabel.textContent = 'Dark High-Contrast';
+            }
+        }
+
+        function setViewMode(mode) {
+            const displayEl = document.getElementById('displayContainer');
+            const adminEl = document.getElementById('adminContainer');
+
+            const btnDisplay = document.getElementById('btnViewDisplay');
+            const btnSplit = document.getElementById('btnViewSplit');
+            const btnAdmin = document.getElementById('btnViewAdmin');
+
+            // Reset buttons styling
+            [btnDisplay, btnSplit, btnAdmin].forEach(btn => {
+                btn.className = "px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-gray-800 text-yellow-400 text-base flex items-center gap-2 transition hover:bg-gray-700";
+            });
+
+            if (mode === 'display') {
+                displayEl.className = "w-full h-full flex flex-col bg-black text-white p-4 overflow-y-auto smooth-transition";
+                adminEl.className = "hidden";
+                btnDisplay.className = "px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-yellow-400 text-black text-base flex items-center gap-2 transition hover:opacity-90";
+            } else if (mode === 'admin') {
+                displayEl.className = "hidden";
+                adminEl.className = "w-full h-full bg-gray-900 text-gray-100 flex flex-col p-4 sm:p-6 overflow-y-auto smooth-transition";
+                btnAdmin.className = "px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-yellow-400 text-black text-base flex items-center gap-2 transition hover:opacity-90";
+            } else { // split
+                displayEl.className = "w-1/2 h-full flex flex-col bg-black text-white p-4 overflow-y-auto border-r-4 border-yellow-400 smooth-transition";
+                adminEl.className = "w-1/2 h-full bg-gray-900 text-gray-100 flex flex-col p-4 sm:p-6 overflow-y-auto smooth-transition";
+                btnSplit.className = "px-4 py-2 font-bold rounded-lg border-2 border-yellow-400 bg-yellow-400 text-black text-base flex items-center gap-2 transition hover:opacity-90";
+            }
+        }
+
+        // Web Audio API Synthetic Chime Notification
+        function triggerChime() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+
+                const now = ctx.currentTime;
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.3); // E5
+
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+
+                osc1.start(now);
+                osc1.stop(now + 1.2);
+            } catch (e) {
+                console.log("Audio chime error:", e);
+            }
+        }
+
+        function updateLastUpdatedTime() {
+            const el = document.getElementById('lastUpdatedTime');
+            if (el) {
+                const now = new Date();
+                el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialization on Load
+        window.onload = function() {
+            loadState();
+            renderAll();
+            updateClock();
+            setInterval(updateClock, 1000); // Clock tick every second
+
+            // Simulated cross-tab synchronization event listener
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'nest_hub_board_state') {
+                    loadState();
+                    renderAll();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
