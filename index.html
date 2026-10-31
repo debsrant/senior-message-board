@@ -332,14 +332,22 @@
 			let currentUser = null;
 			let userProfile = null;
 
-			// Auth State Listener
+						// Auth State Listener
 			auth.onAuthStateChanged(async (user) => {
+				console.log('Auth State Changed:', user ? 'Logged In' : 'Logged Out');
 				if (user) {
 					currentUser = user;
 					document.getElementById('view-auth').classList.add('hidden');
-					// Fetch user profile from database
-					const snap = await database.ref(`users/${user.uid}`).once('value');
-					userProfile = snap.val() || { role: 'VIEWER' };
+
+					try {
+						// Fetch user profile from database
+						const snap = await database.ref(`users/${user.uid}`).once('value');
+						userProfile = snap.val() || { role: 'VIEWER' };
+						console.log('User Profile Loaded:', userProfile);
+					} catch (err) {
+						console.warn('Could not fetch user profile, defaulting to VIEWER:', err);
+						userProfile = { role: 'VIEWER' };
+					}
 
 					// Setup view permissions
 					if (userProfile.role === 'ADMIN') {
@@ -372,24 +380,36 @@
 				location.reload();
 			}
 
-			function initBoard() {
+						function initBoard() {
+				console.log('Initializing Board...');
 				// Connection Monitor
 				const statusEl = document.getElementById('connection-status');
 				database.ref('.info/connected').on('value', (snap) => {
+					console.log('Connection Status Changed:', snap.val());
 					if (snap.val() === true) {
 						statusEl.innerText = '● Live Sync Active';
-						statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-emerald-500 font-bold mt-1';
+						statusEl.className =
+							'text-[10px] uppercase tracking-[0.2em] text-emerald-500 font-bold mt-1';
 					} else {
 						statusEl.innerText = '○ Disconnected';
-						statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-rose-500 font-bold mt-1';
+						statusEl.className =
+							'text-[10px] uppercase tracking-[0.2em] text-rose-500 font-bold mt-1';
 					}
 				});
 
 				// Real-Time Listeners
-				database.ref('board').on('value', (snapshot) => {
-					const data = snapshot.val();
-					if (data) renderBoard(data);
-				});
+				database.ref('board').on(
+					'value',
+					(snapshot) => {
+						const data = snapshot.val();
+						console.log('Board Data Received:', data);
+						renderBoard(data || {}); // Pass empty object if no data exists
+					},
+					(error) => {
+						console.error('Database Read Error:', error);
+						alert('Permission Denied: You do not have access to read the board data.');
+					}
+				);
 			}
 
 			function renderBoard(data) {
