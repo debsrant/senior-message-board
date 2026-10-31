@@ -22,12 +22,20 @@
 	</head>
 	<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
 		<!-- Top Navigation / Mode Toggle -->
-		<header
+				<header
 			class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md"
 		>
-			<h1 id="disp-board-title" class="text-xl font-bold flex items-center gap-2">
-				Senior Message Board
-			</h1>
+			<div class="flex flex-col">
+				<h1 id="disp-board-title" class="text-xl font-bold flex items-center gap-2">
+					Senior Message Board
+				</h1>
+				<div
+					id="connection-status"
+					class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mt-1"
+				>
+					Connecting...
+				</div>
+			</div>
 			<div class="flex gap-2">
 				<button
 					onclick="switchView('display')"
@@ -85,14 +93,8 @@
 						</div>
 					</div>
 
-					<div class="text-right">
-						<div
-							id="connection-status"
-							class="text-xs uppercase tracking-wider bg-slate-700 text-slate-400 px-3 py-1 rounded-full font-bold transition-colors"
-						>
-							Connecting...
-						</div>
-					</div>
+										<div class="text-right"></div>
+				</div>
 				</div>
 
 				<!-- Main Message Card -->
@@ -220,7 +222,7 @@
 						></textarea>
 					</div>
 
-					<div>
+										<div>
 						<label class="block text-sm font-bold mb-2 text-slate-300"
 							>Zipcode (for Local Weather):</label
 						>
@@ -230,6 +232,28 @@
 							placeholder="e.g. 90210"
 							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
 						/>
+					</div>
+
+					<div class="pt-4 border-t border-slate-700">
+						<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">Custom Activity Suggestions</h3>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div>
+								<label class="block text-xs font-bold mb-1 text-slate-400">If Sunny:</label>
+								<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+							</div>
+							<div>
+								<label class="block text-xs font-bold mb-1 text-slate-400">If Cloudy:</label>
+								<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+							</div>
+							<div>
+								<label class="block text-xs font-bold mb-1 text-slate-400">If Rainy:</label>
+								<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+							</div>
+							<div>
+								<label class="block text-xs font-bold mb-1 text-slate-400">If Snowy:</label>
+								<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+							</div>
+						</div>
 					</div>
 
 					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
@@ -286,25 +310,25 @@
 
 			// Connection Monitor
 			const statusEl = document.getElementById('connection-status');
-			database.ref('.info/connected').on('value', (snap) => {
+						database.ref('.info/connected').on('value', (snap) => {
 				if (snap.val() === true) {
-					statusEl.innerText = 'Status: Live Sync';
-					statusEl.className =
-						'text-xs uppercase tracking-wider bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-bold';
+					statusEl.innerText = '● Live Sync Active';
+					statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-emerald-500 font-bold mt-1';
 					console.log('Firebase: Connected to Realtime Database.');
 				} else {
-					statusEl.innerText = 'Status: Disconnected';
-					statusEl.className =
-						'text-xs uppercase tracking-wider bg-rose-900 text-rose-300 px-3 py-1 rounded-full font-bold';
+					statusEl.innerText = '○ Disconnected';
+					statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-rose-500 font-bold mt-1';
 					console.warn('Firebase: Disconnected.');
 				}
 			});
 
 			// Clock & Weather Functionality
 			let currentZip = '';
+			let weatherSuggestions = { sunny: '', cloudy: '', rain: '', snow: '' };
 
 			async function updateWeather(zip) {
-				if (!zip || zip === currentZip) return;
+				if (!zip) return;
+				// We don't check currentZip here anymore because suggestions might change even if zip hasn't
 				currentZip = zip;
 
 				try {
@@ -346,11 +370,11 @@
 						};
 
 												document.getElementById('weather-temp').innerText = `${temp}°F`;
-						document.getElementById('weather-icon').innerText =
-							weatherIcons[code] || '🌤️';
-						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
-						document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
-						document.getElementById('weather-widget').classList.remove('hidden');
+												document.getElementById('weather-icon').innerText =
+													weatherIcons[code] || '🌤️';
+												document.getElementById('weather-desc').innerText = getWeatherDesc(code);
+												document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
+												document.getElementById('weather-widget').classList.remove('hidden');
 					}
 				} catch (err) {
 					console.warn('Weather fetch failed:', err);
@@ -358,25 +382,13 @@
 			}
 
 			function getWeatherSuggestion(code) {
-				const suggestions = {
-					0: 'Great day for a short walk outside!',
-					1: 'Nice weather for a bit of gardening.',
-					2: 'A lovely time to sit on the porch.',
-					3: 'Perfect for some light bird watching.',
-					45: 'A good time for indoor puzzles.',
-					48: 'Cozy day to listen to some music.',
-					51: 'Perfect for some indoor exercises.',
-					53: 'Good time to read by the window.',
-					55: 'A great day for a movie marathon.',
-					61: 'Stay dry! Maybe call a friend today?',
-					63: 'Perfect time for indoor hobbies.',
-					65: 'A cozy day for baking something tasty.',
-					71: 'Stay warm! Time for a hot cup of tea.',
-					73: 'Beautiful snow! Enjoy it from inside.',
-					75: 'Perfect day for a book and a blanket.',
-					95: 'Stay safe! Good for board games.',
-				};
-				return suggestions[code] || 'A great day for indoor activities!';
+				// Use custom suggestions if provided, otherwise fall back to defaults
+				if (code === 0 || code === 1) return weatherSuggestions.sunny || 'Great day for a short walk outside!';
+				if (code === 2 || code === 3) return weatherSuggestions.cloudy || 'Perfect for some light bird watching.';
+				if (code >= 51 && code <= 65) return weatherSuggestions.rain || 'Stay dry! Maybe call a friend today?';
+				if (code >= 71 && code <= 75) return weatherSuggestions.snow || 'Stay warm! Time for a hot cup of tea.';
+				if (code === 95) return 'Stay safe! Good for board games.';
+				return 'A great day for indoor activities!';
 			}
 
 			function getWeatherDesc(code) {
@@ -451,7 +463,13 @@
 					document.getElementById('disp-medications').innerText =
 						data.medications || 'No medications set.';
 
-					// Update Weather
+										// Update Weather
+					weatherSuggestions = {
+						sunny: data.suggestSunny || '',
+						cloudy: data.suggestCloudy || '',
+						rain: data.suggestRain || '',
+						snow: data.suggestSnow || '',
+					};
 					if (data.zipcode) {
 						updateWeather(data.zipcode);
 					}
@@ -499,8 +517,12 @@
 					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
 					document.getElementById('input-medications').value = data.medications || '';
-					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
+										document.getElementById('input-meds-taken').checked = data.medsTaken || false;
 					document.getElementById('input-zipcode').value = data.zipcode || '';
+					document.getElementById('input-suggest-sunny').value = data.suggestSunny || '';
+					document.getElementById('input-suggest-cloudy').value = data.suggestCloudy || '';
+					document.getElementById('input-suggest-rain').value = data.suggestRain || '';
+					document.getElementById('input-suggest-snow').value = data.suggestSnow || '';
 
 					// Auto-Reset Check
 					checkAutoReset(data.medsTaken, data.medsTakenTime);
@@ -546,8 +568,12 @@
 				const announcement = document.getElementById('input-announcement').value;
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
-				const medsTaken = document.getElementById('input-meds-taken').checked;
+								const medsTaken = document.getElementById('input-meds-taken').checked;
 				const zipcode = document.getElementById('input-zipcode').value;
+				const suggestSunny = document.getElementById('input-suggest-sunny').value;
+				const suggestCloudy = document.getElementById('input-suggest-cloudy').value;
+				const suggestRain = document.getElementById('input-suggest-rain').value;
+				const suggestSnow = document.getElementById('input-suggest-snow').value;
 
 				database.ref('board').update(
 					{
@@ -557,6 +583,10 @@
 						medications: medications,
 						medsTaken: medsTaken,
 						zipcode: zipcode,
+						suggestSunny: suggestSunny,
+						suggestCloudy: suggestCloudy,
+						suggestRain: suggestRain,
+						suggestSnow: suggestSnow,
 						updatedAt: Date.now(),
 					},
 					(error) => {

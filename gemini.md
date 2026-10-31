@@ -10,7 +10,7 @@
 ## Active Firebase Config Schema
 
 - Node: `board`
-- Fields: `boardTitle`, `announcement`, `reminders`, `medications`, `medsTaken` (boolean), `medsTakenTime` (timestamp), `zipcode`, `updatedAt`
+- Fields: `boardTitle`, `announcement`, `reminders`, `medications`, `medsTaken` (boolean), `medsTakenTime` (timestamp), `zipcode`, `suggestSunny`, `suggestCloudy`, `suggestRain`, `suggestSnow`, `updatedAt`
 
 ## Key Setup Features
 
