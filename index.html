@@ -54,12 +54,32 @@
 				<div
 					class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg"
 				>
-					<div>
-						<div id="display-date" class="text-2xl text-blue-400 font-medium">
-							Loading date...
+					<div class="flex items-center gap-6">
+						<div>
+							<div id="display-date" class="text-2xl text-blue-400 font-medium">
+								Loading date...
+							</div>
+							<div
+								id="display-time"
+								class="text-6xl font-extrabold tracking-tight mt-1"
+							>
+								00:00
+							</div>
 						</div>
-						<div id="display-time" class="text-6xl font-extrabold tracking-tight mt-1">
-							00:00
+						<!-- Weather Widget -->
+						<div
+							id="weather-widget"
+							class="hidden border-l border-slate-700 pl-6 flex items-center gap-4"
+						>
+							<div id="weather-icon" class="text-5xl">☀️</div>
+							<div>
+								<div id="weather-temp" class="text-4xl font-bold text-white">
+									--°F
+								</div>
+								<div id="weather-desc" class="text-lg text-slate-400 capitalize">
+									Loading...
+								</div>
+							</div>
 						</div>
 					</div>
 
@@ -85,8 +105,8 @@
 					</p>
 				</div>
 
-				<!-- Three Column Layout: Reminders, Medications, & Emergency Contacts -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<!-- Two Column Layout: Reminders & Medications -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Reminders -->
 					<div
 						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
@@ -135,18 +155,6 @@
 							class="text-center text-sm text-slate-400 mt-2 hidden"
 						>
 							Last taken: --:--
-						</p>
-					</div>
-
-					<!-- Emergency / Family Contacts -->
-					<div
-						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3"
-					>
-						<h2 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-							<span>📞</span> Important Contacts
-						</h2>
-						<p id="disp-contacts" class="text-2xl text-slate-200 whitespace-pre-line">
-							Loading contacts...
 						</p>
 					</div>
 				</div>
@@ -200,18 +208,7 @@
 
 					<div>
 						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Important Contacts:</label
-						>
-						<textarea
-							id="input-contacts"
-							rows="3"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-					</div>
-
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Zipcode (for Local Time):</label
+							>Zipcode (for Local Weather):</label
 						>
 						<input
 							type="text"
@@ -289,7 +286,84 @@
 				}
 			});
 
-			// Clock Functionality
+			// Clock & Weather Functionality
+			let currentZip = '';
+
+			async function updateWeather(zip) {
+				if (!zip || zip === currentZip) return;
+				currentZip = zip;
+
+				try {
+					// Using Open-Meteo (Free, no API key required for basic use)
+					// First, geocode the zipcode (using a free service)
+					const geoRes = await fetch(
+						`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=US&format=json`
+					);
+					const geoData = await geoRes.json();
+
+					if (geoData && geoData.length > 0) {
+						const { lat, lon } = geoData[0];
+						const weatherRes = await fetch(
+							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
+						);
+						const weatherData = await weatherRes.json();
+
+						const temp = Math.round(weatherData.current_weather.temperature);
+						const code = weatherData.current_weather.weathercode;
+
+						// Map WMO codes to Emojis
+						const weatherIcons = {
+							0: '☀️',
+							1: '🌤️',
+							2: '⛅',
+							3: '☁️',
+							45: '🌫️',
+							48: '🌫️',
+							51: '🌦️',
+							53: '🌦️',
+							55: '🌦️',
+							61: '🌧️',
+							63: '🌧️',
+							65: '🌧️',
+							71: '❄️',
+							73: '❄️',
+							75: '❄️',
+							95: '⛈️',
+						};
+
+						document.getElementById('weather-temp').innerText = `${temp}°F`;
+						document.getElementById('weather-icon').innerText =
+							weatherIcons[code] || '🌤️';
+						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
+						document.getElementById('weather-widget').classList.remove('hidden');
+					}
+				} catch (err) {
+					console.warn('Weather fetch failed:', err);
+				}
+			}
+
+			function getWeatherDesc(code) {
+				const descriptions = {
+					0: 'Clear sky',
+					1: 'Mainly clear',
+					2: 'Partly cloudy',
+					3: 'Overcast',
+					45: 'Foggy',
+					48: 'Depositing rime fog',
+					51: 'Light drizzle',
+					53: 'Moderate drizzle',
+					55: 'Dense drizzle',
+					61: 'Slight rain',
+					63: 'Moderate rain',
+					65: 'Heavy rain',
+					71: 'Slight snow',
+					73: 'Moderate snow',
+					75: 'Heavy snow',
+					95: 'Thunderstorm',
+				};
+				return descriptions[code] || 'Cloudy';
+			}
+
 			function updateClock() {
 				const now = new Date();
 				document.getElementById('display-time').innerText = now.toLocaleTimeString([], {
@@ -337,8 +411,11 @@
 						data.reminders || 'No reminders set.';
 					document.getElementById('disp-medications').innerText =
 						data.medications || 'No medications set.';
-					document.getElementById('disp-contacts').innerText =
-						data.contacts || 'No contacts set.';
+
+					// Update Weather
+					if (data.zipcode) {
+						updateWeather(data.zipcode);
+					}
 
 					// Update Medication Card State
 					const medCard = document.getElementById('card-medications');
@@ -381,7 +458,6 @@
 					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
 					document.getElementById('input-medications').value = data.medications || '';
-					document.getElementById('input-contacts').value = data.contacts || '';
 					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
 					document.getElementById('input-zipcode').value = data.zipcode || '';
 
@@ -428,7 +504,6 @@
 				const announcement = document.getElementById('input-announcement').value;
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
-				const contacts = document.getElementById('input-contacts').value;
 				const medsTaken = document.getElementById('input-meds-taken').checked;
 				const zipcode = document.getElementById('input-zipcode').value;
 
@@ -437,7 +512,6 @@
 						announcement: announcement,
 						reminders: reminders,
 						medications: medications,
-						contacts: contacts,
 						medsTaken: medsTaken,
 						zipcode: zipcode,
 						updatedAt: Date.now(),
