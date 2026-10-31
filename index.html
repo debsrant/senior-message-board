@@ -73,12 +73,14 @@
 						>
 							<div id="weather-icon" class="text-5xl">☀️</div>
 							<div>
-								<div id="weather-temp" class="text-4xl font-bold text-white">
+																<div id="weather-temp" class="text-4xl font-bold text-white">
 									--°F
 								</div>
 								<div id="weather-desc" class="text-lg text-slate-400 capitalize">
 									Loading...
 								</div>
+								<div id="weather-suggestion" class="text-sm text-blue-300 font-medium mt-1"></div>
+							</div>
 							</div>
 						</div>
 					</div>
@@ -343,15 +345,38 @@
 							95: '⛈️',
 						};
 
-						document.getElementById('weather-temp').innerText = `${temp}°F`;
+												document.getElementById('weather-temp').innerText = `${temp}°F`;
 						document.getElementById('weather-icon').innerText =
 							weatherIcons[code] || '🌤️';
 						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
+						document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
 						document.getElementById('weather-widget').classList.remove('hidden');
 					}
 				} catch (err) {
 					console.warn('Weather fetch failed:', err);
 				}
+			}
+
+			function getWeatherSuggestion(code) {
+				const suggestions = {
+					0: 'Great day for a short walk outside!',
+					1: 'Nice weather for a bit of gardening.',
+					2: 'A lovely time to sit on the porch.',
+					3: 'Perfect for some light bird watching.',
+					45: 'A good time for indoor puzzles.',
+					48: 'Cozy day to listen to some music.',
+					51: 'Perfect for some indoor exercises.',
+					53: 'Good time to read by the window.',
+					55: 'A great day for a movie marathon.',
+					61: 'Stay dry! Maybe call a friend today?',
+					63: 'Perfect time for indoor hobbies.',
+					65: 'A cozy day for baking something tasty.',
+					71: 'Stay warm! Time for a hot cup of tea.',
+					73: 'Beautiful snow! Enjoy it from inside.',
+					75: 'Perfect day for a book and a blanket.',
+					95: 'Stay safe! Good for board games.',
+				};
+				return suggestions[code] || 'A great day for indoor activities!';
 			}
 
 			function getWeatherDesc(code) {
