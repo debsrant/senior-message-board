@@ -6,9 +6,10 @@
 		<title>Senior Message Board & Admin</title>
 		<!-- Tailwind CSS for clean, high-contrast styling -->
 		<script src="https://cdn.tailwindcss.com"></script>
-		<!-- Firebase App (Compat) & Realtime Database SDKs -->
+				<!-- Firebase App (Compat) & SDKs -->
 		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 		<style>
 			.high-contrast {
 				background-color: #000;
@@ -20,9 +21,25 @@
 			}
 		</style>
 	</head>
-	<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+		<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+		<!-- Auth Overlay (Shown if not logged in) -->
+		<div id="view-auth" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-6 hidden">
+			<div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-md space-y-6">
+				<div class="text-center">
+					<h2 class="text-3xl font-bold text-white">Board Login</h2>
+					<p class="text-slate-400 mt-2">Sign in to access the message board.</p>
+				</div>
+				<div class="space-y-4">
+					<input id="auth-email" type="email" placeholder="Email Address" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-white outline-none focus:ring-2 focus:ring-blue-500" />
+					<input id="auth-password" type="password" placeholder="Password" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-white outline-none focus:ring-2 focus:ring-blue-500" />
+					<button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition">Sign In</button>
+					<div id="auth-error" class="text-rose-500 text-sm text-center font-medium hidden"></div>
+				</div>
+			</div>
+		</div>
+
 		<!-- Top Navigation / Mode Toggle -->
-				<header
+		<header
 			class="bg-slate-800 border-b border-slate-700 p-4 flex justify-between items-center shadow-md"
 		>
 			<div class="flex flex-col">
@@ -36,21 +53,24 @@
 					Connecting...
 				</div>
 			</div>
-			<div class="flex gap-2">
-				<button
-					onclick="switchView('display')"
-					id="btn-display"
-					class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition"
-				>
-					Hub Display View
-				</button>
-				<button
-					onclick="switchView('admin')"
-					id="btn-admin"
-					class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition"
-				>
-					Admin Panel
-				</button>
+			<div class="flex gap-4 items-center">
+				<div class="flex gap-2">
+					<button
+						onclick="switchView('display')"
+						id="btn-display"
+						class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition"
+					>
+						Display
+					</button>
+					<button
+						onclick="switchView('admin')"
+						id="btn-admin"
+						class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition hidden"
+					>
+						Admin
+					</button>
+				</div>
+				<button onclick="handleLogout()" class="text-slate-400 hover:text-white transition text-xs font-bold uppercase tracking-widest px-2 py-1 border border-slate-700 rounded">Logout</button>
 			</div>
 		</header>
 
@@ -305,229 +325,142 @@
 				);
 			}
 
-			firebase.initializeApp(firebaseConfig);
+						firebase.initializeApp(firebaseConfig);
 			const database = firebase.database();
+			const auth = firebase.auth();
 
-			// Connection Monitor
-			const statusEl = document.getElementById('connection-status');
-						database.ref('.info/connected').on('value', (snap) => {
-				if (snap.val() === true) {
-					statusEl.innerText = '● Live Sync Active';
-					statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-emerald-500 font-bold mt-1';
-					console.log('Firebase: Connected to Realtime Database.');
+			let currentUser = null;
+			let userProfile = null;
+
+			// Auth State Listener
+			auth.onAuthStateChanged(async (user) => {
+				if (user) {
+					currentUser = user;
+					document.getElementById('view-auth').classList.add('hidden');
+					// Fetch user profile from database
+					const snap = await database.ref(`users/${user.uid}`).once('value');
+					userProfile = snap.val() || { role: 'VIEWER' };
+
+					// Setup view permissions
+					if (userProfile.role === 'ADMIN') {
+						document.getElementById('btn-admin').classList.remove('hidden');
+					}
+
+					initBoard();
 				} else {
-					statusEl.innerText = '○ Disconnected';
-					statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-rose-500 font-bold mt-1';
-					console.warn('Firebase: Disconnected.');
+					currentUser = null;
+					document.getElementById('view-auth').classList.remove('hidden');
 				}
 			});
 
-			// Clock & Weather Functionality
-			let currentZip = '';
-			let weatherSuggestions = { sunny: '', cloudy: '', rain: '', snow: '' };
-
-			async function updateWeather(zip) {
-				if (!zip) return;
-				// We don't check currentZip here anymore because suggestions might change even if zip hasn't
-				currentZip = zip;
+			async function handleLogin() {
+				const email = document.getElementById('auth-email').value;
+				const pass = document.getElementById('auth-password').value;
+				const errEl = document.getElementById('auth-error');
+				errEl.classList.add('hidden');
 
 				try {
-					// Using Open-Meteo (Free, no API key required for basic use)
-					// First, geocode the zipcode (using a free service)
-					const geoRes = await fetch(
-						`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=US&format=json`
-					);
-					const geoData = await geoRes.json();
-
-					if (geoData && geoData.length > 0) {
-						const { lat, lon } = geoData[0];
-						const weatherRes = await fetch(
-							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
-						);
-						const weatherData = await weatherRes.json();
-
-						const temp = Math.round(weatherData.current_weather.temperature);
-						const code = weatherData.current_weather.weathercode;
-
-						// Map WMO codes to Emojis
-						const weatherIcons = {
-							0: '☀️',
-							1: '🌤️',
-							2: '⛅',
-							3: '☁️',
-							45: '🌫️',
-							48: '🌫️',
-							51: '🌦️',
-							53: '🌦️',
-							55: '🌦️',
-							61: '🌧️',
-							63: '🌧️',
-							65: '🌧️',
-							71: '❄️',
-							73: '❄️',
-							75: '❄️',
-							95: '⛈️',
-						};
-
-												document.getElementById('weather-temp').innerText = `${temp}°F`;
-												document.getElementById('weather-icon').innerText =
-													weatherIcons[code] || '🌤️';
-												document.getElementById('weather-desc').innerText = getWeatherDesc(code);
-												document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
-												document.getElementById('weather-widget').classList.remove('hidden');
-					}
+					await auth.signInWithEmailAndPassword(email, pass);
 				} catch (err) {
-					console.warn('Weather fetch failed:', err);
+					errEl.innerText = err.message;
+					errEl.classList.remove('hidden');
 				}
 			}
 
-			function getWeatherSuggestion(code) {
-				// Use custom suggestions if provided, otherwise fall back to defaults
-				if (code === 0 || code === 1) return weatherSuggestions.sunny || 'Great day for a short walk outside!';
-				if (code === 2 || code === 3) return weatherSuggestions.cloudy || 'Perfect for some light bird watching.';
-				if (code >= 51 && code <= 65) return weatherSuggestions.rain || 'Stay dry! Maybe call a friend today?';
-				if (code >= 71 && code <= 75) return weatherSuggestions.snow || 'Stay warm! Time for a hot cup of tea.';
-				if (code === 95) return 'Stay safe! Good for board games.';
-				return 'A great day for indoor activities!';
+			function handleLogout() {
+				auth.signOut();
+				location.reload();
 			}
 
-			function getWeatherDesc(code) {
-				const descriptions = {
-					0: 'Clear sky',
-					1: 'Mainly clear',
-					2: 'Partly cloudy',
-					3: 'Overcast',
-					45: 'Foggy',
-					48: 'Depositing rime fog',
-					51: 'Light drizzle',
-					53: 'Moderate drizzle',
-					55: 'Dense drizzle',
-					61: 'Slight rain',
-					63: 'Moderate rain',
-					65: 'Heavy rain',
-					71: 'Slight snow',
-					73: 'Moderate snow',
-					75: 'Heavy snow',
-					95: 'Thunderstorm',
-				};
-				return descriptions[code] || 'Cloudy';
-			}
-
-			function updateClock() {
-				const now = new Date();
-				document.getElementById('display-time').innerText = now.toLocaleTimeString([], {
-					hour: '2-digit',
-					minute: '2-digit',
-				});
-				document.getElementById('display-date').innerText = now.toLocaleDateString([], {
-					weekday: 'long',
-					month: 'long',
-					day: 'numeric',
-				});
-			}
-			setInterval(updateClock, 1000);
-			updateClock();
-
-			// View Switcher Tabs
-			function switchView(view) {
-				if (view === 'display') {
-					document.getElementById('view-display').classList.remove('hidden');
-					document.getElementById('view-admin').classList.add('hidden');
-					document.getElementById('btn-display').className =
-						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
-					document.getElementById('btn-admin').className =
-						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
-				} else {
-					document.getElementById('view-admin').classList.remove('hidden');
-					document.getElementById('view-display').classList.add('hidden');
-					document.getElementById('btn-admin').className =
-						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
-					document.getElementById('btn-display').className =
-						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
-				}
-			}
-
-			// Real-Time Listeners (Syncs automatically when data changes in Firebase)
-			database.ref('board').on('value', (snapshot) => {
-				const data = snapshot.val();
-				console.log('Firebase Update Received:', data);
-
-				if (data) {
-					// Update Display Screen Elements
-					document.getElementById('disp-board-title').innerText =
-						data.boardTitle || 'Senior Message Board';
-					document.getElementById('disp-announcement').innerText =
-						data.announcement || 'No current announcement.';
-					document.getElementById('disp-reminders').innerText =
-						data.reminders || 'No reminders set.';
-					document.getElementById('disp-medications').innerText =
-						data.medications || 'No medications set.';
-
-										// Update Weather
-					weatherSuggestions = {
-						sunny: data.suggestSunny || '',
-						cloudy: data.suggestCloudy || '',
-						rain: data.suggestRain || '',
-						snow: data.suggestSnow || '',
-					};
-					if (data.zipcode) {
-						updateWeather(data.zipcode);
-					}
-
-					// Update Medication Card State
-					const medCard = document.getElementById('card-medications');
-					const medBtn = document.getElementById('btn-take-meds');
-					const medBadge = document.getElementById('meds-status-badge');
-					const medTime = document.getElementById('meds-taken-time');
-
-					if (data.medsTaken) {
-						medCard.classList.add('border-emerald-500', 'bg-slate-800');
-						medCard.classList.remove('border-slate-700');
-						medBtn.classList.add('bg-slate-700', 'opacity-50');
-						medBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
-						medBtn.innerHTML = '<span>✔️</span> Medications Logged';
-						medBadge.classList.remove('hidden');
-						medTime.classList.remove('hidden');
-						if (data.medsTakenTime) {
-							const dateObj = new Date(data.medsTakenTime);
-							const time = dateObj.toLocaleTimeString([], {
-								hour: '2-digit',
-								minute: '2-digit',
-							});
-							const dayDate = dateObj.toLocaleDateString([], {
-								weekday: 'short',
-								month: 'short',
-								day: 'numeric',
-							});
-							medTime.innerText = `Taken ${dayDate} at ${time}`;
-						}
+			function initBoard() {
+				// Connection Monitor
+				const statusEl = document.getElementById('connection-status');
+				database.ref('.info/connected').on('value', (snap) => {
+					if (snap.val() === true) {
+						statusEl.innerText = '● Live Sync Active';
+						statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-emerald-500 font-bold mt-1';
 					} else {
-						medCard.classList.remove('border-emerald-500');
-						medCard.classList.add('border-slate-700');
-						medBtn.classList.add('bg-rose-600', 'hover:bg-rose-500');
-						medBtn.classList.remove('bg-slate-700', 'opacity-50');
-						medBtn.innerHTML = '<span>✅</span> I took my meds';
-						medBadge.classList.add('hidden');
-						medTime.classList.add('hidden');
+						statusEl.innerText = '○ Disconnected';
+						statusEl.className = 'text-[10px] uppercase tracking-[0.2em] text-rose-500 font-bold mt-1';
 					}
+				});
 
-					// Populate Admin Inputs to match current live state
-					document.getElementById('input-board-title').value =
-						data.boardTitle || 'Senior Message Board';
+				// Real-Time Listeners
+				database.ref('board').on('value', (snapshot) => {
+					const data = snapshot.val();
+					if (data) renderBoard(data);
+				});
+			}
+
+			function renderBoard(data) {
+				// Update Display Screen Elements
+				document.getElementById('disp-board-title').innerText =
+					data.boardTitle || 'Senior Message Board';
+				document.getElementById('disp-announcement').innerText =
+					data.announcement || 'No current announcement.';
+				document.getElementById('disp-reminders').innerText =
+					data.reminders || 'No reminders set.';
+				document.getElementById('disp-medications').innerText =
+					data.medications || 'No medications set.';
+
+				// Update Weather
+				weatherSuggestions = {
+					sunny: data.suggestSunny || '',
+					cloudy: data.suggestCloudy || '',
+					rain: data.suggestRain || '',
+					snow: data.suggestSnow || '',
+				};
+				if (data.zipcode) {
+					updateWeather(data.zipcode);
+				}
+
+				// Update Medication Card State
+				const medCard = document.getElementById('card-medications');
+				const medBtn = document.getElementById('btn-take-meds');
+				const medBadge = document.getElementById('meds-status-badge');
+				const medTime = document.getElementById('meds-taken-time');
+
+				if (data.medsTaken) {
+					medCard.classList.add('border-emerald-500', 'bg-slate-800');
+					medCard.classList.remove('border-slate-700');
+					medBtn.classList.add('bg-slate-700', 'opacity-50');
+					medBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
+					medBtn.innerHTML = '<span>✔️</span> Medications Logged';
+					medBadge.classList.remove('hidden');
+					medTime.classList.remove('hidden');
+					if (data.medsTakenTime) {
+						const dateObj = new Date(data.medsTakenTime);
+						const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+						const dayDate = dateObj.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+						medTime.innerText = `Taken ${dayDate} at ${time}`;
+					}
+				} else {
+					medCard.classList.remove('border-emerald-500');
+					medCard.classList.add('border-slate-700');
+					medBtn.classList.add('bg-rose-600', 'hover:bg-rose-500');
+					medBtn.classList.remove('bg-slate-700', 'opacity-50');
+					medBtn.innerHTML = '<span>✅</span> I took my meds';
+					medBadge.classList.add('hidden');
+					medTime.classList.add('hidden');
+				}
+
+				// Populate Admin Inputs ONLY if user is admin
+				if (userProfile && userProfile.role === 'ADMIN') {
+					document.getElementById('input-board-title').value = data.boardTitle || 'Senior Message Board';
 					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
 					document.getElementById('input-medications').value = data.medications || '';
-										document.getElementById('input-meds-taken').checked = data.medsTaken || false;
+					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
 					document.getElementById('input-zipcode').value = data.zipcode || '';
 					document.getElementById('input-suggest-sunny').value = data.suggestSunny || '';
 					document.getElementById('input-suggest-cloudy').value = data.suggestCloudy || '';
 					document.getElementById('input-suggest-rain').value = data.suggestRain || '';
 					document.getElementById('input-suggest-snow').value = data.suggestSnow || '';
-
-					// Auto-Reset Check
-					checkAutoReset(data.medsTaken, data.medsTakenTime);
 				}
-			});
+
+				// Auto-Reset Check
+				checkAutoReset(data.medsTaken, data.medsTakenTime);
+			}
 
 			// Auto-reset meds status if it's a new day
 			function checkAutoReset(isTaken, takenTime) {

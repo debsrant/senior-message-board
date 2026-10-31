@@ -7,10 +7,15 @@
 - Database: Firebase Realtime Database (`board` node).
 - Kiosk Display: Android tablet running Fully Kiosk Browser.
 
-## Active Firebase Config Schema
+## Security & Users
 
-- Node: `board`
-- Fields: `boardTitle`, `announcement`, `reminders`, `medications`, `medsTaken` (boolean), `medsTakenTime` (timestamp), `zipcode`, `suggestSunny`, `suggestCloudy`, `suggestRain`, `suggestSnow`, `updatedAt`
+- Authentication: Firebase Auth (Email/Password).
+- Roles:
+    - `ADMIN`: Full read/write access.
+    - `VIEWER`: Read-only for content, write access to `medsTaken` status.
+- Database Structure:
+    - `boards/default`: The message board data.
+    - `users/{uid}`: Stores user profile and permissions (`role`, `notifyOnMeds`).
 
 ## Key Setup Features
 
