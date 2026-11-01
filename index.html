@@ -407,6 +407,94 @@
 								Uncheck this to clear the green "Taken" badge on the tablet.
 							</p>
 						</div>
+
+						<!-- Section 4: User Management (Admin Only) -->
+						<div class="pt-6 border-t border-slate-700 space-y-4">
+							<div class="flex justify-between items-center">
+								<div>
+									<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+										<span>👥</span> User Management & Roles
+									</h3>
+									<p class="text-xs text-slate-400 mt-0.5">
+										Assign roles and manage registered caregivers and viewers.
+									</p>
+								</div>
+								<button
+									type="button"
+									onclick="toggleAddUserForm()"
+									class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1"
+								>
+									<span>+ Pre-assign User</span>
+								</button>
+							</div>
+
+							<!-- Pre-assign User Form (Optional) -->
+							<div id="form-add-user" class="hidden p-4 bg-slate-900 rounded-xl border border-slate-700 space-y-3">
+								<div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pre-configure User Role by UID</div>
+								<p class="text-xs text-slate-400">
+									If you just created an account in Firebase Auth Console, enter their UID below to set their role ahead of time:
+								</p>
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+									<input
+										type="text"
+										id="input-new-uid"
+										placeholder="Firebase User UID"
+										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+									/>
+									<input
+										type="email"
+										id="input-new-email"
+										placeholder="user@example.com"
+										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+									/>
+									<select
+										id="select-new-role"
+										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+									>
+										<option value="EDITOR">EDITOR (Post Messages)</option>
+										<option value="ADMIN">ADMIN (Full Control)</option>
+										<option value="VIEWER">VIEWER (Display Kiosk)</option>
+									</select>
+								</div>
+								<div class="flex justify-end gap-2">
+									<button
+										type="button"
+										onclick="toggleAddUserForm(false)"
+										class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded"
+									>
+										Cancel
+									</button>
+									<button
+										type="button"
+										onclick="savePreconfiguredUser()"
+										class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded"
+									>
+										Save User Role
+									</button>
+								</div>
+							</div>
+
+							<!-- Users Table -->
+							<div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
+								<table class="w-full text-left text-xs text-slate-300">
+									<thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+										<tr>
+											<th class="py-3 px-4">User</th>
+											<th class="py-3 px-4">Role</th>
+											<th class="py-3 px-4 text-center">Meds Alert</th>
+											<th class="py-3 px-4 text-right">Actions</th>
+										</tr>
+									</thead>
+									<tbody id="users-table-body" class="divide-y divide-slate-800">
+										<tr>
+											<td colspan="4" class="py-4 text-center text-slate-500 italic">
+												Loading registered users...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
 					</div>
 
 					<button
@@ -459,9 +547,24 @@
 					document.getElementById('view-auth').classList.add('hidden');
 
 					try {
-						// Fetch user profile from database
+						// Fetch user profile from database (or initialize if first login)
 						const snap = await database.ref(`users/${user.uid}`).once('value');
-						userProfile = snap.val() || { role: 'VIEWER', displayName: '', notifyOnMeds: false };
+						if (!snap.exists()) {
+							userProfile = {
+								email: user.email || '',
+								displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
+								role: 'VIEWER',
+								notifyOnMeds: false,
+								createdAt: Date.now(),
+							};
+							await database.ref(`users/${user.uid}`).set(userProfile);
+						} else {
+							userProfile = snap.val() || { role: 'VIEWER', displayName: '', notifyOnMeds: false };
+							if (!userProfile.email && user.email) {
+								database.ref(`users/${user.uid}/email`).set(user.email);
+								userProfile.email = user.email;
+							}
+						}
 						if (userProfile.role === 'USER') userProfile.role = 'EDITOR'; // legacy role migration
 						console.log('User Profile Loaded:', userProfile);
 					} catch (err) {
@@ -498,6 +601,7 @@
 						if (sectionAdminOnly) sectionAdminOnly.classList.remove('hidden');
 						if (panelTitle) panelTitle.innerText = 'Remote Administration Panel';
 						if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
+						initUsersManagement();
 					} else if (userProfile.role === 'EDITOR') {
 						if (btnAdmin) {
 							btnAdmin.innerText = 'Editor Panel';
@@ -925,6 +1029,173 @@
 				const role = userProfile?.role || 'VIEWER';
 				textEl.innerText = `${name} (${role})`;
 				badge.classList.remove('hidden');
+			}
+
+			// User Management & Roles Functions (Admin Only)
+			let usersListenerAttached = false;
+
+			function initUsersManagement() {
+				if (usersListenerAttached) return;
+				usersListenerAttached = true;
+
+				database.ref('users').on(
+					'value',
+					(snapshot) => {
+						renderUsersTable(snapshot.val() || {});
+					},
+					(err) => {
+						console.warn('Could not read users directory:', err);
+						const tbody = document.getElementById('users-table-body');
+						if (tbody) {
+							tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-rose-400">Unable to load users (${err.message}). Verify Firebase security rules allow admin to read /users.</td></tr>`;
+						}
+					}
+				);
+			}
+
+			function renderUsersTable(usersData) {
+				const tbody = document.getElementById('users-table-body');
+				if (!tbody) return;
+
+				const uids = Object.keys(usersData);
+				if (uids.length === 0) {
+					tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-500">No registered users found.</td></tr>';
+					return;
+				}
+
+				let html = '';
+				uids.forEach((uid) => {
+					const user = usersData[uid] || {};
+					const isSelf = currentUser && uid === currentUser.uid;
+					const displayName = escapeHtml(user.displayName || 'No display name');
+					const email = escapeHtml(user.email || 'No email');
+					const role = user.role || 'VIEWER';
+					const hasMedsAlert = !!user.notifyOnMeds;
+
+					html += `
+						<tr class="hover:bg-slate-800/50 transition">
+							<td class="py-3 px-4">
+								<div class="font-bold text-white flex items-center gap-2">
+									<span>${displayName}</span>
+									${isSelf ? '<span class="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-600 px-1.5 py-0.2 rounded font-bold">YOU</span>' : ''}
+								</div>
+								<div class="text-[11px] text-slate-400 font-mono">${email}</div>
+								<div class="text-[10px] text-slate-600 font-mono select-all">UID: ${uid}</div>
+							</td>
+							<td class="py-3 px-4">
+								<select
+									onchange="updateUserRole('${uid}', this.value)"
+									class="bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 font-bold"
+								>
+									<option value="ADMIN" ${role === 'ADMIN' ? 'selected' : ''}>ADMIN (Full Control)</option>
+									<option value="EDITOR" ${role === 'EDITOR' ? 'selected' : ''}>EDITOR (Post Messages)</option>
+									<option value="VIEWER" ${role === 'VIEWER' ? 'selected' : ''}>VIEWER (Kiosk Display)</option>
+								</select>
+							</td>
+							<td class="py-3 px-4 text-center">
+								${hasMedsAlert
+									? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">🔔 Active</span>'
+									: '<span class="text-slate-500 text-[11px]">Off</span>'
+								}
+							</td>
+							<td class="py-3 px-4 text-right">
+								${isSelf
+									? '<span class="text-slate-600 text-xs italic">Current account</span>'
+									: `<button onclick="deleteUserProfile('${uid}', '${displayName || email}')" class="text-rose-400 hover:text-rose-300 font-bold text-xs transition px-2 py-1 rounded hover:bg-rose-950/40">Remove</button>`
+								}
+							</td>
+						</tr>
+					`;
+				});
+
+				tbody.innerHTML = html;
+			}
+
+			async function updateUserRole(uid, newRole) {
+				if (!currentUser) return;
+				if (uid === currentUser.uid && newRole !== 'ADMIN') {
+					const proceed = confirm(
+						'WARNING: You are changing your own role away from ADMIN. You will lose access to administrative settings immediately. Are you sure you want to proceed?'
+					);
+					if (!proceed) {
+						initUsersManagement();
+						return;
+					}
+				}
+
+				try {
+					await database.ref(`users/${uid}/role`).set(newRole);
+					showToast(`Role updated to ${newRole} for user.`);
+					if (uid === currentUser.uid && newRole !== 'ADMIN') {
+						setTimeout(() => location.reload(), 1000);
+					}
+				} catch (err) {
+					console.error('Failed to update role:', err);
+					alert('Failed to update user role: ' + err.message);
+				}
+			}
+
+			async function deleteUserProfile(uid, label) {
+				const proceed = confirm(
+					`Are you sure you want to remove the database profile for "${label}"?\n\nNote: This revokes their board role in the database. To permanently remove login credentials, delete the user from the Firebase Authentication Console.`
+				);
+				if (!proceed) return;
+
+				try {
+					await database.ref(`users/${uid}`).remove();
+					showToast(`User profile removed for ${label}.`);
+				} catch (err) {
+					console.error('Failed to delete user profile:', err);
+					alert('Failed to remove user: ' + err.message);
+				}
+			}
+
+			function toggleAddUserForm(show) {
+				const form = document.getElementById('form-add-user');
+				if (!form) return;
+				if (typeof show === 'boolean') {
+					if (show) form.classList.remove('hidden');
+					else form.classList.add('hidden');
+				} else {
+					form.classList.toggle('hidden');
+				}
+			}
+
+			async function savePreconfiguredUser() {
+				const uid = document.getElementById('input-new-uid').value.trim();
+				const email = document.getElementById('input-new-email').value.trim();
+				const role = document.getElementById('select-new-role').value;
+
+				if (!uid) {
+					alert('Please enter the user UID copied from the Firebase Authentication Console.');
+					return;
+				}
+
+				try {
+					await database.ref(`users/${uid}`).set({
+						email: email,
+						displayName: email ? email.split('@')[0] : 'User',
+						role: role,
+						notifyOnMeds: false,
+						createdAt: Date.now(),
+					});
+					document.getElementById('input-new-uid').value = '';
+					document.getElementById('input-new-email').value = '';
+					toggleAddUserForm(false);
+					showToast(`User pre-configured successfully with role ${role}.`);
+				} catch (err) {
+					console.error('Failed to pre-configure user:', err);
+					alert('Error saving user: ' + err.message);
+				}
+			}
+
+			function escapeHtml(str) {
+				return String(str)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/"/g, '&quot;')
+					.replace(/'/g, '&#039;');
 			}
 
 			// Post Message (Legacy / Alias to saveData)

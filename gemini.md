@@ -22,5 +22,6 @@
 
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
 - Profile Management: Authenticated users can edit their profile (display name and notification settings) directly within the Admin panel.
+- In-App User Management: Admins can view all registered users in real time, assign roles (ADMIN, EDITOR, VIEWER), and pre-configure new user accounts directly in the Admin panel.
 - Dual-view toggling: Display Mode & Admin/Editor Panel with role-based feature gating.
 - Medication Notification System: Browser push notifications, audio chime, and in-app alerts dispatched to editors and admins when medication is logged.

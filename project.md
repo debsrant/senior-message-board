@@ -129,7 +129,7 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
 ### D. Security Rules
 Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
 - Only authenticated users can read the board.
-- Users with `ADMIN` role can update all board contents and manage user records.
+- Users with `ADMIN` role can update all board contents, view the registered users directory, and manage user roles.
 - Users with `EDITOR` role can post announcements/messages and update their own profile and notification preferences.
 - Users with `VIEWER` role can log medication completion (`medsTaken` and `medsTakenTime`).
 - Users can read and update their own profile settings under `users/$uid` (display name, notification preferences).
@@ -139,6 +139,7 @@ Example rules:
 {
   "rules": {
     "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
@@ -169,8 +170,14 @@ Example rules:
   1. Caregiver signs in with `ADMIN` credentials and opens the **Admin** panel.
   2. **Edit User Profile**: Under the "My Profile" section, set your display name, view your email and assigned `ADMIN` role, and toggle medication notifications. Click **Save Profile** to apply changes.
   3. **Board Administration**: Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
-  4. Click **Publish Changes Instantly**.
-  5. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+  4. **User Management & Role Assignment**: 
+     - Under "User Management & Roles", view all registered users in real time.
+     - Change any user's role (`ADMIN`, `EDITOR`, `VIEWER`) instantly using the dropdown selector.
+     - View which users have medication notifications enabled.
+     - Pre-assign roles for newly created Firebase Auth accounts using the **+ Pre-assign User** tool.
+     - Remove user database profiles when necessary.
+  5. Click **Publish Changes Instantly**.
+  6. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
 - **Editor View (Family Members & Messages)**:
   1. Family member signs in with `EDITOR` credentials and opens the **Admin / Editor** panel.
   2. **Edit User Profile**: Under the "My Profile" section, set or update your display name (e.g., "Sarah"), review your assigned `EDITOR` role, and toggle **"Notify me when medications are taken"**. Click **Save Profile**.
