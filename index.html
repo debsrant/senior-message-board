@@ -22,6 +22,19 @@
 		</style>
 	</head>
 		<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+		<!-- In-App Medication Notification Toast -->
+		<div
+			id="toast-notification"
+			class="fixed top-5 right-5 z-50 bg-emerald-600 text-white px-5 py-4 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none border border-emerald-400"
+		>
+			<span class="text-3xl">💊</span>
+			<div>
+				<div class="font-bold text-sm tracking-wide">Medication Alert</div>
+				<div id="toast-message" class="text-xs text-emerald-100">Medications were logged as taken!</div>
+			</div>
+			<button onclick="hideToast()" class="ml-4 text-emerald-200 hover:text-white font-bold text-xl leading-none">&times;</button>
+		</div>
+
 		<!-- Auth Overlay (Shown if not logged in) -->
 		<div id="view-auth" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-6 hidden">
 			<div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-2xl w-full max-w-md space-y-6">
@@ -61,6 +74,13 @@
 						class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition"
 					>
 						Display
+					</button>
+					<button
+						onclick="switchView('user')"
+						id="btn-user"
+						class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition hidden"
+					>
+						Post Message
 					</button>
 					<button
 						onclick="switchView('admin')"
@@ -299,12 +319,98 @@
 						</p>
 					</div>
 
+					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700 space-y-2">
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								id="input-admin-notify-meds"
+								onchange="toggleNotificationPref(this.checked)"
+								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+							/>
+							<span class="text-slate-300 font-bold"
+								>Notify me when medications are taken</span
+							>
+						</label>
+						<p class="text-xs text-slate-500">
+							Receive system alerts and notifications on this device when meds are marked taken.
+						</p>
+					</div>
+
 					<button
 						onclick="saveData()"
 						class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
 					>
 						Publish Changes Instantly
 					</button>
+				</div>
+			</div>
+
+			<!-- ================= USER PANEL (Post Message & Alerts) ================= -->
+			<div
+				id="view-user"
+				class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
+			>
+				<div class="border-b border-slate-700 pb-3">
+					<h2 class="text-2xl font-bold text-white flex items-center gap-2">
+						<span>💬</span> Post Family Message & Alerts
+					</h2>
+					<p class="text-sm text-slate-400 mt-1">
+						Post an encouraging message or update to the tablet, and subscribe to medication notifications.
+					</p>
+				</div>
+
+				<div class="space-y-4">
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Today's Message / Announcement:</label
+						>
+						<textarea
+							id="input-user-announcement"
+							rows="4"
+							placeholder="Write a message to display on the board (e.g. 'Thinking of you! Sarah is visiting at 2 PM.')"
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+					</div>
+
+					<button
+						onclick="saveUserMessage()"
+						class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
+					>
+						Post Message to Board
+					</button>
+				</div>
+
+				<div class="pt-6 border-t border-slate-700 space-y-4">
+					<h3 class="text-lg font-bold text-white flex items-center gap-2">
+						<span>🔔</span> Medication Notifications
+					</h3>
+					<p class="text-xs text-slate-400">
+						Get an instant audio chime, in-app alert, and browser notification whenever medications are logged as taken.
+					</p>
+
+					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700 space-y-3">
+						<label class="flex items-center gap-3 cursor-pointer">
+							<input
+								type="checkbox"
+								id="input-user-notify-meds"
+								onchange="toggleNotificationPref(this.checked)"
+								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+							/>
+							<span class="text-slate-200 font-bold"
+								>Notify me when medications are taken</span
+							>
+						</label>
+						<div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+							<span id="perm-status" class="text-xs text-slate-400">Checking notification permission...</span>
+							<button
+								id="btn-request-perm"
+								onclick="requestBrowserNotificationPermission()"
+								class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white rounded transition"
+							>
+								Enable Browser Alerts
+							</button>
+						</div>
+					</div>
 				</div>
 			</div>
 		</main>
@@ -338,8 +444,9 @@
 
 			let currentUser = null;
 			let userProfile = null;
+			let previousMedsTaken = null;
 
-						// Auth State Listener
+			// Auth State Listener
 			auth.onAuthStateChanged(async (user) => {
 				console.log('Auth State Changed:', user ? 'Logged In' : 'Logged Out');
 				if (user) {
@@ -349,21 +456,39 @@
 					try {
 						// Fetch user profile from database
 						const snap = await database.ref(`users/${user.uid}`).once('value');
-						userProfile = snap.val() || { role: 'VIEWER' };
+						userProfile = snap.val() || { role: 'VIEWER', notifyOnMeds: false };
 						console.log('User Profile Loaded:', userProfile);
 					} catch (err) {
 						console.warn('Could not fetch user profile, defaulting to VIEWER:', err);
-						userProfile = { role: 'VIEWER' };
+						userProfile = { role: 'VIEWER', notifyOnMeds: false };
 					}
 
-					// Setup view permissions
+					// Initialize notification checkboxes
+					const userNotifyEl = document.getElementById('input-user-notify-meds');
+					if (userNotifyEl) userNotifyEl.checked = !!userProfile.notifyOnMeds;
+					const adminNotifyEl = document.getElementById('input-admin-notify-meds');
+					if (adminNotifyEl) adminNotifyEl.checked = !!userProfile.notifyOnMeds;
+					updatePermStatus();
+
+					// Setup view permissions based on role
 					if (userProfile.role === 'ADMIN') {
 						document.getElementById('btn-admin').classList.remove('hidden');
+						document.getElementById('btn-user').classList.remove('hidden');
+					} else if (userProfile.role === 'USER') {
+						document.getElementById('btn-user').classList.remove('hidden');
+						document.getElementById('btn-admin').classList.add('hidden');
+					} else {
+						document.getElementById('btn-admin').classList.add('hidden');
+						document.getElementById('btn-user').classList.add('hidden');
 					}
 
 					initBoard();
 				} else {
 					currentUser = null;
+					userProfile = null;
+					previousMedsTaken = null;
+					document.getElementById('btn-admin').classList.add('hidden');
+					document.getElementById('btn-user').classList.add('hidden');
 					document.getElementById('view-auth').classList.remove('hidden');
 				}
 			});
@@ -486,21 +611,25 @@
 
 			// View Switcher Tabs
 			function switchView(view) {
-				if (view === 'display') {
-					document.getElementById('view-display').classList.remove('hidden');
-					document.getElementById('view-admin').classList.add('hidden');
-					document.getElementById('btn-display').className =
-						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
-					document.getElementById('btn-admin').className =
-						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
-				} else {
-					document.getElementById('view-admin').classList.remove('hidden');
-					document.getElementById('view-display').classList.add('hidden');
-					document.getElementById('btn-admin').className =
-						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
-					document.getElementById('btn-display').className =
-						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
-				}
+				const views = ['display', 'user', 'admin'];
+				views.forEach((v) => {
+					const el = document.getElementById(`view-${v}`);
+					const btn = document.getElementById(`btn-${v}`);
+					if (el) {
+						if (v === view) {
+							el.classList.remove('hidden');
+						} else {
+							el.classList.add('hidden');
+						}
+					}
+					if (btn) {
+						if (v === view) {
+							btn.className = 'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
+						} else {
+							btn.className = 'px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition';
+						}
+					}
+				});
 			}
 
 			function initBoard() {
@@ -609,6 +738,20 @@
 					document.getElementById('input-suggest-snow').value = data.suggestSnow || '';
 				}
 
+				// Populate User Announcement Input
+				const userAnnounceInput = document.getElementById('input-user-announcement');
+				if (userAnnounceInput && document.activeElement !== userAnnounceInput) {
+					userAnnounceInput.value = data.announcement || '';
+				}
+
+				// Notify on Medication Completion Transition
+				if (previousMedsTaken !== null && previousMedsTaken === false && data.medsTaken === true) {
+					if (userProfile && userProfile.notifyOnMeds) {
+						notifyMedicationTaken(data.medsTakenTime);
+					}
+				}
+				previousMedsTaken = !!data.medsTaken;
+
 				// Auto-Reset Check
 				checkAutoReset(data.medsTaken, data.medsTakenTime);
 			}
@@ -684,6 +827,158 @@
 						}
 					}
 				);
+			}
+
+			// Post Message (User Role)
+			async function saveUserMessage() {
+				console.log('Attempting to save user message...');
+				const announcement = document.getElementById('input-user-announcement').value;
+
+				try {
+					await database.ref('board').update({
+						announcement: announcement,
+						updatedAt: Date.now(),
+					});
+					console.log('User message posted successfully.');
+					alert('Message posted successfully! Tablet will update instantly.');
+					switchView('display');
+				} catch (err) {
+					console.error('Failed to post message:', err);
+					alert('Failed to post message. ERROR: ' + err.message);
+				}
+			}
+
+			// Notification System & Preferences
+			function notifyMedicationTaken(time) {
+				const timeStr = time
+					? new Date(time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+					: 'just now';
+
+				playNotificationChime();
+
+				if ('Notification' in window && Notification.permission === 'granted') {
+					try {
+						new Notification('💊 Medication Logged', {
+							body: `Medications were recorded as taken at ${timeStr}.`,
+							icon: 'https://cdn-icons-png.flaticon.com/512/883/883360.png',
+						});
+					} catch (e) {
+						console.warn('System notification error:', e);
+					}
+				}
+
+				showToast(`Medications were taken today at ${timeStr}!`);
+			}
+
+			function playNotificationChime() {
+				try {
+					const AudioCtx = window.AudioContext || window.webkitAudioContext;
+					if (!AudioCtx) return;
+					const ctx = new AudioCtx();
+					const now = ctx.currentTime;
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+
+					osc.type = 'sine';
+					osc.frequency.setValueAtTime(587.33, now); // D5
+					osc.frequency.setValueAtTime(880, now + 0.15); // A5
+					gain.gain.setValueAtTime(0.2, now);
+					gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+					osc.connect(gain);
+					gain.connect(ctx.destination);
+					osc.start(now);
+					osc.stop(now + 0.6);
+				} catch (e) {
+					console.warn('Audio chime unavailable:', e);
+				}
+			}
+
+			function showToast(message) {
+				const toast = document.getElementById('toast-notification');
+				const msgEl = document.getElementById('toast-message');
+				if (!toast) return;
+				if (msgEl) msgEl.innerText = message;
+				toast.classList.remove('-translate-y-24', 'opacity-0', 'pointer-events-none');
+				toast.classList.add('translate-y-0', 'opacity-100');
+				setTimeout(() => hideToast(), 8000);
+			}
+
+			function hideToast() {
+				const toast = document.getElementById('toast-notification');
+				if (toast) {
+					toast.classList.add('-translate-y-24', 'opacity-0', 'pointer-events-none');
+					toast.classList.remove('translate-y-0', 'opacity-100');
+				}
+			}
+
+			async function toggleNotificationPref(checked) {
+				if (!currentUser) return;
+				if (!userProfile) userProfile = {};
+				userProfile.notifyOnMeds = checked;
+
+				// Keep both checkboxes synchronized
+				const userBox = document.getElementById('input-user-notify-meds');
+				const adminBox = document.getElementById('input-admin-notify-meds');
+				if (userBox) userBox.checked = checked;
+				if (adminBox) adminBox.checked = checked;
+
+				try {
+					await database.ref(`users/${currentUser.uid}/notifyOnMeds`).set(checked);
+					console.log('Saved notification preference:', checked);
+					if (checked && 'Notification' in window && Notification.permission !== 'granted') {
+						requestBrowserNotificationPermission();
+					}
+				} catch (err) {
+					console.warn('Failed to save notification preference:', err);
+				}
+			}
+
+			async function requestBrowserNotificationPermission() {
+				if (!('Notification' in window)) {
+					alert('This browser does not support desktop notifications.');
+					return;
+				}
+				const perm = await Notification.requestPermission();
+				updatePermStatus();
+				if (perm === 'granted') {
+					new Notification('Senior Message Board', {
+						body: 'Notifications enabled! You will be alerted when meds are taken.',
+						icon: 'https://cdn-icons-png.flaticon.com/512/883/883360.png',
+					});
+				}
+			}
+
+			function updatePermStatus() {
+				const statusEl = document.getElementById('perm-status');
+				const btnEl = document.getElementById('btn-request-perm');
+				if (!('Notification' in window)) {
+					if (statusEl) statusEl.innerText = 'Desktop notifications not supported in this browser.';
+					if (btnEl) btnEl.classList.add('hidden');
+					return;
+				}
+				if (Notification.permission === 'granted') {
+					if (statusEl) statusEl.innerText = 'Browser notifications: Allowed';
+					if (btnEl) {
+						btnEl.innerText = 'Allowed';
+						btnEl.disabled = true;
+						btnEl.classList.add('opacity-50');
+					}
+				} else if (Notification.permission === 'denied') {
+					if (statusEl) statusEl.innerText = 'Browser notifications: Blocked in browser settings';
+					if (btnEl) {
+						btnEl.innerText = 'Blocked';
+						btnEl.disabled = true;
+						btnEl.classList.add('opacity-50');
+					}
+				} else {
+					if (statusEl) statusEl.innerText = 'Browser notifications: Not yet granted';
+					if (btnEl) {
+						btnEl.innerText = 'Enable Browser Alerts';
+						btnEl.disabled = false;
+						btnEl.classList.remove('opacity-50');
+					}
+				}
 			}
 		</script>
 	</body>

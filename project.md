@@ -72,96 +72,115 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
         ```
 
 ### B. Authentication Setup & User Roles
-
 1. Go to **Build** > **Authentication** > **Sign-in method**.
 2. Enable **Email/Password** provider (leave Email link passwordless sign-in disabled).
 3. Create accounts under the **Users** tab:
-    - **Admin Account**: Used by caregivers on phones/PCs to edit board content.
-    - **Viewer / Tablet Account**: Dedicated login used by the senior's tablet.
+   - **Admin Account**: Used by primary caregivers on phones/PCs for full control over board configuration, medication schedules, reminders, and settings.
+   - **User Account**: Used by family members and loved ones to post daily messages/announcements to the board and opt-in to receive medication alerts.
+   - **Viewer / Tablet Account**: Dedicated login used by the senior's tablet display kiosk.
 4. Copy the unique **User UID** for each account created.
 
 ### C. Realtime Database Schema & Setup
-
 1. Go to **Build** > **Realtime Database** and create a database (select your preferred region).
 2. Set up the two primary data nodes:
-    - `board`: Stores the display content and state.
-        ```json
-        {
-        	"boardTitle": "Grandma's Daily Board",
-        	"announcement": "Good morning! Have a wonderful day.",
-        	"reminders": "10:30 AM - Doctor appointment\n2:00 PM - Call Sarah",
-        	"medications": "Morning vitamins with breakfast\nBlood pressure pill at 8:00 AM",
-        	"medsTaken": false,
-        	"medsTakenTime": 0,
-        	"zipcode": "90210",
-        	"suggestSunny": "Great day for a short walk outside!",
-        	"suggestCloudy": "Perfect for some light bird watching.",
-        	"suggestRain": "Stay dry! Maybe call a friend today?",
-        	"suggestSnow": "Stay warm! Time for a hot cup of tea.",
-        	"updatedAt": 1700000000000
-        }
-        ```
-    - `users/{uid}`: Maps user UIDs to roles to control UI visibility and permissions:
-        - For admin accounts:
-            ```json
-            {
-            	"role": "ADMIN"
-            }
-            ```
-        - For the tablet display account:
-            ```json
-            {
-            	"role": "VIEWER"
-            }
-            ```
+   - `board`: Stores the display content and state.
+     ```json
+     {
+       "boardTitle": "Grandma's Daily Board",
+       "announcement": "Good morning! Have a wonderful day.",
+       "reminders": "10:30 AM - Doctor appointment\n2:00 PM - Call Sarah",
+       "medications": "Morning vitamins with breakfast\nBlood pressure pill at 8:00 AM",
+       "medsTaken": false,
+       "medsTakenTime": 0,
+       "zipcode": "90210",
+       "suggestSunny": "Great day for a short walk outside!",
+       "suggestCloudy": "Perfect for some light bird watching.",
+       "suggestRain": "Stay dry! Maybe call a friend today?",
+       "suggestSnow": "Stay warm! Time for a hot cup of tea.",
+       "updatedAt": 1700000000000
+     }
+     ```
+   - `users/{uid}`: Maps user UIDs to roles to control UI visibility, posting rights, and notification subscriptions:
+     - For admin accounts:
+       ```json
+       {
+         "role": "ADMIN",
+         "notifyOnMeds": true
+       }
+       ```
+     - For family member user accounts:
+       ```json
+       {
+         "role": "USER",
+         "notifyOnMeds": true
+       }
+       ```
+     - For the tablet display account:
+       ```json
+       {
+         "role": "VIEWER",
+         "notifyOnMeds": false
+       }
+       ```
 
 ### D. Security Rules
-
 Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
-
 - Only authenticated users can read the board.
-- Only users with `ADMIN` role can update board contents.
-- Users with `VIEWER` role can only update `medsTaken` and `medsTakenTime`.
+- Users with `ADMIN` role can update all board contents and manage user records.
+- Users with `USER` role can post new announcements and update their own notification preferences.
+- Users with `VIEWER` role can log medication completion (`medsTaken` and `medsTakenTime`).
+- Users can read/write their own profile settings under `users/$uid`.
 
 Example rules:
-
 ```json
 {
-	"rules": {
-		"users": {
-			"$uid": {
-				".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
-				".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'"
-			}
-		},
-		"board": {
-			".read": "auth != null",
-			".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
-			"medsTaken": {
-				".write": "auth != null"
-			},
-			"medsTakenTime": {
-				".write": "auth != null"
-			}
-		}
-	}
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
+      }
+    },
+    "board": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
+      "announcement": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'USER')"
+      },
+      "updatedAt": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'USER')"
+      },
+      "medsTaken": {
+        ".write": "auth != null"
+      },
+      "medsTakenTime": {
+        ".write": "auth != null"
+      }
+    }
+  }
 }
 ```
 
 ### E. Operating the Views
-
 - **Admin View**:
-    1. Caregiver signs in with `ADMIN` credentials.
-    2. Switch to the **Admin** tab.
-    3. Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
-    4. Click **Publish Changes Instantly**.
-    5. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+  1. Caregiver signs in with `ADMIN` credentials.
+  2. Switch to the **Admin** tab.
+  3. Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
+  4. Toggle the notification checkbox to be alerted when medications are taken.
+  5. Click **Publish Changes Instantly**.
+  6. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+- **User View (Family Messages & Notifications)**:
+  1. Family member signs in with `USER` credentials.
+  2. Switch to the **Post Message** tab.
+  3. Enter an encouraging message or update under **Today's Message / Announcement** and click **Post Message to Board**. The message appears immediately on the tablet screen.
+  4. Under **Medication Notifications**, check **"Notify me when medications are taken"** and grant browser notification permissions.
+  5. Whenever the senior presses the medication button, the device plays an audio chime, displays an in-app toast, and delivers an operating system / browser notification.
 - **Display View (Tablet)**:
-    1. Sign in with the `VIEWER` credentials on the tablet.
-    2. The Admin button is hidden.
-    3. Displays large-format time, date, local weather, announcements, and medication status.
-    4. The senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and marking the task as complete for the day.
-    5. If a new calendar day is detected, the board automatically resets `medsTaken` to `false`.
+  1. Sign in with the `VIEWER` credentials on the tablet.
+  2. Both Admin and Post Message navigation buttons are hidden.
+  3. Displays large-format time, date, local weather, announcements, and medication status.
+  4. The senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and marking the task as complete for the day.
+  5. If a new calendar day is detected, the board automatically resets `medsTaken` to `false`.
 
 ---
 
