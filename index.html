@@ -102,11 +102,14 @@
 							<div id="weather-icon" class="text-5xl">☀️</div>
 							<div>
 																<div id="weather-temp" class="text-4xl font-bold text-white">
-									--°F
-								</div>
-								<div id="weather-desc" class="text-lg text-slate-400 capitalize">
-									Loading...
-								</div>
+																	--°F
+																</div>
+																<div id="weather-range" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+																	High: --° | Low: --°
+																</div>
+																<div id="weather-desc" class="text-lg text-slate-400 capitalize">
+																	Loading...
+																</div>
 								<div id="weather-suggestion" class="text-sm text-blue-300 font-medium mt-1"></div>
 							</div>
 							</div>
@@ -396,36 +399,28 @@
 
 					if (geoData && geoData.length > 0) {
 						const { lat, lon } = geoData[0];
-						const weatherRes = await fetch(
-							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
+												const weatherRes = await fetch(
+							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
 						);
 						const weatherData = await weatherRes.json();
 
 						const temp = Math.round(weatherData.current_weather.temperature);
+						const high = Math.round(weatherData.daily.temperature_2m_max[0]);
+						const low = Math.round(weatherData.daily.temperature_2m_min[0]);
 						const code = weatherData.current_weather.weathercode;
 
 						const weatherIcons = {
-							0: '☀️',
-							1: '🌤️',
-							2: '⛅',
-							3: '☁️',
-							45: '🌫️',
-							48: '🌫️',
-							51: '🌦️',
-							53: '🌦️',
-							55: '🌦️',
-							61: '🌧️',
-							63: '🌧️',
-							65: '🌧️',
-							71: '❄️',
-							73: '❄️',
-							75: '❄️',
+							0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+							45: '🌫️', 48: '🌫️',
+							51: '🌦️', 53: '🌦️', 55: '🌦️',
+							61: '🌧️', 63: '🌧️', 65: '🌧️',
+							71: '❄️', 73: '❄️', 75: '❄️',
 							95: '⛈️',
 						};
 
 						document.getElementById('weather-temp').innerText = `${temp}°F`;
-						document.getElementById('weather-icon').innerText =
-							weatherIcons[code] || '🌤️';
+						document.getElementById('weather-range').innerText = `High: ${high}° | Low: ${low}°`;
+						document.getElementById('weather-icon').innerText = weatherIcons[code] || '🌤️';
 						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
 						document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
 						document.getElementById('weather-widget').classList.remove('hidden');
