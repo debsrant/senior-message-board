@@ -12,14 +12,15 @@
 - Authentication: Firebase Auth (Email/Password).
 - Roles:
     - `ADMIN`: Full read/write access to board content, medication schedules, settings, and user management.
-    - `USER`: Can post messages/announcements to the board and opt-in to receive notifications when medications are taken.
+    - `EDITOR`: Can post messages/announcements to the board, customize their user profile in the Admin panel, and opt-in to receive notifications when medications are taken.
     - `VIEWER`: Read-only for content on the kiosk display; write access to log `medsTaken` status.
 - Database Structure:
     - `board`: The message board data (`announcement`, `reminders`, `medications`, `medsTaken`, `medsTakenTime`, `zipcode`, weather suggestions, `updatedAt`).
-    - `users/{uid}`: Stores user profile and permissions (`role`: `ADMIN` | `USER` | `VIEWER`, `notifyOnMeds`: boolean).
+    - `users/{uid}`: Stores user profile and permissions (`displayName`: string, `role`: `ADMIN` | `EDITOR` | `VIEWER`, `notifyOnMeds`: boolean).
 
 ## Key Setup Features
 
-- Real-time `on('value')` listener synchronizes admin and user edits from phone/PC to tablet instantly.
-- Multi-view toggling: Display Mode, User Message Panel, and Admin Panel.
-- Medication Notification System: Browser push notifications, audio chime, and in-app alerts dispatched to users/admins when medication is logged.
+- Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
+- Profile Management: Authenticated users can edit their profile (display name and notification settings) directly within the Admin panel.
+- Dual-view toggling: Display Mode & Admin/Editor Panel with role-based feature gating.
+- Medication Notification System: Browser push notifications, audio chime, and in-app alerts dispatched to editors and admins when medication is logged.

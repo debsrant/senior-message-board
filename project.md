@@ -75,8 +75,8 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
 1. Go to **Build** > **Authentication** > **Sign-in method**.
 2. Enable **Email/Password** provider (leave Email link passwordless sign-in disabled).
 3. Create accounts under the **Users** tab:
-   - **Admin Account**: Used by primary caregivers on phones/PCs for full control over board configuration, medication schedules, reminders, and settings.
-   - **User Account**: Used by family members and loved ones to post daily messages/announcements to the board and opt-in to receive medication alerts.
+   - **Admin Account**: Used by primary caregivers on phones/PCs for full control over board configuration, medication schedules, reminders, settings, and user profiles.
+   - **Editor Account**: Used by family members and loved ones to post daily messages/announcements to the board, customize their personal user profile, and receive medication alerts.
    - **Viewer / Tablet Account**: Dedicated login used by the senior's tablet display kiosk.
 4. Copy the unique **User UID** for each account created.
 
@@ -100,24 +100,27 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
        "updatedAt": 1700000000000
      }
      ```
-   - `users/{uid}`: Maps user UIDs to roles to control UI visibility, posting rights, and notification subscriptions:
+   - `users/{uid}`: Maps user UIDs to user profiles, roles, and notification subscriptions:
      - For admin accounts:
        ```json
        {
+         "displayName": "Primary Caregiver",
          "role": "ADMIN",
          "notifyOnMeds": true
        }
        ```
-     - For family member user accounts:
+     - For editor accounts (family members):
        ```json
        {
-         "role": "USER",
+         "displayName": "Sarah",
+         "role": "EDITOR",
          "notifyOnMeds": true
        }
        ```
      - For the tablet display account:
        ```json
        {
+         "displayName": "Kitchen Tablet Display",
          "role": "VIEWER",
          "notifyOnMeds": false
        }
@@ -127,9 +130,9 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
 Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
 - Only authenticated users can read the board.
 - Users with `ADMIN` role can update all board contents and manage user records.
-- Users with `USER` role can post new announcements and update their own notification preferences.
+- Users with `EDITOR` role can post announcements/messages and update their own profile and notification preferences.
 - Users with `VIEWER` role can log medication completion (`medsTaken` and `medsTakenTime`).
-- Users can read/write their own profile settings under `users/$uid`.
+- Users can read and update their own profile settings under `users/$uid` (display name, notification preferences).
 
 Example rules:
 ```json
@@ -145,10 +148,10 @@ Example rules:
       ".read": "auth != null",
       ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
       "announcement": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'USER')"
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
       },
       "updatedAt": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'USER')"
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
       },
       "medsTaken": {
         ".write": "auth != null"
@@ -163,21 +166,20 @@ Example rules:
 
 ### E. Operating the Views
 - **Admin View**:
-  1. Caregiver signs in with `ADMIN` credentials.
-  2. Switch to the **Admin** tab.
-  3. Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
-  4. Toggle the notification checkbox to be alerted when medications are taken.
-  5. Click **Publish Changes Instantly**.
-  6. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
-- **User View (Family Messages & Notifications)**:
-  1. Family member signs in with `USER` credentials.
-  2. Switch to the **Post Message** tab.
-  3. Enter an encouraging message or update under **Today's Message / Announcement** and click **Post Message to Board**. The message appears immediately on the tablet screen.
-  4. Under **Medication Notifications**, check **"Notify me when medications are taken"** and grant browser notification permissions.
-  5. Whenever the senior presses the medication button, the device plays an audio chime, displays an in-app toast, and delivers an operating system / browser notification.
+  1. Caregiver signs in with `ADMIN` credentials and opens the **Admin** panel.
+  2. **Edit User Profile**: Under the "My Profile" section, set your display name, view your email and assigned `ADMIN` role, and toggle medication notifications. Click **Save Profile** to apply changes.
+  3. **Board Administration**: Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
+  4. Click **Publish Changes Instantly**.
+  5. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+- **Editor View (Family Members & Messages)**:
+  1. Family member signs in with `EDITOR` credentials and opens the **Admin / Editor** panel.
+  2. **Edit User Profile**: Under the "My Profile" section, set or update your display name (e.g., "Sarah"), review your assigned `EDITOR` role, and toggle **"Notify me when medications are taken"**. Click **Save Profile**.
+  3. **Post Announcements**: Enter a personalized message under **Today's Message / Announcement** and click **Publish Announcement**. The message appears immediately on the tablet screen.
+  4. Core administrative settings (medication lists, board title, weather coordinates) are protected and hidden from the Editor view.
+  5. Whenever the senior presses the medication button, all subscribed editors and admins receive an audio chime, in-app toast, and browser notification.
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
-  2. Both Admin and Post Message navigation buttons are hidden.
+  2. Both Admin and Editor management buttons are hidden.
   3. Displays large-format time, date, local weather, announcements, and medication status.
   4. The senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and marking the task as complete for the day.
   5. If a new calendar day is detected, the board automatically resets `medsTaken` to `false`.

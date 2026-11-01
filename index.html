@@ -67,6 +67,10 @@
 				</div>
 			</div>
 			<div class="flex gap-4 items-center">
+				<div id="user-info-badge" class="hidden text-xs text-slate-300 font-medium px-2.5 py-1 bg-slate-700/60 rounded border border-slate-600 flex items-center gap-1.5">
+					<span class="text-sm">👤</span>
+					<span id="user-info-text">User</span>
+				</div>
 				<div class="flex gap-2">
 					<button
 						onclick="switchView('display')"
@@ -74,13 +78,6 @@
 						class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-bold text-white transition"
 					>
 						Display
-					</button>
-					<button
-						onclick="switchView('user')"
-						id="btn-user"
-						class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded font-bold text-slate-300 transition hidden"
-					>
-						Post Message
 					</button>
 					<button
 						onclick="switchView('admin')"
@@ -211,206 +208,214 @@
 				</div>
 			</div>
 
-			<!-- ================= ADMIN PANEL ================= -->
+			<!-- ================= ADMIN & EDITOR PANEL ================= -->
 			<div
 				id="view-admin"
 				class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
 			>
-				<h2 class="text-2xl font-bold text-white border-b border-slate-700 pb-3">
-					Remote Administration Panel
-				</h2>
-				<p class="text-sm text-slate-400">
-					Changes made here will instantly update on the tablet screen via Firebase.
-				</p>
-
-				<div class="space-y-4">
+				<div class="border-b border-slate-700 pb-3 flex justify-between items-start">
 					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Board Title (Display Name):</label
+						<h2 id="admin-panel-title" class="text-2xl font-bold text-white">
+							Remote Administration Panel
+						</h2>
+						<p id="admin-panel-subtitle" class="text-sm text-slate-400 mt-1">
+							Changes made here will instantly update on the tablet screen via Firebase.
+						</p>
+					</div>
+					<span
+						id="panel-role-pill"
+						class="text-xs font-black px-2.5 py-1 rounded bg-blue-900/70 text-blue-300 border border-blue-500 uppercase tracking-widest"
+					>
+						ADMIN
+					</span>
+				</div>
+
+				<!-- Section 1: User Profile -->
+				<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+					<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+						<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+							<span>👤</span> My Profile
+						</h3>
+						<span
+							id="profile-role-badge"
+							class="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
 						>
-						<input
-							type="text"
-							id="input-board-title"
-							placeholder="e.g. Grandma's Daily Board"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						/>
+							Role: ADMIN
+						</span>
 					</div>
 
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Main Announcement / Note:</label
-						>
-						<textarea
-							id="input-announcement"
-							rows="3"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-					</div>
-
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Reminders:</label
-						>
-						<textarea
-							id="input-reminders"
-							rows="3"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-					</div>
-
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Medications:</label
-						>
-						<textarea
-							id="input-medications"
-							rows="3"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-					</div>
-
-										<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Zipcode (for Local Weather):</label
-						>
-						<input
-							type="text"
-							id="input-zipcode"
-							placeholder="e.g. 90210"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						/>
-					</div>
-
-					<div class="pt-4 border-t border-slate-700">
-						<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">Custom Activity Suggestions</h3>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<div>
-								<label class="block text-xs font-bold mb-1 text-slate-400">If Sunny:</label>
-								<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-							</div>
-							<div>
-								<label class="block text-xs font-bold mb-1 text-slate-400">If Cloudy:</label>
-								<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-							</div>
-							<div>
-								<label class="block text-xs font-bold mb-1 text-slate-400">If Rainy:</label>
-								<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-							</div>
-							<div>
-								<label class="block text-xs font-bold mb-1 text-slate-400">If Snowy:</label>
-								<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-							</div>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div>
+							<label class="block text-xs font-bold mb-1 text-slate-300">Display Name:</label>
+							<input
+								type="text"
+								id="input-profile-name"
+								placeholder="e.g. Sarah"
+								class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+							/>
+							<p class="text-[11px] text-slate-500 mt-1">Name shown on your account and messages.</p>
+						</div>
+						<div>
+							<label class="block text-xs font-bold mb-1 text-slate-300">Account Email:</label>
+							<input
+								type="text"
+								id="input-profile-email"
+								disabled
+								class="w-full bg-slate-950/60 border border-slate-800 rounded-lg p-2.5 text-slate-400 text-sm cursor-not-allowed outline-none font-mono"
+							/>
+							<p class="text-[11px] text-slate-500 mt-1">Firebase Authentication email.</p>
 						</div>
 					</div>
 
-					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
+					<div class="pt-3 border-t border-slate-800 space-y-2">
 						<label class="flex items-center gap-3 cursor-pointer">
 							<input
 								type="checkbox"
-								id="input-meds-taken"
-								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+								id="input-profile-notify-meds"
+								class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
 							/>
-							<span class="text-slate-300 font-bold"
-								>Reset "Medications Taken" status for tomorrow</span
-							>
+							<span class="text-slate-200 text-sm font-bold">
+								Notify me when medications are taken
+							</span>
 						</label>
-						<p class="text-xs text-slate-500 mt-2">
-							Uncheck this to clear the green "Taken" badge on the tablet.
-						</p>
-					</div>
-
-					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700 space-y-2">
-						<label class="flex items-center gap-3 cursor-pointer">
-							<input
-								type="checkbox"
-								id="input-admin-notify-meds"
-								onchange="toggleNotificationPref(this.checked)"
-								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-slate-300 font-bold"
-								>Notify me when medications are taken</span
-							>
-						</label>
-						<p class="text-xs text-slate-500">
-							Receive system alerts and notifications on this device when meds are marked taken.
-						</p>
-					</div>
-
-					<button
-						onclick="saveData()"
-						class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
-					>
-						Publish Changes Instantly
-					</button>
-				</div>
-			</div>
-
-			<!-- ================= USER PANEL (Post Message & Alerts) ================= -->
-			<div
-				id="view-user"
-				class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
-			>
-				<div class="border-b border-slate-700 pb-3">
-					<h2 class="text-2xl font-bold text-white flex items-center gap-2">
-						<span>💬</span> Post Family Message & Alerts
-					</h2>
-					<p class="text-sm text-slate-400 mt-1">
-						Post an encouraging message or update to the tablet, and subscribe to medication notifications.
-					</p>
-				</div>
-
-				<div class="space-y-4">
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Today's Message / Announcement:</label
-						>
-						<textarea
-							id="input-user-announcement"
-							rows="4"
-							placeholder="Write a message to display on the board (e.g. 'Thinking of you! Sarah is visiting at 2 PM.')"
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-					</div>
-
-					<button
-						onclick="saveUserMessage()"
-						class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
-					>
-						Post Message to Board
-					</button>
-				</div>
-
-				<div class="pt-6 border-t border-slate-700 space-y-4">
-					<h3 class="text-lg font-bold text-white flex items-center gap-2">
-						<span>🔔</span> Medication Notifications
-					</h3>
-					<p class="text-xs text-slate-400">
-						Get an instant audio chime, in-app alert, and browser notification whenever medications are logged as taken.
-					</p>
-
-					<div class="p-4 bg-slate-900 rounded-lg border border-slate-700 space-y-3">
-						<label class="flex items-center gap-3 cursor-pointer">
-							<input
-								type="checkbox"
-								id="input-user-notify-meds"
-								onchange="toggleNotificationPref(this.checked)"
-								class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-slate-200 font-bold"
-								>Notify me when medications are taken</span
-							>
-						</label>
-						<div class="pt-2 border-t border-slate-800 flex items-center justify-between">
-							<span id="perm-status" class="text-xs text-slate-400">Checking notification permission...</span>
+						<div class="flex items-center justify-between text-xs text-slate-400 pl-8">
+							<span id="perm-status">Checking browser alerts...</span>
 							<button
+								type="button"
 								id="btn-request-perm"
 								onclick="requestBrowserNotificationPermission()"
-								class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-xs font-bold text-white rounded transition"
+								class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded border border-slate-600 transition"
 							>
 								Enable Browser Alerts
 							</button>
 						</div>
 					</div>
+
+					<div class="flex items-center gap-3 pt-1">
+						<button
+							type="button"
+							onclick="saveUserProfile()"
+							class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm shadow transition"
+						>
+							Save Profile
+						</button>
+						<span id="profile-save-status" class="text-xs text-emerald-400 font-bold hidden">
+							✓ Profile updated successfully!
+						</span>
+					</div>
+				</div>
+
+				<!-- Section 2: Announcement (Accessible to both Admin & Editor) -->
+				<div class="space-y-4">
+					<div>
+						<label class="block text-sm font-bold mb-2 text-slate-300"
+							>Today's Important Message / Announcement:</label
+						>
+						<textarea
+							id="input-announcement"
+							rows="3"
+							placeholder="Write an announcement or encouraging note for the senior..."
+							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+						></textarea>
+						<p class="text-xs text-slate-400 mt-1">
+							Featured in large font on the main card of the senior's tablet screen.
+						</p>
+					</div>
+
+					<!-- Section 3: Administrative Only Settings (Hidden for Editor) -->
+					<div id="section-admin-only" class="space-y-4">
+						<div>
+							<label class="block text-sm font-bold mb-2 text-slate-300"
+								>Board Title (Display Name):</label
+							>
+							<input
+								type="text"
+								id="input-board-title"
+								placeholder="e.g. Grandma's Daily Board"
+								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+							/>
+						</div>
+
+						<div>
+							<label class="block text-sm font-bold mb-2 text-slate-300"
+								>Reminders:</label
+							>
+							<textarea
+								id="input-reminders"
+								rows="3"
+								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+							></textarea>
+						</div>
+
+						<div>
+							<label class="block text-sm font-bold mb-2 text-slate-300"
+								>Medications:</label
+							>
+							<textarea
+								id="input-medications"
+								rows="3"
+								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+							></textarea>
+						</div>
+
+						<div>
+							<label class="block text-sm font-bold mb-2 text-slate-300"
+								>Zipcode (for Local Weather):</label
+							>
+							<input
+								type="text"
+								id="input-zipcode"
+								placeholder="e.g. 90210"
+								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
+							/>
+						</div>
+
+						<div class="pt-4 border-t border-slate-700">
+							<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">Custom Activity Suggestions</h3>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-400">If Sunny:</label>
+									<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+								</div>
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-400">If Cloudy:</label>
+									<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+								</div>
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-400">If Rainy:</label>
+									<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+								</div>
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-400">If Snowy:</label>
+									<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
+								</div>
+							</div>
+						</div>
+
+						<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
+							<label class="flex items-center gap-3 cursor-pointer">
+								<input
+									type="checkbox"
+									id="input-meds-taken"
+									class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+								/>
+								<span class="text-slate-300 font-bold"
+									>Reset "Medications Taken" status for tomorrow</span
+								>
+							</label>
+							<p class="text-xs text-slate-500 mt-2">
+								Uncheck this to clear the green "Taken" badge on the tablet.
+							</p>
+						</div>
+					</div>
+
+					<button
+						onclick="saveData()"
+						id="btn-publish-data"
+						class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
+					>
+						Publish Changes Instantly
+					</button>
 				</div>
 			</div>
 		</main>
@@ -456,30 +461,54 @@
 					try {
 						// Fetch user profile from database
 						const snap = await database.ref(`users/${user.uid}`).once('value');
-						userProfile = snap.val() || { role: 'VIEWER', notifyOnMeds: false };
+						userProfile = snap.val() || { role: 'VIEWER', displayName: '', notifyOnMeds: false };
+						if (userProfile.role === 'USER') userProfile.role = 'EDITOR'; // legacy role migration
 						console.log('User Profile Loaded:', userProfile);
 					} catch (err) {
 						console.warn('Could not fetch user profile, defaulting to VIEWER:', err);
-						userProfile = { role: 'VIEWER', notifyOnMeds: false };
+						userProfile = { role: 'VIEWER', displayName: '', notifyOnMeds: false };
 					}
 
-					// Initialize notification checkboxes
-					const userNotifyEl = document.getElementById('input-user-notify-meds');
-					if (userNotifyEl) userNotifyEl.checked = !!userProfile.notifyOnMeds;
-					const adminNotifyEl = document.getElementById('input-admin-notify-meds');
-					if (adminNotifyEl) adminNotifyEl.checked = !!userProfile.notifyOnMeds;
+					// Populate Profile Form in Admin/Editor Panel
+					const nameInput = document.getElementById('input-profile-name');
+					if (nameInput) nameInput.value = userProfile.displayName || user.displayName || '';
+					const emailInput = document.getElementById('input-profile-email');
+					if (emailInput) emailInput.value = user.email || '';
+					const roleBadge = document.getElementById('profile-role-badge');
+					if (roleBadge) roleBadge.innerText = 'Role: ' + (userProfile.role || 'VIEWER');
+					const panelRolePill = document.getElementById('panel-role-pill');
+					if (panelRolePill) panelRolePill.innerText = userProfile.role || 'VIEWER';
+					const notifyBox = document.getElementById('input-profile-notify-meds');
+					if (notifyBox) notifyBox.checked = !!userProfile.notifyOnMeds;
+
 					updatePermStatus();
+					updateUserBadge();
 
 					// Setup view permissions based on role
+					const btnAdmin = document.getElementById('btn-admin');
+					const sectionAdminOnly = document.getElementById('section-admin-only');
+					const panelTitle = document.getElementById('admin-panel-title');
+					const publishBtn = document.getElementById('btn-publish-data');
+
 					if (userProfile.role === 'ADMIN') {
-						document.getElementById('btn-admin').classList.remove('hidden');
-						document.getElementById('btn-user').classList.remove('hidden');
-					} else if (userProfile.role === 'USER') {
-						document.getElementById('btn-user').classList.remove('hidden');
-						document.getElementById('btn-admin').classList.add('hidden');
+						if (btnAdmin) {
+							btnAdmin.innerText = 'Admin';
+							btnAdmin.classList.remove('hidden');
+						}
+						if (sectionAdminOnly) sectionAdminOnly.classList.remove('hidden');
+						if (panelTitle) panelTitle.innerText = 'Remote Administration Panel';
+						if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
+					} else if (userProfile.role === 'EDITOR') {
+						if (btnAdmin) {
+							btnAdmin.innerText = 'Editor Panel';
+							btnAdmin.classList.remove('hidden');
+						}
+						if (sectionAdminOnly) sectionAdminOnly.classList.add('hidden');
+						if (panelTitle) panelTitle.innerText = 'Editor & Profile Panel';
+						if (publishBtn) publishBtn.innerText = 'Publish Announcement Instantly';
 					} else {
-						document.getElementById('btn-admin').classList.add('hidden');
-						document.getElementById('btn-user').classList.add('hidden');
+						// VIEWER role (tablet kiosk display)
+						if (btnAdmin) btnAdmin.classList.add('hidden');
 					}
 
 					initBoard();
@@ -488,7 +517,8 @@
 					userProfile = null;
 					previousMedsTaken = null;
 					document.getElementById('btn-admin').classList.add('hidden');
-					document.getElementById('btn-user').classList.add('hidden');
+					const badge = document.getElementById('user-info-badge');
+					if (badge) badge.classList.add('hidden');
 					document.getElementById('view-auth').classList.remove('hidden');
 				}
 			});
@@ -611,7 +641,7 @@
 
 			// View Switcher Tabs
 			function switchView(view) {
-				const views = ['display', 'user', 'admin'];
+				const views = ['display', 'admin'];
 				views.forEach((v) => {
 					const el = document.getElementById(`view-${v}`);
 					const btn = document.getElementById(`btn-${v}`);
@@ -724,10 +754,15 @@
 					medInstr.className = 'bg-rose-900/30 border border-rose-500/50 p-3 rounded-lg text-rose-200 text-sm font-bold flex items-center gap-2';
 					}
 
-				// Populate Admin Inputs ONLY if user is admin
+				// Populate Announcement Input for both Admin and Editor
+				const announceInput = document.getElementById('input-announcement');
+				if (announceInput && document.activeElement !== announceInput) {
+					announceInput.value = data.announcement || '';
+				}
+
+				// Populate Admin-only Inputs if user is admin
 				if (userProfile && userProfile.role === 'ADMIN') {
 					document.getElementById('input-board-title').value = data.boardTitle || 'Senior Message Board';
-					document.getElementById('input-announcement').value = data.announcement || '';
 					document.getElementById('input-reminders').value = data.reminders || '';
 					document.getElementById('input-medications').value = data.medications || '';
 					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
@@ -736,12 +771,6 @@
 					document.getElementById('input-suggest-cloudy').value = data.suggestCloudy || '';
 					document.getElementById('input-suggest-rain').value = data.suggestRain || '';
 					document.getElementById('input-suggest-snow').value = data.suggestSnow || '';
-				}
-
-				// Populate User Announcement Input
-				const userAnnounceInput = document.getElementById('input-user-announcement');
-				if (userAnnounceInput && document.activeElement !== userAnnounceInput) {
-					userAnnounceInput.value = data.announcement || '';
 				}
 
 				// Notify on Medication Completion Transition
@@ -791,11 +820,32 @@
 
 			function saveData() {
 				console.log('Attempting to save board data...');
-				const boardTitle = document.getElementById('input-board-title').value;
 				const announcement = document.getElementById('input-announcement').value;
+
+				if (userProfile && userProfile.role === 'EDITOR') {
+					database.ref('board').update(
+						{
+							announcement: announcement,
+							updatedAt: Date.now(),
+						},
+						(error) => {
+							if (error) {
+								console.error('Firebase Save Error:', error);
+								alert('Failed to publish announcement: ' + error.message);
+							} else {
+								console.log('Announcement published successfully.');
+								alert('Announcement published successfully! Tablet will update instantly.');
+								switchView('display');
+							}
+						}
+					);
+					return;
+				}
+
+				const boardTitle = document.getElementById('input-board-title').value;
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
-								const medsTaken = document.getElementById('input-meds-taken').checked;
+				const medsTaken = document.getElementById('input-meds-taken').checked;
 				const zipcode = document.getElementById('input-zipcode').value;
 				const suggestSunny = document.getElementById('input-suggest-sunny').value;
 				const suggestCloudy = document.getElementById('input-suggest-cloudy').value;
@@ -829,23 +879,57 @@
 				);
 			}
 
-			// Post Message (User Role)
-			async function saveUserMessage() {
-				console.log('Attempting to save user message...');
-				const announcement = document.getElementById('input-user-announcement').value;
+			// Profile Management in Admin Panel
+			async function saveUserProfile() {
+				if (!currentUser) return;
+				const name = document.getElementById('input-profile-name').value.trim();
+				const notifyMeds = document.getElementById('input-profile-notify-meds').checked;
+				const statusEl = document.getElementById('profile-save-status');
 
 				try {
-					await database.ref('board').update({
-						announcement: announcement,
-						updatedAt: Date.now(),
+					if (!userProfile) userProfile = {};
+					userProfile.displayName = name;
+					userProfile.notifyOnMeds = notifyMeds;
+
+					await database.ref(`users/${currentUser.uid}`).update({
+						displayName: name,
+						notifyOnMeds: notifyMeds,
 					});
-					console.log('User message posted successfully.');
-					alert('Message posted successfully! Tablet will update instantly.');
-					switchView('display');
+
+					if (currentUser.updateProfile) {
+						await currentUser.updateProfile({ displayName: name });
+					}
+
+					updateUserBadge();
+
+					if (notifyMeds && 'Notification' in window && Notification.permission !== 'granted') {
+						requestBrowserNotificationPermission();
+					}
+
+					if (statusEl) {
+						statusEl.classList.remove('hidden');
+						setTimeout(() => statusEl.classList.add('hidden'), 4000);
+					}
 				} catch (err) {
-					console.error('Failed to post message:', err);
-					alert('Failed to post message. ERROR: ' + err.message);
+					console.error('Error saving profile:', err);
+					alert('Failed to save profile: ' + err.message);
 				}
+			}
+
+			function updateUserBadge() {
+				const badge = document.getElementById('user-info-badge');
+				const textEl = document.getElementById('user-info-text');
+				if (!badge || !textEl || !currentUser) return;
+
+				const name = userProfile?.displayName || currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+				const role = userProfile?.role || 'VIEWER';
+				textEl.innerText = `${name} (${role})`;
+				badge.classList.remove('hidden');
+			}
+
+			// Post Message (Legacy / Alias to saveData)
+			function saveUserMessage() {
+				saveData();
 			}
 
 			// Notification System & Preferences
@@ -917,11 +1001,8 @@
 				if (!userProfile) userProfile = {};
 				userProfile.notifyOnMeds = checked;
 
-				// Keep both checkboxes synchronized
-				const userBox = document.getElementById('input-user-notify-meds');
-				const adminBox = document.getElementById('input-admin-notify-meds');
-				if (userBox) userBox.checked = checked;
-				if (adminBox) adminBox.checked = checked;
+				const profileBox = document.getElementById('input-profile-notify-meds');
+				if (profileBox) profileBox.checked = checked;
 
 				try {
 					await database.ref(`users/${currentUser.uid}/notifyOnMeds`).set(checked);
