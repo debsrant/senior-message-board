@@ -375,12 +375,136 @@
 				}
 			}
 
-			function handleLogout() {
+						function handleLogout() {
 				auth.signOut();
 				location.reload();
 			}
 
-						function initBoard() {
+			// Clock & Weather Functionality
+			let currentZip = '';
+			let weatherSuggestions = { sunny: '', cloudy: '', rain: '', snow: '' };
+
+			async function updateWeather(zip) {
+				if (!zip) return;
+				currentZip = zip;
+
+				try {
+					const geoRes = await fetch(
+						`https://nominatim.openstreetmap.org/search?postalcode=${zip}&country=US&format=json`
+					);
+					const geoData = await geoRes.json();
+
+					if (geoData && geoData.length > 0) {
+						const { lat, lon } = geoData[0];
+						const weatherRes = await fetch(
+							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit`
+						);
+						const weatherData = await weatherRes.json();
+
+						const temp = Math.round(weatherData.current_weather.temperature);
+						const code = weatherData.current_weather.weathercode;
+
+						const weatherIcons = {
+							0: '☀️',
+							1: '🌤️',
+							2: '⛅',
+							3: '☁️',
+							45: '🌫️',
+							48: '🌫️',
+							51: '🌦️',
+							53: '🌦️',
+							55: '🌦️',
+							61: '🌧️',
+							63: '🌧️',
+							65: '🌧️',
+							71: '❄️',
+							73: '❄️',
+							75: '❄️',
+							95: '⛈️',
+						};
+
+						document.getElementById('weather-temp').innerText = `${temp}°F`;
+						document.getElementById('weather-icon').innerText =
+							weatherIcons[code] || '🌤️';
+						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
+						document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
+						document.getElementById('weather-widget').classList.remove('hidden');
+					}
+				} catch (err) {
+					console.warn('Weather fetch failed:', err);
+				}
+			}
+
+			function getWeatherSuggestion(code) {
+				if (code === 0 || code === 1)
+					return weatherSuggestions.sunny || 'Great day for a short walk outside!';
+				if (code === 2 || code === 3)
+					return weatherSuggestions.cloudy || 'Perfect for some light bird watching.';
+				if (code >= 51 && code <= 65)
+					return weatherSuggestions.rain || 'Stay dry! Maybe call a friend today?';
+				if (code >= 71 && code <= 75)
+					return weatherSuggestions.snow || 'Stay warm! Time for a hot cup of tea.';
+				if (code === 95) return 'Stay safe! Good for board games.';
+				return 'A great day for indoor activities!';
+			}
+
+			function getWeatherDesc(code) {
+				const descriptions = {
+					0: 'Clear sky',
+					1: 'Mainly clear',
+					2: 'Partly cloudy',
+					3: 'Overcast',
+					45: 'Foggy',
+					48: 'Depositing rime fog',
+					51: 'Light drizzle',
+					53: 'Moderate drizzle',
+					55: 'Dense drizzle',
+					61: 'Slight rain',
+					63: 'Moderate rain',
+					65: 'Heavy rain',
+					71: 'Slight snow',
+					73: 'Moderate snow',
+					75: 'Heavy snow',
+					95: 'Thunderstorm',
+				};
+				return descriptions[code] || 'Cloudy';
+			}
+
+			function updateClock() {
+				const now = new Date();
+				document.getElementById('display-time').innerText = now.toLocaleTimeString([], {
+					hour: '2-digit',
+					minute: '2-digit',
+				});
+				document.getElementById('display-date').innerText = now.toLocaleDateString([], {
+					weekday: 'long',
+					month: 'long',
+					day: 'numeric',
+				});
+			}
+			setInterval(updateClock, 1000);
+			updateClock();
+
+			// View Switcher Tabs
+			function switchView(view) {
+				if (view === 'display') {
+					document.getElementById('view-display').classList.remove('hidden');
+					document.getElementById('view-admin').classList.add('hidden');
+					document.getElementById('btn-display').className =
+						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
+					document.getElementById('btn-admin').className =
+						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
+				} else {
+					document.getElementById('view-admin').classList.remove('hidden');
+					document.getElementById('view-display').classList.add('hidden');
+					document.getElementById('btn-admin').className =
+						'px-4 py-2 bg-blue-600 rounded font-bold text-white transition';
+					document.getElementById('btn-display').className =
+						'px-4 py-2 bg-slate-700 rounded font-bold text-slate-300 transition';
+				}
+			}
+
+			function initBoard() {
 				console.log('Initializing Board...');
 				// Connection Monitor
 				const statusEl = document.getElementById('connection-status');
