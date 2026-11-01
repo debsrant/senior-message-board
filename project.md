@@ -1,21 +1,255 @@
-# Services Used in This Project
+# Project Instructions
 
-1. **GitHub**:
-    - Used for version control.
-    - For hosting and managing project files and codebase.
-    - Supports collaboration and access control.
+This document provides setup and operational instructions for each product and service used in the **Senior Message Board** project.
 
-2. **Firebase**:
-    - Used for backend services and authentication.
-    - Offers features like real-time database, authentication, and cloud functions.
-    - Provides a scalable and secure platform for building apps and managing user data.
+---
 
-3. **Kiosk Browser**:
-    - Used for creating a fixed-function web application.
-    - Runs on a single screen and displays predefined content.
-    - Ideal for applications that need to run on a dedicated device.
+## 1. GitHub
 
-4. **API Keys**:
-    - Used for accessing external APIs and services.
-    - Essential for integrations with third-party services, such as payment gateways, weather APIs, or social media platforms.
-    - Must be securely managed and stored to prevent unauthorized access.
+GitHub serves as the version control platform, codebase repository, and hosting service (via GitHub Pages).
+
+### A. Repository & Version Control
+
+1. **Clone the Repository**:
+    ```bash
+    git clone https://github.com/debsrant/senior-message-board.git
+    cd senior-message-board
+    ```
+2. **Local Development Workflow**:
+    - Make edits to `index.html` (or other project assets).
+    - Test locally by opening `index.html` directly in a browser or serving it with a local web server (e.g. Live Server in VS Code or `npx serve`).
+3. **Commit & Push Changes**:
+    ```bash
+    git add index.html project.md
+    git commit -m "Update feature or content"
+    git push origin main
+    ```
+
+### B. Hosting with GitHub Pages
+
+The web application is hosted as a single-page app via GitHub Pages:
+
+1. Go to the repository on GitHub: `https://github.com/debsrant/senior-message-board`.
+2. Navigate to **Settings** > **Pages** (under the "Code and automation" sidebar).
+3. Under **Build and deployment**:
+    - **Source**: Select `Deploy from a branch`.
+    - **Branch**: Select `main` and set folder to `/ (root)`.
+    - Click **Save**.
+4. GitHub Pages will build and deploy the site. The live URL will be available at:
+    ```
+    https://debsrant.github.io/senior-message-board/
+    ```
+5. Any updates pushed to the `main` branch will automatically re-deploy within minutes.
+
+### C. Access Control & Collaboration
+
+- Under **Settings** > **Collaborators**, grant access to any family members or caregivers who will contribute code or documentation.
+- For open or multi-contributor repos, configure branch protection rules on `main` to require pull requests.
+
+---
+
+## 2. Firebase
+
+Firebase provides the backend infrastructure: **Firebase Authentication** for user accounts and **Firebase Realtime Database (RTDB)** for instant two-way synchronization between family admin devices and the display tablet.
+
+### A. Firebase Console & Project Setup
+
+1. Log in to the [Firebase Console](https://console.firebase.google.com/).
+2. Select or create your Firebase project (e.g., `seniormessageboard`).
+3. Under **Project Overview** > **Project Settings** > **General**:
+    - In the **Your apps** section, register a **Web App** (or select the existing one).
+    - Copy the `firebaseConfig` object and ensure it is updated in `index.html`:
+        ```javascript
+        const firebaseConfig = {
+        	apiKey: 'YOUR_API_KEY',
+        	authDomain: 'seniormessageboard.firebaseapp.com',
+        	databaseURL: 'https://seniormessageboard-default-rtdb.firebaseio.com',
+        	projectId: 'seniormessageboard',
+        	storageBucket: 'seniormessageboard.firebasestorage.app',
+        	messagingSenderId: '431774663721',
+        	appId: 'YOUR_APP_ID',
+        };
+        ```
+
+### B. Authentication Setup & User Roles
+
+1. Go to **Build** > **Authentication** > **Sign-in method**.
+2. Enable **Email/Password** provider (leave Email link passwordless sign-in disabled).
+3. Create accounts under the **Users** tab:
+    - **Admin Account**: Used by caregivers on phones/PCs to edit board content.
+    - **Viewer / Tablet Account**: Dedicated login used by the senior's tablet.
+4. Copy the unique **User UID** for each account created.
+
+### C. Realtime Database Schema & Setup
+
+1. Go to **Build** > **Realtime Database** and create a database (select your preferred region).
+2. Set up the two primary data nodes:
+    - `board`: Stores the display content and state.
+        ```json
+        {
+        	"boardTitle": "Grandma's Daily Board",
+        	"announcement": "Good morning! Have a wonderful day.",
+        	"reminders": "10:30 AM - Doctor appointment\n2:00 PM - Call Sarah",
+        	"medications": "Morning vitamins with breakfast\nBlood pressure pill at 8:00 AM",
+        	"medsTaken": false,
+        	"medsTakenTime": 0,
+        	"zipcode": "90210",
+        	"suggestSunny": "Great day for a short walk outside!",
+        	"suggestCloudy": "Perfect for some light bird watching.",
+        	"suggestRain": "Stay dry! Maybe call a friend today?",
+        	"suggestSnow": "Stay warm! Time for a hot cup of tea.",
+        	"updatedAt": 1700000000000
+        }
+        ```
+    - `users/{uid}`: Maps user UIDs to roles to control UI visibility and permissions:
+        - For admin accounts:
+            ```json
+            {
+            	"role": "ADMIN"
+            }
+            ```
+        - For the tablet display account:
+            ```json
+            {
+            	"role": "VIEWER"
+            }
+            ```
+
+### D. Security Rules
+
+Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
+
+- Only authenticated users can read the board.
+- Only users with `ADMIN` role can update board contents.
+- Users with `VIEWER` role can only update `medsTaken` and `medsTakenTime`.
+
+Example rules:
+
+```json
+{
+	"rules": {
+		"users": {
+			"$uid": {
+				".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
+				".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'"
+			}
+		},
+		"board": {
+			".read": "auth != null",
+			".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
+			"medsTaken": {
+				".write": "auth != null"
+			},
+			"medsTakenTime": {
+				".write": "auth != null"
+			}
+		}
+	}
+}
+```
+
+### E. Operating the Views
+
+- **Admin View**:
+    1. Caregiver signs in with `ADMIN` credentials.
+    2. Switch to the **Admin** tab.
+    3. Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
+    4. Click **Publish Changes Instantly**.
+    5. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+- **Display View (Tablet)**:
+    1. Sign in with the `VIEWER` credentials on the tablet.
+    2. The Admin button is hidden.
+    3. Displays large-format time, date, local weather, announcements, and medication status.
+    4. The senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and marking the task as complete for the day.
+    5. If a new calendar day is detected, the board automatically resets `medsTaken` to `false`.
+
+---
+
+## 3. Kiosk Browser
+
+A dedicated kiosk browser (such as **Fully Kiosk Browser & Launcher** on Android) locks down the tablet to run the message board continuously in full-screen mode without senior intervention.
+
+### A. Tablet Preparation
+
+1. Mount the Android tablet in an accessible, visible location (e.g., kitchen counter or bedside table).
+2. Connect the tablet to continuous power via its charging cable.
+3. Connect to a reliable Wi-Fi network.
+
+### B. Installing & Configuring Fully Kiosk Browser
+
+1. Install **Fully Kiosk Browser & Launcher** from the Google Play Store (or download the APK from the official website).
+2. Launch Fully Kiosk Browser and grant required permissions (overlay, system settings, accessibility if requested).
+3. Open the Fully Kiosk Settings menu (swipe from left edge or tap back button repeatedly, default PIN if set).
+4. Configure the following settings:
+    - **Web Zoom and Scaling**:
+        - **Start URL**: Enter the GitHub Pages URL (e.g., `https://debsrant.github.io/senior-message-board/`).
+        - **Enable Zoom**: Off (or adjust default zoom if text needs to be even larger).
+        - **View Mode**: Desktop mode or standard mobile depending on screen resolution.
+    - **Device Management & Boot**:
+        - **Launch on Boot**: Enable (starts the message board immediately if the tablet restarts or powers on).
+        - **Restart Browser on Crash**: Enable.
+    - **Power & Screen Settings**:
+        - **Keep Screen On**: Enable while plugged in / on AC power.
+        - **Screen Off Timer / Sleep Schedule**: Optional - configure sleep hours (e.g., 10:00 PM to 7:00 AM) or use ambient light/motion detection to dim the display at night.
+    - **Kiosk Mode (Lockdown)**:
+        - **Enable Kiosk Mode**: Enable to lock down the interface.
+        - **Kiosk PIN**: Set a secure numeric PIN known only to caregivers to prevent accidental exits.
+        - **Disable Status Bar**: Enable (hides notifications and top status bar).
+        - **Disable Navigation Bar**: Enable (hides Android back/home/recent buttons).
+        - **Block Hardware Keys**: Enable (disables volume/power exit shortcuts).
+
+### C. First-Time Tablet Login
+
+1. Before locking into Kiosk Mode, load the Start URL.
+2. Sign in using the `VIEWER` account credentials.
+3. Verify that the **Display View** loads correctly and that the **Admin** button is not visible.
+4. Test tapping **"I TOOK MY MEDS"** to ensure database connectivity.
+5. Activate Kiosk Mode and lock settings.
+
+---
+
+## 4. API Keys & External Services
+
+This project relies on external APIs for authentication, database synchronization, and local weather forecasting.
+
+### A. Firebase Web API Key Management
+
+The `apiKey` in `firebaseConfig` is a client identifier used by the Firebase JavaScript SDK to identify your project with Google Cloud services:
+
+1. **Google Cloud Console Restrictions**:
+    - Go to [Google Cloud Console - Credentials](https://console.cloud.google.com/apis/credentials).
+    - Find the **Browser key (auto-created by Firebase)** matching your `apiKey`.
+    - Under **Application restrictions**:
+        - Select **Websites**.
+        - Add allowed referrers:
+            - `https://debsrant.github.io/*` (production URL)
+            - `http://localhost:*` (for local development/testing)
+    - Under **API restrictions**:
+        - Select **Restrict key**.
+        - Check only the services required by the app:
+            - **Identity Toolkit API** (Firebase Auth)
+            - **Firebase Realtime Database API**
+            - **Token Service API**
+    - Save changes.
+2. **Credential Safety**:
+    - Never embed Firebase Service Account private keys or admin SDK credentials in client-side HTML or push them to GitHub. The client SDK only requires the public web config.
+
+### B. Weather & Geocoding Services
+
+The board displays local weather and daily activity suggestions using two public, keyless APIs:
+
+1. **OpenStreetMap Nominatim API**:
+    - Converts the caregiver-entered US ZIP code into latitude and longitude coordinates.
+    - Endpoint: `https://nominatim.openstreetmap.org/search?postalcode={zip}&country=US&format=json`
+    - No API key is required. Ensure respectful request frequencies (requests are triggered only when the ZIP code updates).
+2. **Open-Meteo Weather API**:
+    - Fetches current temperatures, daily highs/lows, and weather condition codes.
+    - Endpoint: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
+    - Open-source, free for non-commercial use, and requires no API key.
+
+### C. Future Third-Party Integrations
+
+If adding fee-based or sensitive third-party services in the future (e.g., Twilio for SMS alerts to family when medications are taken, OpenAI for generating dynamic reminders, or paid weather APIs):
+
+- **Do not** put secret API keys directly into `index.html`.
+- Use a serverless backend such as **Firebase Cloud Functions** to securely hold secret keys in environment secrets and handle server-to-server calls.
