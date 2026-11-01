@@ -151,20 +151,23 @@
 						id="card-medications"
 						class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3 transition-all duration-500"
 					>
-						<div class="flex justify-between items-start">
+												<div class="flex justify-between items-start">
 							<h2 class="text-xl font-bold text-rose-400 flex items-center gap-2">
 								<span>💊</span> Medications
 							</h2>
 							<div id="meds-status-badge" class="hidden">
 								<span
 									class="bg-emerald-900 text-emerald-300 text-xs font-bold px-2 py-1 rounded-full border border-emerald-500"
-									>TAKEN</span
+									>COMPLETED</span
 								>
 							</div>
 						</div>
+						<div id="meds-instruction" class="bg-rose-900/30 border border-rose-500/50 p-3 rounded-lg text-rose-200 text-sm font-bold flex items-center gap-2">
+							<span class="text-lg">⚠️</span> ACTION REQUIRED: Please take your medicine.
+						</div>
 						<p
 							id="disp-medications"
-							class="text-2xl text-slate-200 whitespace-pre-line"
+							class="text-2xl text-slate-200 whitespace-pre-line py-2"
 						>
 							Loading medications...
 						</p>
@@ -173,9 +176,10 @@
 						<button
 							id="btn-take-meds"
 							onclick="markMedsTaken()"
-							class="w-full mt-4 py-4 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-xl"
+							class="w-full mt-2 py-5 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black rounded-xl shadow-lg transition-all flex flex-col items-center justify-center gap-1 text-2xl border-b-4 border-rose-800"
 						>
-							<span>✅</span> I took my meds
+							<span>I TOOK MY MEDS</span>
+							<span class="text-xs uppercase font-bold opacity-80 tracking-widest">Tap here to log</span>
 						</button>
 						<p
 							id="meds-taken-time"
@@ -558,30 +562,38 @@
 				const medBtn = document.getElementById('btn-take-meds');
 				const medBadge = document.getElementById('meds-status-badge');
 				const medTime = document.getElementById('meds-taken-time');
+				const medInstr = document.getElementById('meds-instruction');
 
 				if (data.medsTaken) {
 					medCard.classList.add('border-emerald-500', 'bg-slate-800');
-					medCard.classList.remove('border-slate-700');
-					medBtn.classList.add('bg-slate-700', 'opacity-50');
-					medBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
-					medBtn.innerHTML = '<span>✔️</span> Medications Logged';
+					medCard.classList.remove('border-slate-700', 'border-rose-500');
+					medBtn.classList.add('bg-slate-700', 'opacity-50', 'border-slate-800');
+					medBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500', 'border-rose-800');
+					medBtn.innerHTML = '<span>MEDS LOGGED</span><span class="text-xs font-bold">Successfully saved</span>';
 					medBadge.classList.remove('hidden');
 					medTime.classList.remove('hidden');
+
+					medInstr.innerText = '✅ ALL DONE: Medications are logged for today.';
+					medInstr.className = 'bg-emerald-900/30 border border-emerald-500/50 p-3 rounded-lg text-emerald-200 text-sm font-bold flex items-center gap-2';
+
 					if (data.medsTakenTime) {
 						const dateObj = new Date(data.medsTakenTime);
 						const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 						const dayDate = dateObj.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
 						medTime.innerText = `Taken ${dayDate} at ${time}`;
 					}
-				} else {
+					} else {
 					medCard.classList.remove('border-emerald-500');
-					medCard.classList.add('border-slate-700');
-					medBtn.classList.add('bg-rose-600', 'hover:bg-rose-500');
-					medBtn.classList.remove('bg-slate-700', 'opacity-50');
-					medBtn.innerHTML = '<span>✅</span> I took my meds';
+					medCard.classList.add('border-rose-500', 'bg-slate-800/50');
+					medBtn.classList.add('bg-rose-600', 'hover:bg-rose-500', 'border-rose-800');
+					medBtn.classList.remove('bg-slate-700', 'opacity-50', 'border-slate-800');
+					medBtn.innerHTML = '<span>I TOOK MY MEDS</span><span class="text-xs uppercase font-bold opacity-80 tracking-widest">Tap here to log</span>';
 					medBadge.classList.add('hidden');
 					medTime.classList.add('hidden');
-				}
+
+					medInstr.innerHTML = '<span class="text-lg">⚠️</span> ACTION REQUIRED: Please take your medicine.';
+					medInstr.className = 'bg-rose-900/30 border border-rose-500/50 p-3 rounded-lg text-rose-200 text-sm font-bold flex items-center gap-2';
+					}
 
 				// Populate Admin Inputs ONLY if user is admin
 				if (userProfile && userProfile.role === 'ADMIN') {
