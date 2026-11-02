@@ -138,16 +138,15 @@
 				</div>
 				</div>
 
-				<!-- Main Message Card -->
+				<!-- Main Message Card (Hidden when empty) -->
 				<div
-					class="bg-slate-800 p-8 rounded-2xl border-2 border-blue-500 shadow-xl space-y-4"
+					id="card-announcement"
+					class="hidden bg-slate-800 p-8 rounded-2xl border-2 border-blue-500 shadow-xl space-y-4"
 				>
 					<h2 class="text-blue-400 font-bold uppercase tracking-wide text-sm">
 						Today's Important Message
 					</h2>
-					<p id="disp-announcement" class="text-huge font-medium text-white">
-						Loading announcement...
-					</p>
+					<p id="disp-announcement" class="text-huge font-medium text-white"></p>
 				</div>
 
 				<!-- Two Column Layout: Reminders & Medications -->
@@ -662,8 +661,19 @@
 					const geoData = await geoRes.json();
 
 					if (geoData && geoData.length > 0) {
-						const { lat, lon, address } = geoData[0];
-						const city = address.city || address.town || address.village || address.hamlet || "";
+						const geoItem = geoData[0];
+						const lat = geoItem.lat;
+						const lon = geoItem.lon;
+						const address = geoItem.address || {};
+						const city =
+							address.city ||
+							address.town ||
+							address.village ||
+							address.hamlet ||
+							address.municipality ||
+							address.suburb ||
+							address.county ||
+							'';
 
 						const weatherRes = await fetch(
 							`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
@@ -694,7 +704,16 @@
 							95: '⛈️',
 						};
 
-						document.getElementById('weather-city').innerText = city;
+						const cityEl = document.getElementById('weather-city');
+						if (cityEl) {
+							cityEl.innerText = city;
+							if (city) {
+								cityEl.classList.remove('hidden');
+							} else {
+								cityEl.classList.add('hidden');
+							}
+						}
+
 						document.getElementById('weather-temp').innerText = `${temp}°F`;
 						document.getElementById('weather-range').innerText = `High: ${high}° | Low: ${low}°`;
 						document.getElementById('weather-icon').innerText = weatherIcons[code] || '🌤️';
@@ -816,8 +835,19 @@
 				// Update Display Screen Elements
 				document.getElementById('disp-board-title').innerText =
 					data.boardTitle || 'Senior Message Board';
-				document.getElementById('disp-announcement').innerText =
-					data.announcement || 'No current announcement.';
+
+				// Main announcement card: display if has content, hide if empty
+				const announcement = (data.announcement || '').trim();
+				const cardAnnouncement = document.getElementById('card-announcement');
+				const dispAnnouncement = document.getElementById('disp-announcement');
+				if (announcement) {
+					dispAnnouncement.innerText = announcement;
+					cardAnnouncement.classList.remove('hidden');
+				} else {
+					dispAnnouncement.innerText = '';
+					cardAnnouncement.classList.add('hidden');
+				}
+
 				document.getElementById('disp-reminders').innerText =
 					data.reminders || 'No reminders set.';
 				document.getElementById('disp-medications').innerText =
