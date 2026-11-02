@@ -448,202 +448,199 @@
 							</div>
 						</div>
 
-						<!-- Section 4: Maintenance Items (Admin Only) -->
-						<div id="section-admin-only" class="space-y-6">
-							<!-- Maintenance Box -->
-							<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-5 shadow-inner">
-								<div class="flex items-center justify-between border-b border-slate-800 pb-2">
-									<h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-										<span>⚙️</span> Board Maintenance & Schedules
+						<!-- Section 2: Board Maintenance & Schedules (Admin & Editor) -->
+						<div id="section-maintenance" class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-5 shadow-inner">
+							<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+								<h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+									<span>⚙️</span> Board Maintenance & Schedules
+								</h3>
+								<span class="text-[11px] font-bold text-amber-300 px-2 py-0.5 rounded bg-amber-950/70 border border-amber-700">
+									Admin & Editor
+								</span>
+							</div>
+
+							<div>
+								<label class="block text-xs font-bold mb-1.5 text-slate-300"
+									>Board Title (Display Name):</label
+								>
+								<input
+									type="text"
+									id="input-board-title"
+									placeholder="e.g. Grandma's Daily Board"
+									class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+								/>
+							</div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<label class="block text-xs font-bold mb-1.5 text-slate-300"
+										>Reminders:</label
+									>
+									<textarea
+										id="input-reminders"
+										rows="3"
+										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+									></textarea>
+								</div>
+
+								<div>
+									<label class="block text-xs font-bold mb-1.5 text-slate-300"
+										>Medications:</label
+									>
+									<textarea
+										id="input-medications"
+										rows="3"
+										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+									></textarea>
+								</div>
+							</div>
+
+							<div>
+								<label class="block text-xs font-bold mb-1.5 text-slate-300"
+									>Zipcode (for Local Weather):</label
+								>
+								<input
+									type="text"
+									id="input-zipcode"
+									placeholder="e.g. 90210"
+									class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+								/>
+							</div>
+
+							<div class="pt-3 border-t border-slate-800">
+								<h4 class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2.5">Custom Activity Suggestions</h4>
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div>
+										<label class="block text-[11px] font-bold mb-1 text-slate-400">If Sunny:</label>
+										<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+									</div>
+									<div>
+										<label class="block text-[11px] font-bold mb-1 text-slate-400">If Cloudy:</label>
+										<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+									</div>
+									<div>
+										<label class="block text-[11px] font-bold mb-1 text-slate-400">If Rainy:</label>
+										<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+									</div>
+									<div>
+										<label class="block text-[11px] font-bold mb-1 text-slate-400">If Snowy:</label>
+										<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+									</div>
+								</div>
+							</div>
+
+							<div class="p-3.5 bg-slate-800/90 rounded-xl border border-slate-700">
+								<label class="flex items-center gap-3 cursor-pointer">
+									<input
+										type="checkbox"
+										id="input-meds-taken"
+										class="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-slate-300 text-sm font-bold"
+										>Reset "Medications Taken" status for tomorrow</span
+									>
+								</label>
+								<p class="text-[11px] text-slate-500 mt-1 pl-8">
+									Uncheck this to clear the green "Taken" badge on the tablet.
+								</p>
+							</div>
+
+							<div class="pt-2">
+								<button
+									type="button"
+									onclick="saveData()"
+									class="w-full bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm shadow transition border border-emerald-500/40"
+								>
+									Save Maintenance Changes
+								</button>
+							</div>
+						</div>
+
+						<!-- Section 3: User Management & Roles (Admin Only) -->
+						<div id="section-admin-only" class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+							<div class="flex justify-between items-center border-b border-slate-800 pb-2">
+								<div>
+									<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+										<span>👥</span> User Management & Roles
 									</h3>
-									<span class="text-[11px] font-bold text-amber-300 px-2 py-0.5 rounded bg-amber-950/70 border border-amber-700">
-										Admin Only
-									</span>
-								</div>
-
-								<div>
-									<label class="block text-xs font-bold mb-1.5 text-slate-300"
-										>Board Title (Display Name):</label
-									>
-									<input
-										type="text"
-										id="input-board-title"
-										placeholder="e.g. Grandma's Daily Board"
-										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-									/>
-								</div>
-
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div>
-										<label class="block text-xs font-bold mb-1.5 text-slate-300"
-											>Reminders:</label
-										>
-										<textarea
-											id="input-reminders"
-											rows="3"
-											class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-										></textarea>
-									</div>
-
-									<div>
-										<label class="block text-xs font-bold mb-1.5 text-slate-300"
-											>Medications:</label
-										>
-										<textarea
-											id="input-medications"
-											rows="3"
-											class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-										></textarea>
-									</div>
-								</div>
-
-								<div>
-									<label class="block text-xs font-bold mb-1.5 text-slate-300"
-										>Zipcode (for Local Weather):</label
-									>
-									<input
-										type="text"
-										id="input-zipcode"
-										placeholder="e.g. 90210"
-										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-									/>
-								</div>
-
-								<div class="pt-3 border-t border-slate-800">
-									<h4 class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2.5">Custom Activity Suggestions</h4>
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-										<div>
-											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Sunny:</label>
-											<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
-										</div>
-										<div>
-											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Cloudy:</label>
-											<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
-										</div>
-										<div>
-											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Rainy:</label>
-											<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
-										</div>
-										<div>
-											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Snowy:</label>
-											<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
-										</div>
-									</div>
-								</div>
-
-								<div class="p-3.5 bg-slate-800/90 rounded-xl border border-slate-700">
-									<label class="flex items-center gap-3 cursor-pointer">
-										<input
-											type="checkbox"
-											id="input-meds-taken"
-											class="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
-										/>
-										<span class="text-slate-300 text-sm font-bold"
-											>Reset "Medications Taken" status for tomorrow</span
-										>
-									</label>
-									<p class="text-[11px] text-slate-500 mt-1 pl-8">
-										Uncheck this to clear the green "Taken" badge on the tablet.
+									<p class="text-xs text-slate-400 mt-0.5">
+										Assign roles and manage user access permissions.
 									</p>
 								</div>
+								<button
+									type="button"
+									onclick="toggleAddUserForm()"
+									class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1"
+								>
+									<span>+ Pre-assign User</span>
+								</button>
+							</div>
 
-								<div class="pt-2">
+							<!-- Pre-assign User Form (Optional) -->
+							<div id="form-add-user" class="hidden p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-3">
+								<div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pre-configure User Role by UID</div>
+								<p class="text-[11px] text-slate-400">
+									If you just created an account in Firebase Auth Console, enter their UID below to set their role ahead of time:
+								</p>
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+									<input
+										type="text"
+										id="input-new-uid"
+										placeholder="Firebase User UID"
+										class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+									/>
+									<input
+										type="email"
+										id="input-new-email"
+										placeholder="user@example.com"
+										class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+									/>
+									<select
+										id="select-new-role"
+										class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+									>
+										<option value="EDITOR">EDITOR (Post & Edit)</option>
+										<option value="ADMIN">ADMIN (Full Control)</option>
+										<option value="VIEWER">VIEWER (Display Kiosk)</option>
+									</select>
+								</div>
+								<div class="flex justify-end gap-2">
 									<button
 										type="button"
-										onclick="saveData()"
-										class="w-full bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm shadow transition border border-emerald-500/40"
+										onclick="toggleAddUserForm(false)"
+										class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded"
 									>
-										Save Maintenance Changes
+										Cancel
+									</button>
+									<button
+										type="button"
+										onclick="savePreconfiguredUser()"
+										class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded"
+									>
+										Save User Role
 									</button>
 								</div>
 							</div>
 
-							<!-- Card: User Management (Admin Only) -->
-							<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
-								<div class="flex justify-between items-center border-b border-slate-800 pb-2">
-									<div>
-										<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-											<span>👥</span> User Management & Roles
-										</h3>
-										<p class="text-xs text-slate-400 mt-0.5">
-											Assign roles and manage registered caregivers.
-										</p>
-									</div>
-									<button
-										type="button"
-										onclick="toggleAddUserForm()"
-										class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1"
-									>
-										<span>+ Pre-assign User</span>
-									</button>
-								</div>
-
-								<!-- Pre-assign User Form (Optional) -->
-								<div id="form-add-user" class="hidden p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-3">
-									<div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pre-configure User Role by UID</div>
-									<p class="text-[11px] text-slate-400">
-										If you just created an account in Firebase Auth Console, enter their UID below to set their role ahead of time:
-									</p>
-									<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-										<input
-											type="text"
-											id="input-new-uid"
-											placeholder="Firebase User UID"
-											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-										/>
-										<input
-											type="email"
-											id="input-new-email"
-											placeholder="user@example.com"
-											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
-										/>
-										<select
-											id="select-new-role"
-											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
-										>
-											<option value="EDITOR">EDITOR (Post Messages)</option>
-											<option value="ADMIN">ADMIN (Full Control)</option>
-											<option value="VIEWER">VIEWER (Display Kiosk)</option>
-										</select>
-									</div>
-									<div class="flex justify-end gap-2">
-										<button
-											type="button"
-											onclick="toggleAddUserForm(false)"
-											class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded"
-										>
-											Cancel
-										</button>
-										<button
-											type="button"
-											onclick="savePreconfiguredUser()"
-											class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded"
-										>
-											Save User Role
-										</button>
-									</div>
-								</div>
-
-								<!-- Users Table -->
-								<div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
-									<table class="w-full text-left text-xs text-slate-300">
-										<thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
-											<tr>
-												<th class="py-2.5 px-3">User</th>
-												<th class="py-2.5 px-3">Role</th>
-												<th class="py-2.5 px-3 text-center">Alert</th>
-												<th class="py-2.5 px-3 text-right">Actions</th>
-											</tr>
-										</thead>
-										<tbody id="users-table-body" class="divide-y divide-slate-800">
-											<tr>
-												<td colspan="4" class="py-4 text-center text-slate-500 italic">
-													Loading registered users...
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
+							<!-- Users Table -->
+							<div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
+								<table class="w-full text-left text-xs text-slate-300">
+									<thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+										<tr>
+											<th class="py-2.5 px-3">User</th>
+											<th class="py-2.5 px-3">Role</th>
+											<th class="py-2.5 px-3 text-center">Alert</th>
+											<th class="py-2.5 px-3 text-right">Access Status</th>
+										</tr>
+									</thead>
+									<tbody id="users-table-body" class="divide-y divide-slate-800">
+										<tr>
+											<td colspan="4" class="py-4 text-center text-slate-500 italic">
+												Loading registered users...
+											</td>
+										</tr>
+									</tbody>
+								</table>
 							</div>
 						</div>
 					</div>
@@ -697,22 +694,50 @@
 								email: user.email || '',
 								displayName: user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
 								role: 'VIEWER',
+								active: true,
 								notifyOnMeds: false,
 								createdAt: Date.now(),
 							};
 							await database.ref(`users/${user.uid}`).set(userProfile);
 						} else {
-							userProfile = snap.val() || { role: 'VIEWER', displayName: '', notifyOnMeds: false };
+							userProfile = snap.val() || { role: 'VIEWER', displayName: '', notifyOnMeds: false, active: true };
 							if (!userProfile.email && user.email) {
 								database.ref(`users/${user.uid}/email`).set(user.email);
 								userProfile.email = user.email;
 							}
+							if (userProfile.active === undefined) {
+								userProfile.active = true;
+							}
 						}
 						if (userProfile.role === 'USER') userProfile.role = 'EDITOR'; // legacy role migration
 						console.log('User Profile Loaded:', userProfile);
+
+						// Enforce Active Status: Block deactivated accounts
+						if (userProfile.active === false) {
+							console.warn('Account is deactivated:', user.uid);
+							await auth.signOut();
+							currentUser = null;
+							userProfile = null;
+							const authErr = document.getElementById('auth-error');
+							if (authErr) {
+								authErr.innerText = 'This account has been deactivated. Please contact an administrator.';
+								authErr.classList.remove('hidden');
+							}
+							document.getElementById('view-auth').classList.remove('hidden');
+							return;
+						}
+
+						// Real-time listener: immediately disconnect if account is deactivated by an admin
+						database.ref(`users/${user.uid}/active`).on('value', (activeSnap) => {
+							if (activeSnap.exists() && activeSnap.val() === false) {
+								alert('Your account has been deactivated by an administrator.');
+								auth.signOut();
+								location.reload();
+							}
+						});
 					} catch (err) {
 						console.warn('Could not fetch user profile, defaulting to VIEWER:', err);
-						userProfile = { role: 'VIEWER', displayName: '', notifyOnMeds: false };
+						userProfile = { role: 'VIEWER', displayName: '', notifyOnMeds: false, active: true };
 					}
 
 					// Populate Profile Form in Admin/Editor Panel
@@ -751,8 +776,8 @@
 							btnAdmin.classList.remove('hidden');
 						}
 						if (sectionAdminOnly) sectionAdminOnly.classList.add('hidden');
-						if (panelTitle) panelTitle.innerText = 'Editor & Profile Panel';
-						if (publishBtn) publishBtn.innerText = 'Publish Announcement Instantly';
+						if (panelTitle) panelTitle.innerText = 'Editor & Maintenance Panel';
+						if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
 					} else {
 						// VIEWER role (tablet kiosk display)
 						if (btnAdmin) btnAdmin.classList.add('hidden');
@@ -1051,17 +1076,26 @@
 					announceInput.value = data.announcement || '';
 				}
 
-				// Populate Admin-only Inputs if user is admin
-				if (userProfile && userProfile.role === 'ADMIN') {
-					document.getElementById('input-board-title').value = data.boardTitle || 'Senior Message Board';
-					document.getElementById('input-reminders').value = data.reminders || '';
-					document.getElementById('input-medications').value = data.medications || '';
-					document.getElementById('input-meds-taken').checked = data.medsTaken || false;
-					document.getElementById('input-zipcode').value = data.zipcode || '';
-					document.getElementById('input-suggest-sunny').value = data.suggestSunny || '';
-					document.getElementById('input-suggest-cloudy').value = data.suggestCloudy || '';
-					document.getElementById('input-suggest-rain').value = data.suggestRain || '';
-					document.getElementById('input-suggest-snow').value = data.suggestSnow || '';
+				// Populate Maintenance Inputs if user is admin or editor
+				if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
+					const titleEl = document.getElementById('input-board-title');
+					if (titleEl && document.activeElement !== titleEl) titleEl.value = data.boardTitle || 'Senior Message Board';
+					const remEl = document.getElementById('input-reminders');
+					if (remEl && document.activeElement !== remEl) remEl.value = data.reminders || '';
+					const medEl = document.getElementById('input-medications');
+					if (medEl && document.activeElement !== medEl) medEl.value = data.medications || '';
+					const medTakenEl = document.getElementById('input-meds-taken');
+					if (medTakenEl) medTakenEl.checked = data.medsTaken || false;
+					const zipEl = document.getElementById('input-zipcode');
+					if (zipEl && document.activeElement !== zipEl) zipEl.value = data.zipcode || '';
+					const sunnyEl = document.getElementById('input-suggest-sunny');
+					if (sunnyEl && document.activeElement !== sunnyEl) sunnyEl.value = data.suggestSunny || '';
+					const cloudyEl = document.getElementById('input-suggest-cloudy');
+					if (cloudyEl && document.activeElement !== cloudyEl) cloudyEl.value = data.suggestCloudy || '';
+					const rainEl = document.getElementById('input-suggest-rain');
+					if (rainEl && document.activeElement !== rainEl) rainEl.value = data.suggestRain || '';
+					const snowEl = document.getElementById('input-suggest-snow');
+					if (snowEl && document.activeElement !== snowEl) snowEl.value = data.suggestSnow || '';
 				}
 
 				// Notify on Medication Completion Transition
@@ -1114,28 +1148,12 @@
 
 			function saveData() {
 				console.log('Attempting to save board data...');
-				const announcement = document.getElementById('input-announcement').value;
-
-				if (userProfile && userProfile.role === 'EDITOR') {
-					database.ref('board').update(
-						{
-							announcement: announcement,
-							updatedAt: Date.now(),
-						},
-						(error) => {
-							if (error) {
-								console.error('Firebase Save Error:', error);
-								alert('Failed to publish announcement: ' + error.message);
-							} else {
-								console.log('Announcement published successfully.');
-								alert('Announcement published successfully! Tablet will update instantly.');
-								switchView('display');
-							}
-						}
-					);
+				if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+					alert('Permission Denied: You do not have permission to modify board content.');
 					return;
 				}
 
+				const announcement = document.getElementById('input-announcement').value;
 				const boardTitle = document.getElementById('input-board-title').value;
 				const reminders = document.getElementById('input-reminders').value;
 				const medications = document.getElementById('input-medications').value;
@@ -1261,37 +1279,63 @@
 					const email = escapeHtml(user.email || 'No email');
 					const role = user.role || 'VIEWER';
 					const hasMedsAlert = !!user.notifyOnMeds;
+					const isActive = user.active !== false; // default true if undefined
 
 					html += `
-						<tr class="hover:bg-slate-800/50 transition">
-							<td class="py-3 px-4">
-								<div class="font-bold text-white flex items-center gap-2">
+						<tr class="hover:bg-slate-800/50 transition ${!isActive ? 'opacity-60 bg-rose-950/20' : ''}">
+							<td class="py-3 px-3">
+								<div class="font-bold text-white flex items-center gap-1.5 flex-wrap">
 									<span>${displayName}</span>
 									${isSelf ? '<span class="text-[10px] bg-blue-900/60 text-blue-300 border border-blue-600 px-1.5 py-0.2 rounded font-bold">YOU</span>' : ''}
+									${!isActive ? '<span class="text-[10px] bg-rose-900/70 text-rose-300 border border-rose-600 px-1.5 py-0.2 rounded font-bold uppercase">Deactivated</span>' : ''}
 								</div>
 								<div class="text-[11px] text-slate-400 font-mono">${email}</div>
 								<div class="text-[10px] text-slate-600 font-mono select-all">UID: ${uid}</div>
 							</td>
-							<td class="py-3 px-4">
+							<td class="py-3 px-3">
 								<select
 									onchange="updateUserRole('${uid}', this.value)"
-									class="bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 font-bold"
+									${!isActive ? 'disabled' : ''}
+									class="bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-500 font-bold ${!isActive ? 'opacity-50 cursor-not-allowed' : ''}"
 								>
-									<option value="ADMIN" ${role === 'ADMIN' ? 'selected' : ''}>ADMIN (Full Control)</option>
-									<option value="EDITOR" ${role === 'EDITOR' ? 'selected' : ''}>EDITOR (Post Messages)</option>
-									<option value="VIEWER" ${role === 'VIEWER' ? 'selected' : ''}>VIEWER (Kiosk Display)</option>
+									<option value="ADMIN" ${role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+									<option value="EDITOR" ${role === 'EDITOR' ? 'selected' : ''}>EDITOR</option>
+									<option value="VIEWER" ${role === 'VIEWER' ? 'selected' : ''}>VIEWER</option>
 								</select>
 							</td>
-							<td class="py-3 px-4 text-center">
+							<td class="py-3 px-3 text-center">
 								${hasMedsAlert
 									? '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded-full">🔔 Active</span>'
 									: '<span class="text-slate-500 text-[11px]">Off</span>'
 								}
 							</td>
-							<td class="py-3 px-4 text-right">
+							<td class="py-3 px-3 text-right">
 								${isSelf
-									? '<span class="text-slate-600 text-xs italic">Current account</span>'
-									: `<button onclick="deleteUserProfile('${uid}', '${displayName || email}')" class="text-rose-400 hover:text-rose-300 font-bold text-xs transition px-2 py-1 rounded hover:bg-rose-950/40">Remove</button>`
+									? '<span class="text-emerald-400 text-xs font-bold px-2.5 py-1 bg-emerald-950/40 rounded border border-emerald-900">● Active</span>'
+									: `
+										<div class="flex items-center justify-end gap-1.5">
+											<button
+												type="button"
+												onclick="toggleUserActive('${uid}', ${!isActive}, '${displayName || email}')"
+												class="px-2.5 py-1 rounded text-xs font-bold transition flex items-center gap-1 ${
+													isActive
+														? 'bg-emerald-950/80 text-emerald-300 border border-emerald-600 hover:bg-rose-950/60 hover:text-rose-300 hover:border-rose-500'
+														: 'bg-slate-800 text-slate-400 border border-slate-600 hover:bg-emerald-950/60 hover:text-emerald-300 hover:border-emerald-500'
+												}"
+												title="${isActive ? 'Click to deactivate user' : 'Click to activate user'}"
+											>
+												<span>${isActive ? '● Active' : '○ Inactive'}</span>
+											</button>
+											<button
+												type="button"
+												onclick="deleteUserProfile('${uid}', '${displayName || email}')"
+												class="text-slate-600 hover:text-rose-400 text-xs p-1 rounded hover:bg-rose-950/30 transition"
+												title="Permanently remove database record"
+											>
+												🗑️
+											</button>
+										</div>
+									`
 								}
 							</td>
 						</tr>
@@ -1299,6 +1343,30 @@
 				});
 
 				tbody.innerHTML = html;
+			}
+
+			async function toggleUserActive(uid, newActiveState, label) {
+				if (!currentUser) return;
+				if (uid === currentUser.uid && !newActiveState) {
+					alert('You cannot deactivate your own administrative account.');
+					return;
+				}
+
+				const actionWord = newActiveState ? 'activate' : 'deactivate';
+				const confirmMsg = newActiveState
+					? `Activate the account for "${label}"? They will regain access to the board.`
+					: `Deactivate the account for "${label}"?\n\nThey will be immediately signed out and blocked from logging in until reactivated.`;
+
+				const proceed = confirm(confirmMsg);
+				if (!proceed) return;
+
+				try {
+					await database.ref(`users/${uid}/active`).set(newActiveState);
+					showToast(`User "${label}" is now ${newActiveState ? 'ACTIVE' : 'DEACTIVATED'}.`);
+				} catch (err) {
+					console.error('Failed to update active state:', err);
+					alert('Failed to update account status: ' + err.message);
+				}
 			}
 
 			async function updateUserRole(uid, newRole) {
@@ -1327,7 +1395,7 @@
 
 			async function deleteUserProfile(uid, label) {
 				const proceed = confirm(
-					`Are you sure you want to remove the database profile for "${label}"?\n\nNote: This revokes their board role in the database. To permanently remove login credentials, delete the user from the Firebase Authentication Console.`
+					`Are you sure you want to remove the database profile for "${label}"?\n\nTip: You can deactivate the user instead of deleting to safely disable their access while keeping their history.\n\nProceed with permanent removal from database?`
 				);
 				if (!proceed) return;
 
@@ -1366,6 +1434,7 @@
 						email: email,
 						displayName: email ? email.split('@')[0] : 'User',
 						role: role,
+						active: true,
 						notifyOnMeds: false,
 						createdAt: Date.now(),
 					});

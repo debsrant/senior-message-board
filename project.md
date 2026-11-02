@@ -138,9 +138,9 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
 
 ### D. Security Rules
 Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
-- Only authenticated users can read the board.
-- Users with `ADMIN` role can update all board contents, view the registered users directory, and manage user roles.
-- Users with `EDITOR` role can post announcements, schedule calendar events/appointments, and update their own profile and notification preferences.
+- Only authenticated and active (`active !== false`) users can read the board.
+- Users with `ADMIN` and `EDITOR` roles can update board contents (announcements, calendar events, reminders, medications, zipcode, weather suggestions).
+- Users with `ADMIN` role can view and manage registered users (`/users`) including role assignments and active/inactive status toggling.
 - Users with `VIEWER` role can log medication completion (`medsTaken` and `medsTakenTime`).
 - Users can read and update their own profile settings under `users/$uid` (display name, notification preferences).
 
@@ -149,29 +149,20 @@ Example rules:
 {
   "rules": {
     "users": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN' && root.child('users').child(auth.uid).child('active').val() !== false",
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'ADMIN')"
+        ".read": "auth != null && (auth.uid === $uid || (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' && root.child('users').child(auth.uid).child('active').val() !== false))",
+        ".write": "auth != null && (auth.uid === $uid || (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' && root.child('users').child(auth.uid).child('active').val() !== false))"
       }
     },
     "board": {
-      ".read": "auth != null",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'ADMIN'",
-      "announcement": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
-      },
-      "events": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
-      },
-      "updatedAt": {
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
-      },
+      ".read": "auth != null && root.child('users').child(auth.uid).child('active').val() !== false",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() !== false && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')",
       "medsTaken": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() !== false"
       },
       "medsTakenTime": {
-        ".write": "auth != null"
+        ".write": "auth != null && root.child('users').child(auth.uid).child('active').val() !== false"
       }
     }
   }
@@ -184,11 +175,11 @@ Example rules:
     1. **Today's Important Message / Announcement**: Enter a personalized message (hidden on the tablet when left empty).
     2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Delete events when canceled.
     3. **Publish Changes**: Large action button to instantly push updates to the tablet.
-  - **Column 2 (Profile & Maintenance)**:
-    1. **My Profile**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
-    2. **Board Maintenance (Admin Only)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication status.
-    3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), or pre-assign roles.
-    *(Note: For users with the `EDITOR` role, all maintenance items in Column 2 remain securely hidden, showing only their personal profile).*
+  - **Column 2 (Profile, Maintenance & Access Control)**:
+    1. **My Profile (Admin & Editor)**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
+    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status.
+    3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), pre-assign new users, and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
+    *(Note: For users with the `EDITOR` role, the User Management card is hidden, while Board Maintenance & Schedules remains fully accessible).*
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
