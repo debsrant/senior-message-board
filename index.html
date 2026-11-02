@@ -164,8 +164,8 @@
 					</div>
 
 					<!-- Dynamic Events List Container -->
-					<div id="disp-events-list" class="space-y-3">
-						<div class="p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
+					<div id="disp-events-list" class="flex flex-wrap gap-4">
+						<div class="w-full p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
 							<div class="text-3xl">🌿</div>
 							<div class="text-lg font-bold text-slate-300">No appointments scheduled</div>
 							<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
@@ -235,9 +235,9 @@
 			<!-- ================= ADMIN & EDITOR PANEL ================= -->
 			<div
 				id="view-admin"
-				class="hidden space-y-6 max-w-2xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
+				class="hidden space-y-6 max-w-6xl mx-auto bg-slate-800 p-8 rounded-2xl border border-slate-700 shadow-xl"
 			>
-				<div class="border-b border-slate-700 pb-3 flex justify-between items-start">
+				<div class="border-b border-slate-700 pb-4 flex justify-between items-start">
 					<div>
 						<h2 id="admin-panel-title" class="text-2xl font-bold text-white">
 							Remote Administration Panel
@@ -254,357 +254,399 @@
 					</span>
 				</div>
 
-				<!-- Section 1: User Profile -->
-				<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
-					<div class="flex items-center justify-between border-b border-slate-800 pb-2">
-						<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-							<span>👤</span> My Profile
-						</h3>
-						<span
-							id="profile-role-badge"
-							class="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
-						>
-							Role: ADMIN
-						</span>
-					</div>
-
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<label class="block text-xs font-bold mb-1 text-slate-300">Display Name:</label>
-							<input
-								type="text"
-								id="input-profile-name"
-								placeholder="e.g. Sarah"
-								class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-							/>
-							<p class="text-[11px] text-slate-500 mt-1">Name shown on your account and messages.</p>
-						</div>
-						<div>
-							<label class="block text-xs font-bold mb-1 text-slate-300">Account Email:</label>
-							<input
-								type="text"
-								id="input-profile-email"
-								disabled
-								class="w-full bg-slate-950/60 border border-slate-800 rounded-lg p-2.5 text-slate-400 text-sm cursor-not-allowed outline-none font-mono"
-							/>
-							<p class="text-[11px] text-slate-500 mt-1">Firebase Authentication email.</p>
-						</div>
-					</div>
-
-					<div class="pt-3 border-t border-slate-800 space-y-2">
-						<label class="flex items-center gap-3 cursor-pointer">
-							<input
-								type="checkbox"
-								id="input-profile-notify-meds"
-								class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
-							/>
-							<span class="text-slate-200 text-sm font-bold">
-								Notify me when medications are taken
-							</span>
-						</label>
-						<div class="flex items-center justify-between text-xs text-slate-400 pl-8">
-							<span id="perm-status">Checking browser alerts...</span>
-							<button
-								type="button"
-								id="btn-request-perm"
-								onclick="requestBrowserNotificationPermission()"
-								class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded border border-slate-600 transition"
-							>
-								Enable Browser Alerts
-							</button>
-						</div>
-					</div>
-
-					<div class="flex items-center gap-3 pt-1">
-						<button
-							type="button"
-							onclick="saveUserProfile()"
-							class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm shadow transition"
-						>
-							Save Profile
-						</button>
-						<span id="profile-save-status" class="text-xs text-emerald-400 font-bold hidden">
-							✓ Profile updated successfully!
-						</span>
-					</div>
-				</div>
-
-				<!-- Section 2: Announcement (Accessible to both Admin & Editor) -->
-				<div class="space-y-4">
-					<div>
-						<label class="block text-sm font-bold mb-2 text-slate-300"
-							>Today's Important Message / Announcement:</label
-						>
-						<textarea
-							id="input-announcement"
-							rows="3"
-							placeholder="Write an announcement or encouraging note for the senior..."
-							class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-						></textarea>
-						<p class="text-xs text-slate-400 mt-1">
-							Featured in large font on the main card of the senior's tablet screen.
-						</p>
-					</div>
-
-					<!-- Section: Calendar Events & Appointments (Accessible to Admin & Editor) -->
-					<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
-						<div class="flex items-center justify-between border-b border-slate-800 pb-2">
-							<div>
-								<h3 class="text-sm font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-									<span>📅</span> Scheduled Appointments & Events
+				<!-- 2-Column Responsive Layout -->
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+					<!-- COLUMN 1: Daily Messages & Calendar Events -->
+					<div class="space-y-6">
+						<!-- Card: Today's Announcement -->
+						<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-3 shadow-inner">
+							<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+								<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+									<span>📣</span> Today's Important Message
 								</h3>
-								<p class="text-xs text-slate-400 mt-0.5">
-									Add doctor visits and outings. Chronologically sorted with automatic past-event cleanup.
+								<span class="text-[11px] font-bold text-blue-300 px-2 py-0.5 rounded bg-blue-950/70 border border-blue-700">
+									Admin & Editor
+								</span>
+							</div>
+							<div>
+								<label class="block text-xs font-bold mb-1.5 text-slate-300"
+									>Announcement Text:</label
+								>
+								<textarea
+									id="input-announcement"
+									rows="4"
+									placeholder="Write an announcement or encouraging note for the senior..."
+									class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white text-base focus:ring-2 focus:ring-blue-500 outline-none"
+								></textarea>
+								<p class="text-[11px] text-slate-400 mt-1">
+									Featured prominently in large font on the senior's tablet screen. Leave blank to hide.
 								</p>
 							</div>
-							<span class="text-[11px] font-bold text-indigo-300 px-2 py-0.5 rounded bg-indigo-950/70 border border-indigo-700">
-								Admin & Editor
-							</span>
 						</div>
 
-						<!-- Add Event Form -->
-						<div class="p-4 bg-slate-800/80 rounded-xl border border-slate-700 space-y-3">
-							<div class="text-xs font-bold text-slate-200 uppercase tracking-wider">Schedule an Appointment</div>
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-								<div class="md:col-span-2">
-									<label class="block text-xs font-bold mb-1 text-slate-300">Appointment Title:</label>
-									<input
-										type="text"
-										id="input-event-title"
-										placeholder="e.g. Dr. Miller - Eye Exam"
-										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-									/>
-								</div>
+						<!-- Card: Calendar Events & Appointments -->
+						<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+							<div class="flex items-center justify-between border-b border-slate-800 pb-2">
 								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-300">Date:</label>
-									<input
-										type="date"
-										id="input-event-date"
-										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-									/>
-								</div>
-								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-300">Time (Optional):</label>
-									<input
-										type="time"
-										id="input-event-time"
-										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-									/>
-								</div>
-								<div class="md:col-span-2">
-									<label class="block text-xs font-bold mb-1 text-slate-300">Notes / Driver (Optional):</label>
-									<input
-										type="text"
-										id="input-event-notes"
-										placeholder="e.g. Sarah is driving, bring reading glasses"
-										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-									/>
-								</div>
-							</div>
-							<div class="flex justify-end pt-1">
-								<button
-									type="button"
-									onclick="addCalendarEvent()"
-									class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm shadow transition flex items-center gap-1.5"
-								>
-									<span>+ Add Appointment</span>
-								</button>
-							</div>
-						</div>
-
-						<!-- Current Scheduled Appointments List in Panel -->
-						<div class="space-y-2">
-							<div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Upcoming Scheduled List</div>
-							<div id="admin-events-list" class="space-y-2">
-								<div class="p-3 text-center text-xs text-slate-500 italic bg-slate-800/40 rounded-lg border border-slate-800">
-									No upcoming appointments.
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Section 4: Administrative Only Settings (Hidden for Editor) -->
-					<div id="section-admin-only" class="space-y-4">
-						<div>
-							<label class="block text-sm font-bold mb-2 text-slate-300"
-								>Board Title (Display Name):</label
-							>
-							<input
-								type="text"
-								id="input-board-title"
-								placeholder="e.g. Grandma's Daily Board"
-								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-							/>
-						</div>
-
-						<div>
-							<label class="block text-sm font-bold mb-2 text-slate-300"
-								>Reminders:</label
-							>
-							<textarea
-								id="input-reminders"
-								rows="3"
-								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-							></textarea>
-						</div>
-
-						<div>
-							<label class="block text-sm font-bold mb-2 text-slate-300"
-								>Medications:</label
-							>
-							<textarea
-								id="input-medications"
-								rows="3"
-								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-							></textarea>
-						</div>
-
-						<div>
-							<label class="block text-sm font-bold mb-2 text-slate-300"
-								>Zipcode (for Local Weather):</label
-							>
-							<input
-								type="text"
-								id="input-zipcode"
-								placeholder="e.g. 90210"
-								class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-							/>
-						</div>
-
-						<div class="pt-4 border-t border-slate-700">
-							<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider mb-3">Custom Activity Suggestions</h3>
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-400">If Sunny:</label>
-									<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-								</div>
-								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-400">If Cloudy:</label>
-									<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-								</div>
-								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-400">If Rainy:</label>
-									<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-								</div>
-								<div>
-									<label class="block text-xs font-bold mb-1 text-slate-400">If Snowy:</label>
-									<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm outline-none focus:ring-1 focus:ring-blue-500" />
-								</div>
-							</div>
-						</div>
-
-						<div class="p-4 bg-slate-900 rounded-lg border border-slate-700">
-							<label class="flex items-center gap-3 cursor-pointer">
-								<input
-									type="checkbox"
-									id="input-meds-taken"
-									class="w-6 h-6 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
-								/>
-								<span class="text-slate-300 font-bold"
-									>Reset "Medications Taken" status for tomorrow</span
-								>
-							</label>
-							<p class="text-xs text-slate-500 mt-2">
-								Uncheck this to clear the green "Taken" badge on the tablet.
-							</p>
-						</div>
-
-						<!-- Section 4: User Management (Admin Only) -->
-						<div class="pt-6 border-t border-slate-700 space-y-4">
-							<div class="flex justify-between items-center">
-								<div>
-									<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
-										<span>👥</span> User Management & Roles
+									<h3 class="text-sm font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+										<span>📅</span> Scheduled Appointments & Events
 									</h3>
 									<p class="text-xs text-slate-400 mt-0.5">
-										Assign roles and manage registered caregivers and viewers.
+										Add doctor visits and outings. Chronologically sorted with past-event cleanup.
 									</p>
 								</div>
-								<button
-									type="button"
-									onclick="toggleAddUserForm()"
-									class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1"
-								>
-									<span>+ Pre-assign User</span>
-								</button>
+								<span class="text-[11px] font-bold text-indigo-300 px-2 py-0.5 rounded bg-indigo-950/70 border border-indigo-700">
+									Admin & Editor
+								</span>
 							</div>
 
-							<!-- Pre-assign User Form (Optional) -->
-							<div id="form-add-user" class="hidden p-4 bg-slate-900 rounded-xl border border-slate-700 space-y-3">
-								<div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pre-configure User Role by UID</div>
-								<p class="text-xs text-slate-400">
-									If you just created an account in Firebase Auth Console, enter their UID below to set their role ahead of time:
-								</p>
-								<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+							<!-- Add Event Form -->
+							<div class="p-4 bg-slate-800/80 rounded-xl border border-slate-700 space-y-3">
+								<div class="text-xs font-bold text-slate-200 uppercase tracking-wider">Schedule an Appointment</div>
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+									<div class="md:col-span-2">
+										<label class="block text-xs font-bold mb-1 text-slate-300">Appointment Title:</label>
+										<input
+											type="text"
+											id="input-event-title"
+											placeholder="e.g. Dr. Miller - Eye Exam"
+											class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-bold mb-1 text-slate-300">Date:</label>
+										<input
+											type="date"
+											id="input-event-date"
+											class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-bold mb-1 text-slate-300">Time (Optional):</label>
+										<input
+											type="time"
+											id="input-event-time"
+											class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+										/>
+									</div>
+									<div class="md:col-span-2">
+										<label class="block text-xs font-bold mb-1 text-slate-300">Notes / Driver (Optional):</label>
+										<input
+											type="text"
+											id="input-event-notes"
+											placeholder="e.g. Sarah is driving, bring reading glasses"
+											class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+										/>
+									</div>
+								</div>
+								<div class="flex justify-end pt-1">
+									<button
+										type="button"
+										onclick="addCalendarEvent()"
+										class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm shadow transition flex items-center gap-1.5"
+									>
+										<span>+ Add Appointment</span>
+									</button>
+								</div>
+							</div>
+
+							<!-- Current Scheduled Appointments List in Panel -->
+							<div class="space-y-2">
+								<div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Upcoming Scheduled List</div>
+								<div id="admin-events-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+									<div class="p-3 text-center text-xs text-slate-500 italic bg-slate-800/40 rounded-lg border border-slate-800">
+										No upcoming appointments.
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Primary Publish Button -->
+						<button
+							onclick="saveData()"
+							id="btn-publish-data"
+							class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
+						>
+							Publish Changes Instantly
+						</button>
+					</div>
+
+					<!-- COLUMN 2: Profile & Maintenance Items -->
+					<div class="space-y-6">
+						<!-- Card: User Profile -->
+						<div id="section-profile" class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+							<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+								<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+									<span>👤</span> My Profile
+								</h3>
+								<span
+									id="profile-role-badge"
+									class="text-[11px] font-bold text-slate-400 uppercase tracking-wider"
+								>
+									Role: ADMIN
+								</span>
+							</div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-300">Display Name:</label>
 									<input
 										type="text"
-										id="input-new-uid"
-										placeholder="Firebase User UID"
-										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+										id="input-profile-name"
+										placeholder="e.g. Sarah"
+										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500 outline-none"
 									/>
-									<input
-										type="email"
-										id="input-new-email"
-										placeholder="user@example.com"
-										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
-									/>
-									<select
-										id="select-new-role"
-										class="bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
-									>
-										<option value="EDITOR">EDITOR (Post Messages)</option>
-										<option value="ADMIN">ADMIN (Full Control)</option>
-										<option value="VIEWER">VIEWER (Display Kiosk)</option>
-									</select>
+									<p class="text-[11px] text-slate-500 mt-1">Name shown on your account and messages.</p>
 								</div>
-								<div class="flex justify-end gap-2">
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-300">Account Email:</label>
+									<input
+										type="text"
+										id="input-profile-email"
+										disabled
+										class="w-full bg-slate-950/60 border border-slate-800 rounded-lg p-2.5 text-slate-400 text-sm cursor-not-allowed outline-none font-mono"
+									/>
+									<p class="text-[11px] text-slate-500 mt-1">Firebase Authentication email.</p>
+								</div>
+							</div>
+
+							<div class="pt-3 border-t border-slate-800 space-y-2">
+								<label class="flex items-center gap-3 cursor-pointer">
+									<input
+										type="checkbox"
+										id="input-profile-notify-meds"
+										class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-blue-600 focus:ring-blue-500"
+									/>
+									<span class="text-slate-200 text-sm font-bold">
+										Notify me when medications are taken
+									</span>
+								</label>
+								<div class="flex items-center justify-between text-xs text-slate-400 pl-8">
+									<span id="perm-status">Checking browser alerts...</span>
 									<button
 										type="button"
-										onclick="toggleAddUserForm(false)"
-										class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded"
+										id="btn-request-perm"
+										onclick="requestBrowserNotificationPermission()"
+										class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded border border-slate-600 transition"
 									>
-										Cancel
-									</button>
-									<button
-										type="button"
-										onclick="savePreconfiguredUser()"
-										class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded"
-									>
-										Save User Role
+										Enable Browser Alerts
 									</button>
 								</div>
 							</div>
 
-							<!-- Users Table -->
-							<div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
-								<table class="w-full text-left text-xs text-slate-300">
-									<thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
-										<tr>
-											<th class="py-3 px-4">User</th>
-											<th class="py-3 px-4">Role</th>
-											<th class="py-3 px-4 text-center">Meds Alert</th>
-											<th class="py-3 px-4 text-right">Actions</th>
-										</tr>
-									</thead>
-									<tbody id="users-table-body" class="divide-y divide-slate-800">
-										<tr>
-											<td colspan="4" class="py-4 text-center text-slate-500 italic">
-												Loading registered users...
-											</td>
-										</tr>
-									</tbody>
-								</table>
+							<div class="flex items-center gap-3 pt-1">
+								<button
+									type="button"
+									onclick="saveUserProfile()"
+									class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-sm shadow transition"
+								>
+									Save Profile
+								</button>
+								<span id="profile-save-status" class="text-xs text-emerald-400 font-bold hidden">
+									✓ Profile updated successfully!
+								</span>
+							</div>
+						</div>
+
+						<!-- Section 4: Maintenance Items (Admin Only) -->
+						<div id="section-admin-only" class="space-y-6">
+							<!-- Maintenance Box -->
+							<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-5 shadow-inner">
+								<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+									<h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+										<span>⚙️</span> Board Maintenance & Schedules
+									</h3>
+									<span class="text-[11px] font-bold text-amber-300 px-2 py-0.5 rounded bg-amber-950/70 border border-amber-700">
+										Admin Only
+									</span>
+								</div>
+
+								<div>
+									<label class="block text-xs font-bold mb-1.5 text-slate-300"
+										>Board Title (Display Name):</label
+									>
+									<input
+										type="text"
+										id="input-board-title"
+										placeholder="e.g. Grandma's Daily Board"
+										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+									/>
+								</div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+									<div>
+										<label class="block text-xs font-bold mb-1.5 text-slate-300"
+											>Reminders:</label
+										>
+										<textarea
+											id="input-reminders"
+											rows="3"
+											class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+										></textarea>
+									</div>
+
+									<div>
+										<label class="block text-xs font-bold mb-1.5 text-slate-300"
+											>Medications:</label
+										>
+										<textarea
+											id="input-medications"
+											rows="3"
+											class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+										></textarea>
+									</div>
+								</div>
+
+								<div>
+									<label class="block text-xs font-bold mb-1.5 text-slate-300"
+										>Zipcode (for Local Weather):</label
+									>
+									<input
+										type="text"
+										id="input-zipcode"
+										placeholder="e.g. 90210"
+										class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+									/>
+								</div>
+
+								<div class="pt-3 border-t border-slate-800">
+									<h4 class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2.5">Custom Activity Suggestions</h4>
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+										<div>
+											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Sunny:</label>
+											<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Cloudy:</label>
+											<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Rainy:</label>
+											<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+										</div>
+										<div>
+											<label class="block text-[11px] font-bold mb-1 text-slate-400">If Snowy:</label>
+											<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+										</div>
+									</div>
+								</div>
+
+								<div class="p-3.5 bg-slate-800/90 rounded-xl border border-slate-700">
+									<label class="flex items-center gap-3 cursor-pointer">
+										<input
+											type="checkbox"
+											id="input-meds-taken"
+											class="w-5 h-5 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
+										/>
+										<span class="text-slate-300 text-sm font-bold"
+											>Reset "Medications Taken" status for tomorrow</span
+										>
+									</label>
+									<p class="text-[11px] text-slate-500 mt-1 pl-8">
+										Uncheck this to clear the green "Taken" badge on the tablet.
+									</p>
+								</div>
+
+								<div class="pt-2">
+									<button
+										type="button"
+										onclick="saveData()"
+										class="w-full bg-emerald-700/80 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm shadow transition border border-emerald-500/40"
+									>
+										Save Maintenance Changes
+									</button>
+								</div>
+							</div>
+
+							<!-- Card: User Management (Admin Only) -->
+							<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+								<div class="flex justify-between items-center border-b border-slate-800 pb-2">
+									<div>
+										<h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
+											<span>👥</span> User Management & Roles
+										</h3>
+										<p class="text-xs text-slate-400 mt-0.5">
+											Assign roles and manage registered caregivers.
+										</p>
+									</div>
+									<button
+										type="button"
+										onclick="toggleAddUserForm()"
+										class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 rounded-lg transition border border-slate-600 flex items-center gap-1"
+									>
+										<span>+ Pre-assign User</span>
+									</button>
+								</div>
+
+								<!-- Pre-assign User Form (Optional) -->
+								<div id="form-add-user" class="hidden p-4 bg-slate-800 rounded-xl border border-slate-700 space-y-3">
+									<div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Pre-configure User Role by UID</div>
+									<p class="text-[11px] text-slate-400">
+										If you just created an account in Firebase Auth Console, enter their UID below to set their role ahead of time:
+									</p>
+									<div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+										<input
+											type="text"
+											id="input-new-uid"
+											placeholder="Firebase User UID"
+											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+										/>
+										<input
+											type="email"
+											id="input-new-email"
+											placeholder="user@example.com"
+											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+										/>
+										<select
+											id="select-new-role"
+											class="bg-slate-900 border border-slate-700 rounded p-2 text-white text-xs outline-none focus:ring-1 focus:ring-blue-500"
+										>
+											<option value="EDITOR">EDITOR (Post Messages)</option>
+											<option value="ADMIN">ADMIN (Full Control)</option>
+											<option value="VIEWER">VIEWER (Display Kiosk)</option>
+										</select>
+									</div>
+									<div class="flex justify-end gap-2">
+										<button
+											type="button"
+											onclick="toggleAddUserForm(false)"
+											class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 rounded"
+										>
+											Cancel
+										</button>
+										<button
+											type="button"
+											onclick="savePreconfiguredUser()"
+											class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white rounded"
+										>
+											Save User Role
+										</button>
+									</div>
+								</div>
+
+								<!-- Users Table -->
+								<div class="overflow-x-auto rounded-xl border border-slate-700 bg-slate-900/60">
+									<table class="w-full text-left text-xs text-slate-300">
+										<thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+											<tr>
+												<th class="py-2.5 px-3">User</th>
+												<th class="py-2.5 px-3">Role</th>
+												<th class="py-2.5 px-3 text-center">Alert</th>
+												<th class="py-2.5 px-3 text-right">Actions</th>
+											</tr>
+										</thead>
+										<tbody id="users-table-body" class="divide-y divide-slate-800">
+											<tr>
+												<td colspan="4" class="py-4 text-center text-slate-500 italic">
+													Loading registered users...
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
 						</div>
 					</div>
-
-					<button
-						onclick="saveData()"
-						id="btn-publish-data"
-						class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl text-lg shadow-lg transition"
-					>
-						Publish Changes Instantly
-					</button>
 				</div>
 			</div>
 		</main>
@@ -1433,7 +1475,7 @@
 				if (dispContainer) {
 					if (upcoming.length === 0) {
 						dispContainer.innerHTML = `
-							<div class="p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
+							<div class="w-full p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
 								<div class="text-3xl">🌿</div>
 								<div class="text-lg font-bold text-slate-300">No appointments scheduled</div>
 								<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
@@ -1444,7 +1486,7 @@
 						upcoming.forEach((evt) => {
 							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time);
 							html += `
-								<div class="bg-slate-900/90 p-5 rounded-xl border border-slate-700/80 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3">
+								<div class="flex-1 min-w-[280px] sm:min-w-[320px] bg-slate-900/90 p-5 rounded-xl border border-slate-700/80 shadow-md flex flex-col justify-between gap-3">
 									<div class="space-y-1">
 										<div class="flex items-center gap-2 flex-wrap">
 											<span class="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${badgeColor}">

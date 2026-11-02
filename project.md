@@ -179,23 +179,20 @@ Example rules:
 ```
 
 ### E. Operating the Views
-- **Admin View**:
-  1. Caregiver signs in with `ADMIN` credentials and opens the **Admin** panel.
-  2. **Edit User Profile**: Under "My Profile", set your display name, view your email and assigned `ADMIN` role, and toggle medication notifications.
-  3. **Calendar Events & Appointments**: Add doctor visits, therapy, and family events with title, date, time, and driver/notes. Delete events when canceled.
-  4. **Board Administration**: Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
-  5. **User Management & Role Assignment**: View all registered users in real time, change roles (`ADMIN`, `EDITOR`, `VIEWER`), or pre-assign roles.
-  6. Click **Publish Changes Instantly**.
-- **Editor View (Family Members & Messages)**:
-  1. Family member signs in with `EDITOR` credentials and opens the **Editor Panel**.
-  2. **Edit User Profile**: Update your display name and toggle medication alert subscriptions.
-  3. **Post Announcements**: Enter a personalized message under **Today's Message / Announcement**.
-  4. **Calendar Events & Appointments**: Add or remove doctor visits and appointments with dates, times, and driver notes.
-  5. Core administrative settings (medication prescriptions, board title, weather coordinates, user directory) remain hidden and protected.
+- **Two-Column Admin & Editor Panel Layout**:
+  - **Column 1 (Daily Board Content & Actions)**:
+    1. **Today's Important Message / Announcement**: Enter a personalized message (hidden on the tablet when left empty).
+    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Delete events when canceled.
+    3. **Publish Changes**: Large action button to instantly push updates to the tablet.
+  - **Column 2 (Profile & Maintenance)**:
+    1. **My Profile**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
+    2. **Board Maintenance (Admin Only)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication status.
+    3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), or pre-assign roles.
+    *(Note: For users with the `EDITOR` role, all maintenance items in Column 2 remain securely hidden, showing only their personal profile).*
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. **Appointments Banner**: Displays upcoming appointments chronologically with badges ("TODAY", "TOMORROW", "Weekday, Date") and driver notes. Shows a friendly placeholder ("No appointments scheduled. Relax and enjoy your day! ☀️") when none are scheduled. Past events are automatically cleaned up.
+  3. **Appointments Banner**: Displays upcoming appointments chronologically in side-by-side cards with responsive wrapping across the tablet screen, badges ("TODAY", "TOMORROW", "Weekday, Date"), and driver notes. Shows a friendly placeholder ("No appointments scheduled. Relax and enjoy your day! ☀️") when none are scheduled. Past events are automatically cleaned up.
   4. Displays time, date, local weather (with city name), announcements (hidden when empty), reminders, and medications.
   5. Senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and notifying subscribed caregivers.
 

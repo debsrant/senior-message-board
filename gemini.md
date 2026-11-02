@@ -21,8 +21,8 @@
 ## Key Setup Features
 
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
-- Calendar & Appointments: Full-width banner displaying upcoming doctor visits and events with chronological sorting, senior-friendly badges ("TODAY", "TOMORROW"), notes/driver details, and automatic past-event cleanup.
+- Calendar & Appointments: Full-width banner displaying upcoming doctor visits and events with side-by-side card wrapping, chronological sorting, senior-friendly badges ("TODAY", "TOMORROW"), notes/driver details, and automatic past-event cleanup.
 - Profile Management: Authenticated users can edit their profile (display name and notification settings) directly within the Admin panel.
 - In-App User Management: Admins can view all registered users in real time, assign roles (ADMIN, EDITOR, VIEWER), and pre-configure new user accounts directly in the Admin panel.
-- Dual-view toggling: Display Mode & Admin/Editor Panel with role-based feature gating.
+- Dual-view toggling: Display Mode & Admin/Editor Panel with role-based feature gating and a clean two-column layout (Column 1: Announcements, Events & Publish; Column 2: Profile & Maintenance/User Management).
 - Medication Notification System: Browser push notifications, audio chime, and in-app alerts dispatched to editors and admins when medication is logged.
