@@ -88,6 +88,16 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
      {
        "boardTitle": "Grandma's Daily Board",
        "announcement": "Good morning! Have a wonderful day.",
+       "events": {
+         "evt_1700000001": {
+           "title": "Dr. Miller - Eye Exam",
+           "date": "2026-11-05",
+           "time": "14:30",
+           "notes": "Sarah is driving",
+           "createdAt": 1700000001000,
+           "createdBy": "Sarah"
+         }
+       },
        "reminders": "10:30 AM - Doctor appointment\n2:00 PM - Call Sarah",
        "medications": "Morning vitamins with breakfast\nBlood pressure pill at 8:00 AM",
        "medsTaken": false,
@@ -130,7 +140,7 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
 Navigate to **Realtime Database** > **Rules** and apply security rules ensuring:
 - Only authenticated users can read the board.
 - Users with `ADMIN` role can update all board contents, view the registered users directory, and manage user roles.
-- Users with `EDITOR` role can post announcements/messages and update their own profile and notification preferences.
+- Users with `EDITOR` role can post announcements, schedule calendar events/appointments, and update their own profile and notification preferences.
 - Users with `VIEWER` role can log medication completion (`medsTaken` and `medsTakenTime`).
 - Users can read and update their own profile settings under `users/$uid` (display name, notification preferences).
 
@@ -151,6 +161,9 @@ Example rules:
       "announcement": {
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
       },
+      "events": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
+      },
       "updatedAt": {
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'ADMIN' || root.child('users').child(auth.uid).child('role').val() === 'EDITOR')"
       },
@@ -168,28 +181,23 @@ Example rules:
 ### E. Operating the Views
 - **Admin View**:
   1. Caregiver signs in with `ADMIN` credentials and opens the **Admin** panel.
-  2. **Edit User Profile**: Under the "My Profile" section, set your display name, view your email and assigned `ADMIN` role, and toggle medication notifications. Click **Save Profile** to apply changes.
-  3. **Board Administration**: Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
-  4. **User Management & Role Assignment**: 
-     - Under "User Management & Roles", view all registered users in real time.
-     - Change any user's role (`ADMIN`, `EDITOR`, `VIEWER`) instantly using the dropdown selector.
-     - View which users have medication notifications enabled.
-     - Pre-assign roles for newly created Firebase Auth accounts using the **+ Pre-assign User** tool.
-     - Remove user database profiles when necessary.
-  5. Click **Publish Changes Instantly**.
-  6. The tablet receives and renders updates in real-time through the `database.ref('board').on('value')` listener.
+  2. **Edit User Profile**: Under "My Profile", set your display name, view your email and assigned `ADMIN` role, and toggle medication notifications.
+  3. **Calendar Events & Appointments**: Add doctor visits, therapy, and family events with title, date, time, and driver/notes. Delete events when canceled.
+  4. **Board Administration**: Update board title, announcement, reminders, medications, zipcode, or custom weather suggestions.
+  5. **User Management & Role Assignment**: View all registered users in real time, change roles (`ADMIN`, `EDITOR`, `VIEWER`), or pre-assign roles.
+  6. Click **Publish Changes Instantly**.
 - **Editor View (Family Members & Messages)**:
-  1. Family member signs in with `EDITOR` credentials and opens the **Admin / Editor** panel.
-  2. **Edit User Profile**: Under the "My Profile" section, set or update your display name (e.g., "Sarah"), review your assigned `EDITOR` role, and toggle **"Notify me when medications are taken"**. Click **Save Profile**.
-  3. **Post Announcements**: Enter a personalized message under **Today's Message / Announcement** and click **Publish Announcement**. The message appears immediately on the tablet screen.
-  4. Core administrative settings (medication lists, board title, weather coordinates) are protected and hidden from the Editor view.
-  5. Whenever the senior presses the medication button, all subscribed editors and admins receive an audio chime, in-app toast, and browser notification.
+  1. Family member signs in with `EDITOR` credentials and opens the **Editor Panel**.
+  2. **Edit User Profile**: Update your display name and toggle medication alert subscriptions.
+  3. **Post Announcements**: Enter a personalized message under **Today's Message / Announcement**.
+  4. **Calendar Events & Appointments**: Add or remove doctor visits and appointments with dates, times, and driver notes.
+  5. Core administrative settings (medication prescriptions, board title, weather coordinates, user directory) remain hidden and protected.
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. Displays large-format time, date, local weather, announcements, and medication status.
-  4. The senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and marking the task as complete for the day.
-  5. If a new calendar day is detected, the board automatically resets `medsTaken` to `false`.
+  3. **Appointments Banner**: Displays upcoming appointments chronologically with badges ("TODAY", "TOMORROW", "Weekday, Date") and driver notes. Shows a friendly placeholder ("No appointments scheduled. Relax and enjoy your day! ☀️") when none are scheduled. Past events are automatically cleaned up.
+  4. Displays time, date, local weather (with city name), announcements (hidden when empty), reminders, and medications.
+  5. Senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---
 

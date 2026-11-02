@@ -149,6 +149,30 @@
 					<p id="disp-announcement" class="text-huge font-medium text-white"></p>
 				</div>
 
+				<!-- Calendar Events & Appointments Banner -->
+				<div
+					id="card-events"
+					class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4"
+				>
+					<div class="flex justify-between items-center border-b border-slate-700/80 pb-3">
+						<h2 class="text-xl font-bold text-indigo-400 flex items-center gap-2">
+							<span class="text-2xl">📅</span> Upcoming Appointments & Events
+						</h2>
+						<span id="events-count-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-700 text-slate-300">
+							0 Scheduled
+						</span>
+					</div>
+
+					<!-- Dynamic Events List Container -->
+					<div id="disp-events-list" class="space-y-3">
+						<div class="p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
+							<div class="text-3xl">🌿</div>
+							<div class="text-lg font-bold text-slate-300">No appointments scheduled</div>
+							<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
+						</div>
+					</div>
+				</div>
+
 				<!-- Two Column Layout: Reminders & Medications -->
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Reminders -->
@@ -322,7 +346,84 @@
 						</p>
 					</div>
 
-					<!-- Section 3: Administrative Only Settings (Hidden for Editor) -->
+					<!-- Section: Calendar Events & Appointments (Accessible to Admin & Editor) -->
+					<div class="bg-slate-900/90 p-6 rounded-2xl border border-slate-700 space-y-4 shadow-inner">
+						<div class="flex items-center justify-between border-b border-slate-800 pb-2">
+							<div>
+								<h3 class="text-sm font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+									<span>📅</span> Scheduled Appointments & Events
+								</h3>
+								<p class="text-xs text-slate-400 mt-0.5">
+									Add doctor visits and outings. Chronologically sorted with automatic past-event cleanup.
+								</p>
+							</div>
+							<span class="text-[11px] font-bold text-indigo-300 px-2 py-0.5 rounded bg-indigo-950/70 border border-indigo-700">
+								Admin & Editor
+							</span>
+						</div>
+
+						<!-- Add Event Form -->
+						<div class="p-4 bg-slate-800/80 rounded-xl border border-slate-700 space-y-3">
+							<div class="text-xs font-bold text-slate-200 uppercase tracking-wider">Schedule an Appointment</div>
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+								<div class="md:col-span-2">
+									<label class="block text-xs font-bold mb-1 text-slate-300">Appointment Title:</label>
+									<input
+										type="text"
+										id="input-event-title"
+										placeholder="e.g. Dr. Miller - Eye Exam"
+										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+									/>
+								</div>
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-300">Date:</label>
+									<input
+										type="date"
+										id="input-event-date"
+										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+									/>
+								</div>
+								<div>
+									<label class="block text-xs font-bold mb-1 text-slate-300">Time (Optional):</label>
+									<input
+										type="time"
+										id="input-event-time"
+										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+									/>
+								</div>
+								<div class="md:col-span-2">
+									<label class="block text-xs font-bold mb-1 text-slate-300">Notes / Driver (Optional):</label>
+									<input
+										type="text"
+										id="input-event-notes"
+										placeholder="e.g. Sarah is driving, bring reading glasses"
+										class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+									/>
+								</div>
+							</div>
+							<div class="flex justify-end pt-1">
+								<button
+									type="button"
+									onclick="addCalendarEvent()"
+									class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg text-sm shadow transition flex items-center gap-1.5"
+								>
+									<span>+ Add Appointment</span>
+								</button>
+							</div>
+						</div>
+
+						<!-- Current Scheduled Appointments List in Panel -->
+						<div class="space-y-2">
+							<div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Upcoming Scheduled List</div>
+							<div id="admin-events-list" class="space-y-2">
+								<div class="p-3 text-center text-xs text-slate-500 italic bg-slate-800/40 rounded-lg border border-slate-800">
+									No upcoming appointments.
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Section 4: Administrative Only Settings (Hidden for Editor) -->
 					<div id="section-admin-only" class="space-y-4">
 						<div>
 							<label class="block text-sm font-bold mb-2 text-slate-300"
@@ -929,6 +1030,9 @@
 				}
 				previousMedsTaken = !!data.medsTaken;
 
+				// Render Calendar Events & Appointments
+				renderEvents(data.events || {});
+
 				// Auto-Reset Check
 				checkAutoReset(data.medsTaken, data.medsTakenTime);
 			}
@@ -1240,6 +1344,217 @@
 					.replace(/>/g, '&gt;')
 					.replace(/"/g, '&quot;')
 					.replace(/'/g, '&#039;');
+			}
+
+			// Calendar Events & Appointments Functions
+			function getTodayDateString() {
+				const d = new Date();
+				const year = d.getFullYear();
+				const month = String(d.getMonth() + 1).padStart(2, '0');
+				const day = String(d.getDate()).padStart(2, '0');
+				return `${year}-${month}-${day}`;
+			}
+
+			function formatEventDate(dateStr, timeStr) {
+				if (!dateStr) return { badge: '', badgeColor: '', time: '' };
+				const [year, month, day] = dateStr.split('-').map(Number);
+				const eventDate = new Date(year, month - 1, day);
+
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+
+				const tomorrow = new Date(today);
+				tomorrow.setDate(tomorrow.getDate() + 1);
+
+				const eventTimeZero = new Date(eventDate);
+				eventTimeZero.setHours(0, 0, 0, 0);
+
+				let badge = '';
+				let badgeColor = '';
+
+				if (eventTimeZero.getTime() === today.getTime()) {
+					badge = 'TODAY';
+					badgeColor = 'bg-amber-500/20 text-amber-300 border-amber-500/50';
+				} else if (eventTimeZero.getTime() === tomorrow.getTime()) {
+					badge = 'TOMORROW';
+					badgeColor = 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50';
+				} else {
+					badge = eventDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+					badgeColor = 'bg-slate-700/80 text-slate-300 border-slate-600';
+				}
+
+				let formattedTime = '';
+				if (timeStr) {
+					const [h, m] = timeStr.split(':').map(Number);
+					const d = new Date();
+					d.setHours(h, m, 0, 0);
+					formattedTime = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+				}
+
+				return { badge, badgeColor, time: formattedTime };
+			}
+
+			function renderEvents(eventsObj) {
+				const dispContainer = document.getElementById('disp-events-list');
+				const adminContainer = document.getElementById('admin-events-list');
+				const countBadge = document.getElementById('events-count-badge');
+				const todayStr = getTodayDateString();
+
+				const entries = Object.entries(eventsObj || {});
+
+				// Automatic past-event cleanup for Admin & Editor
+				if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
+					entries.forEach(([id, evt]) => {
+						if (evt.date && evt.date < todayStr) {
+							console.log('Auto-removing past calendar event:', id, evt.title);
+							database.ref(`board/events/${id}`).remove();
+						}
+					});
+				}
+
+				// Filter for upcoming events (today or later)
+				const upcoming = entries
+					.map(([id, evt]) => ({ id, ...evt }))
+					.filter((evt) => evt.date && evt.date >= todayStr);
+
+				// Sort chronologically: earliest date first, then by time
+				upcoming.sort((a, b) => {
+					const dateCmp = (a.date || '').localeCompare(b.date || '');
+					if (dateCmp !== 0) return dateCmp;
+					return (a.time || '').localeCompare(b.time || '');
+				});
+
+				// Update header count badge
+				if (countBadge) {
+					countBadge.innerText = `${upcoming.length} Scheduled`;
+				}
+
+				// 1. Render Display View Banner
+				if (dispContainer) {
+					if (upcoming.length === 0) {
+						dispContainer.innerHTML = `
+							<div class="p-6 bg-slate-900/60 rounded-xl border border-dashed border-slate-700 text-center space-y-1">
+								<div class="text-3xl">🌿</div>
+								<div class="text-lg font-bold text-slate-300">No appointments scheduled</div>
+								<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
+							</div>
+						`;
+					} else {
+						let html = '';
+						upcoming.forEach((evt) => {
+							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time);
+							html += `
+								<div class="bg-slate-900/90 p-5 rounded-xl border border-slate-700/80 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3">
+									<div class="space-y-1">
+										<div class="flex items-center gap-2 flex-wrap">
+											<span class="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-md border ${badgeColor}">
+												${badge}
+											</span>
+											${time ? `<span class="text-xs font-bold text-indigo-300 bg-indigo-950/70 border border-indigo-800 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>` : ''}
+										</div>
+										<div class="text-2xl font-bold text-white pt-1">
+											${escapeHtml(evt.title)}
+										</div>
+										${evt.notes ? `<div class="text-sm text-slate-300 font-medium flex items-center gap-1.5 pt-0.5"><span class="text-base">🚗</span> ${escapeHtml(evt.notes)}</div>` : ''}
+									</div>
+								</div>
+							`;
+						});
+						dispContainer.innerHTML = html;
+					}
+				}
+
+				// 2. Render Admin / Editor Panel Management List
+				if (adminContainer) {
+					if (upcoming.length === 0) {
+						adminContainer.innerHTML = `
+							<div class="p-3 text-center text-xs text-slate-500 italic bg-slate-800/40 rounded-lg border border-slate-800">
+								No upcoming appointments.
+							</div>
+						`;
+					} else {
+						let adminHtml = '';
+						upcoming.forEach((evt) => {
+							const { badge, time } = formatEventDate(evt.date, evt.time);
+							adminHtml += `
+								<div class="p-3 bg-slate-850 rounded-lg border border-slate-700 flex items-center justify-between gap-3">
+									<div class="space-y-0.5 min-w-0">
+										<div class="flex items-center gap-2 flex-wrap">
+											<span class="text-[11px] font-bold text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800">${badge} ${time ? '• ' + time : ''}</span>
+											<span class="font-bold text-white text-sm truncate">${escapeHtml(evt.title)}</span>
+										</div>
+										${evt.notes ? `<div class="text-xs text-slate-400 truncate pl-1">Note: ${escapeHtml(evt.notes)}</div>` : ''}
+									</div>
+									<button
+										type="button"
+										onclick="deleteCalendarEvent('${evt.id}', '${escapeHtml(evt.title)}')"
+										class="text-rose-400 hover:text-rose-300 text-xs font-bold px-2 py-1 rounded hover:bg-rose-950/40 transition shrink-0"
+									>
+										Delete
+									</button>
+								</div>
+							`;
+						});
+						adminContainer.innerHTML = adminHtml;
+					}
+				}
+			}
+
+			async function addCalendarEvent() {
+				const titleInput = document.getElementById('input-event-title');
+				const dateInput = document.getElementById('input-event-date');
+				const timeInput = document.getElementById('input-event-time');
+				const notesInput = document.getElementById('input-event-notes');
+
+				const title = titleInput.value.trim();
+				const date = dateInput.value;
+				const time = timeInput.value;
+				const notes = notesInput.value.trim();
+
+				if (!title) {
+					alert('Please enter an appointment title (e.g. "Dr. Miller - Eye Exam").');
+					titleInput.focus();
+					return;
+				}
+				if (!date) {
+					alert('Please select an appointment date.');
+					dateInput.focus();
+					return;
+				}
+
+				const eventId = 'evt_' + Date.now();
+				const newEvent = {
+					title,
+					date,
+					time: time || '',
+					notes: notes || '',
+					createdAt: Date.now(),
+					createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
+				};
+
+				try {
+					await database.ref(`board/events/${eventId}`).set(newEvent);
+					titleInput.value = '';
+					timeInput.value = '';
+					notesInput.value = '';
+					showToast(`Appointment "${title}" added to calendar!`);
+				} catch (err) {
+					console.error('Failed to add calendar event:', err);
+					alert('Error adding appointment: ' + err.message);
+				}
+			}
+
+			async function deleteCalendarEvent(eventId, title) {
+				const proceed = confirm(`Remove "${title}" from the calendar?`);
+				if (!proceed) return;
+
+				try {
+					await database.ref(`board/events/${eventId}`).remove();
+					showToast(`Appointment removed from calendar.`);
+				} catch (err) {
+					console.error('Failed to remove event:', err);
+					alert('Error removing appointment: ' + err.message);
+				}
 			}
 
 			// Post Message (Legacy / Alias to saveData)
