@@ -272,6 +272,28 @@
 							</div>
 						</div>
 					</div>
+
+					<!-- Upcoming Major US Holidays Card -->
+					<div
+						id="card-holidays"
+						class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+					>
+						<div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>🎉</span> Upcoming Holidays
+							</h2>
+							<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+								US Holidays
+							</span>
+						</div>
+
+						<!-- Dynamic Holidays List Container -->
+						<div id="disp-holidays-list" class="space-y-2.5">
+							<div class="py-4 text-center text-sm text-slate-400 italic">
+								Loading upcoming holidays...
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -626,9 +648,9 @@
 									</span>
 								</div>
 								<p class="text-xs text-slate-500">
-									Choose the position (1, 2, or 3) for each card in the Reminders, Medications &amp; Appointments section:
+									Choose the position (1, 2, 3, or 4) for each card in the Reminders, Medications, Appointments &amp; Holidays section:
 								</p>
-								<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-reminders" class="block text-xs font-semibold text-slate-700">
 											⏰ Daily Reminders
@@ -638,9 +660,10 @@
 											onchange="handleCardPositionChange('reminders', this.value)"
 											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 										>
-											<option value="1">Position 1</option>
+											<option value="1" selected>Position 1</option>
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
+											<option value="4">Position 4</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -655,6 +678,7 @@
 											<option value="1">Position 1</option>
 											<option value="2" selected>Position 2</option>
 											<option value="3">Position 3</option>
+											<option value="4">Position 4</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -669,6 +693,22 @@
 											<option value="1">Position 1</option>
 											<option value="2">Position 2</option>
 											<option value="3" selected>Position 3</option>
+											<option value="4">Position 4</option>
+										</select>
+									</div>
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+										<label for="select-pos-holidays" class="block text-xs font-semibold text-slate-700">
+											🎉 Upcoming Holidays
+										</label>
+										<select
+											id="select-pos-holidays"
+											onchange="handleCardPositionChange('holidays', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1">Position 1</option>
+											<option value="2">Position 2</option>
+											<option value="3">Position 3</option>
+											<option value="4" selected>Position 4</option>
 										</select>
 									</div>
 								</div>
@@ -1105,6 +1145,9 @@
 					}
 				});
 
+				// Fetch Upcoming Major US Holidays
+				fetchUpcomingUSHolidays();
+
 				// Real-Time Listeners
 				database.ref('board').on(
 					'value',
@@ -1120,24 +1163,34 @@
 				);
 			}
 
-			let currentCardPositions = { reminders: 1, medications: 2, events: 3 };
+			let currentCardPositions = { reminders: 1, medications: 2, events: 3, holidays: 4 };
 
 			function normalizeCardPositions(posData) {
 				const raw = posData || {};
 				let r = parseInt(raw.reminders, 10);
 				let m = parseInt(raw.medications, 10);
 				let e = parseInt(raw.events, 10);
+				let h = parseInt(raw.holidays, 10);
 
-				const validSet = new Set([r, m, e]);
-				if (
-					![1, 2, 3].includes(r) ||
-					![1, 2, 3].includes(m) ||
-					![1, 2, 3].includes(e) ||
-					validSet.size !== 3
-				) {
-					return { reminders: 1, medications: 2, events: 3 };
+				// Upgrade legacy 3-card position objects by assigning holidays to the remaining slot
+				if ([1, 2, 3].includes(r) && [1, 2, 3].includes(m) && [1, 2, 3].includes(e) && isNaN(h)) {
+					const set3 = new Set([r, m, e]);
+					if (set3.size === 3) {
+						return { reminders: r, medications: m, events: e, holidays: 4 };
+					}
 				}
-				return { reminders: r, medications: m, events: e };
+
+				const validSet = new Set([r, m, e, h]);
+				if (
+					![1, 2, 3, 4].includes(r) ||
+					![1, 2, 3, 4].includes(m) ||
+					![1, 2, 3, 4].includes(e) ||
+					![1, 2, 3, 4].includes(h) ||
+					validSet.size !== 4
+				) {
+					return { reminders: 1, medications: 2, events: 3, holidays: 4 };
+				}
+				return { reminders: r, medications: m, events: e, holidays: h };
 			}
 
 			function applyCardPositions(posData) {
@@ -1148,9 +1201,16 @@
 					reminders: document.getElementById('card-reminders'),
 					medications: document.getElementById('card-medications'),
 					events: document.getElementById('card-events'),
+					holidays: document.getElementById('card-holidays'),
 				};
 
-				if (grid && cardMap.reminders && cardMap.medications && cardMap.events) {
+				if (
+					grid &&
+					cardMap.reminders &&
+					cardMap.medications &&
+					cardMap.events &&
+					cardMap.holidays
+				) {
 					const sortedKeys = Object.keys(currentCardPositions).sort(
 						(a, b) => currentCardPositions[a] - currentCardPositions[b]
 					);
@@ -1166,9 +1226,11 @@
 				const selRem = document.getElementById('select-pos-reminders');
 				const selMed = document.getElementById('select-pos-medications');
 				const selEvt = document.getElementById('select-pos-events');
+				const selHol = document.getElementById('select-pos-holidays');
 				if (selRem) selRem.value = String(currentCardPositions.reminders);
 				if (selMed) selMed.value = String(currentCardPositions.medications);
 				if (selEvt) selEvt.value = String(currentCardPositions.events);
+				if (selHol) selHol.value = String(currentCardPositions.holidays);
 			}
 
 			async function handleCardPositionChange(changedCard, newPosValue) {
@@ -1179,7 +1241,7 @@
 				}
 
 				const targetPos = parseInt(newPosValue, 10);
-				if (![1, 2, 3].includes(targetPos)) return;
+				if (![1, 2, 3, 4].includes(targetPos)) return;
 
 				const oldPos = currentCardPositions[changedCard];
 				if (oldPos === targetPos) return;
@@ -1737,6 +1799,259 @@
 
 			let editingEventId = null;
 			let currentEventsMap = {};
+			let upcomingHolidays = [];
+
+			function getNthWeekdayOfMonth(year, monthIndex, weekday, n) {
+				const firstDay = new Date(year, monthIndex, 1);
+				const firstWeekdayOffset = (weekday - firstDay.getDay() + 7) % 7;
+				const day = 1 + firstWeekdayOffset + (n - 1) * 7;
+				const m = String(monthIndex + 1).padStart(2, '0');
+				const d = String(day).padStart(2, '0');
+				return `${year}-${m}-${d}`;
+			}
+
+			function getLastWeekdayOfMonth(year, monthIndex, weekday) {
+				const lastDay = new Date(year, monthIndex + 1, 0);
+				const offset = (lastDay.getDay() - weekday + 7) % 7;
+				const day = lastDay.getDate() - offset;
+				const m = String(monthIndex + 1).padStart(2, '0');
+				const d = String(day).padStart(2, '0');
+				return `${year}-${m}-${d}`;
+			}
+
+			function getBuiltInMajorUSHolidays(year) {
+				return [
+					{ date: `${year}-01-01`, name: "New Year's Day" },
+					{ date: getNthWeekdayOfMonth(year, 0, 1, 3), name: 'Martin Luther King, Jr. Day' },
+					{ date: `${year}-02-14`, name: "Valentine's Day" },
+					{ date: getNthWeekdayOfMonth(year, 1, 1, 3), name: "Presidents' Day" },
+					{ date: `${year}-03-17`, name: "St. Patrick's Day" },
+					{ date: getNthWeekdayOfMonth(year, 4, 0, 2), name: "Mother's Day" },
+					{ date: getLastWeekdayOfMonth(year, 4, 1), name: 'Memorial Day' },
+					{ date: `${year}-06-19`, name: 'Juneteenth' },
+					{ date: getNthWeekdayOfMonth(year, 5, 0, 3), name: "Father's Day" },
+					{ date: `${year}-07-04`, name: 'Independence Day' },
+					{ date: getNthWeekdayOfMonth(year, 8, 1, 1), name: 'Labor Day' },
+					{ date: `${year}-10-31`, name: 'Halloween' },
+					{ date: `${year}-11-11`, name: 'Veterans Day' },
+					{ date: getNthWeekdayOfMonth(year, 10, 4, 4), name: 'Thanksgiving Day' },
+					{ date: `${year}-12-24`, name: 'Christmas Eve' },
+					{ date: `${year}-12-25`, name: 'Christmas Day' },
+					{ date: `${year}-12-31`, name: "New Year's Eve" },
+				];
+			}
+
+			function getHolidayEmoji(name) {
+				const n = (name || '').toLowerCase();
+				if (n.includes('new year')) return '🎉';
+				if (n.includes('valentine')) return '❤️';
+				if (n.includes('patrick')) return '🍀';
+				if (n.includes('easter')) return '🌷';
+				if (n.includes('mother')) return '💐';
+				if (n.includes('father')) return '👔';
+				if (n.includes('independence') || n.includes('july')) return '🎆';
+				if (n.includes('halloween')) return '🎃';
+				if (n.includes('thanksgiving')) return '🦃';
+				if (n.includes('christmas')) return '🎄';
+				if (n.includes('memorial') || n.includes('veterans') || n.includes('president')) return '🇺🇸';
+				if (n.includes('labor')) return '🛠️';
+				return '🌟';
+			}
+
+			async function fetchUpcomingUSHolidays() {
+				const todayStr = getTodayDateString();
+				const currentYear = new Date().getFullYear();
+				let combined = [
+					...getBuiltInMajorUSHolidays(currentYear),
+					...getBuiltInMajorUSHolidays(currentYear + 1),
+				];
+
+				try {
+					const res = await fetch('https://date.nager.at/api/v3/NextPublicHolidays/US');
+					if (res.ok) {
+						const apiHolidays = await res.json();
+						if (Array.isArray(apiHolidays)) {
+							apiHolidays.forEach((item) => {
+								if (item && item.date && (item.localName || item.name)) {
+									combined.push({
+										date: item.date,
+										name: item.localName || item.name,
+									});
+								}
+							});
+						}
+					}
+				} catch (err) {
+					console.warn('Using built-in US holidays schedule (API unreachable):', err);
+				}
+
+				// Deduplicate by date (preferring first entry per date) and filter for today or later
+				const byDate = new Map();
+				combined.forEach((h) => {
+					if (h.date && h.date >= todayStr && !byDate.has(h.date)) {
+						byDate.set(h.date, h);
+					}
+				});
+
+				upcomingHolidays = Array.from(byDate.values()).sort((a, b) =>
+					a.date.localeCompare(b.date)
+				);
+
+				renderHolidaysCard();
+				renderTodayColumn();
+			}
+
+			function formatHolidayCountdown(dateStr) {
+				const [year, month, day] = dateStr.split('-').map(Number);
+				const target = new Date(year, month - 1, day);
+				target.setHours(0, 0, 0, 0);
+
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+
+				const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+				const formattedDate = target.toLocaleDateString([], {
+					weekday: 'short',
+					month: 'short',
+					day: 'numeric',
+				});
+
+				if (diffDays === 0) {
+					return {
+						formattedDate,
+						countdown: 'TODAY',
+						badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+					};
+				}
+				if (diffDays === 1) {
+					return {
+						formattedDate,
+						countdown: 'TOMORROW',
+						badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
+					};
+				}
+				return {
+					formattedDate,
+					countdown: `In ${diffDays} days`,
+					badgeClass: 'bg-white text-slate-600 border-slate-300',
+				};
+			}
+
+			function renderHolidaysCard() {
+				const container = document.getElementById('disp-holidays-list');
+				if (!container) return;
+
+				const nextHolidays = upcomingHolidays.slice(0, 5);
+				if (nextHolidays.length === 0) {
+					container.innerHTML = `
+						<div class="p-4 text-center text-sm text-slate-400 italic">
+							No upcoming holidays found.
+						</div>
+					`;
+					return;
+				}
+
+				let html = '';
+				nextHolidays.forEach((h) => {
+					const emoji = getHolidayEmoji(h.name);
+					const { formattedDate, countdown, badgeClass } = formatHolidayCountdown(h.date);
+					html += `
+						<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+							<div class="flex items-center gap-3 min-w-0">
+								<span class="text-2xl shrink-0">${emoji}</span>
+								<div class="min-w-0">
+									<div class="text-base sm:text-lg font-bold text-slate-900 truncate">
+										${escapeHtml(h.name)}
+									</div>
+									<div class="text-xs sm:text-sm font-medium text-slate-500">
+										${formattedDate}
+									</div>
+								</div>
+							</div>
+							<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${badgeClass}">
+								${countdown}
+							</span>
+						</div>
+					`;
+				});
+				container.innerHTML = html;
+			}
+
+			function renderTodayColumn() {
+				const todayList = document.getElementById('disp-today-events-list');
+				if (!todayList) return;
+
+				const todayStr = getTodayDateString();
+				const todaysHolidays = upcomingHolidays.filter((h) => h.date === todayStr);
+
+				const entries = Object.entries(currentEventsMap || {});
+				const todayEvents = entries
+					.map(([id, evt]) => ({ id, ...evt }))
+					.filter((evt) => evt.date === todayStr)
+					.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+				if (todaysHolidays.length === 0 && todayEvents.length === 0) {
+					todayList.innerHTML = `
+						<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
+							<div class="text-xl">🌿</div>
+							<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
+							<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+						</div>
+					`;
+					return;
+				}
+
+				let todayHtml = '';
+
+				// 1. Render any US Holiday falling on today
+				todaysHolidays.forEach((h) => {
+					const emoji = getHolidayEmoji(h.name);
+					todayHtml += `
+						<div class="w-full bg-amber-50 p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+							<span class="text-2xl sm:text-3xl shrink-0">${emoji}</span>
+							<div>
+								<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+									Holiday Today
+								</div>
+								<div class="text-lg sm:text-xl font-bold text-slate-900">
+									${escapeHtml(h.name)}
+								</div>
+							</div>
+						</div>
+					`;
+				});
+
+				// 2. Render any Scheduled Appointments falling on today
+				todayEvents.forEach((evt) => {
+					const { time } = formatEventDate(evt.date, evt.time);
+					todayHtml += `
+						<div class="w-full bg-white p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
+							<div class="flex items-center gap-2 flex-wrap">
+								<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+									TODAY
+								</span>
+								${
+									time
+										? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+										: ''
+								}
+							</div>
+							<div class="text-lg sm:text-xl font-bold text-slate-900 pt-0.5">
+								${escapeHtml(evt.title)}
+							</div>
+							${
+								evt.notes
+									? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-base">🚗</span> ${escapeHtml(
+											evt.notes
+									  )}</div>`
+									: ''
+							}
+						</div>
+					`;
+				});
+
+				todayList.innerHTML = todayHtml;
+			}
 
 			function renderEvents(eventsObj) {
 				currentEventsMap = eventsObj || {};
@@ -1774,51 +2089,8 @@
 					countBadge.innerText = `${upcoming.length} Scheduled`;
 				}
 
-				// 0. Automatically Render Today's Scheduled Events inside Main Message Section (Always Visible)
-				const todayList = document.getElementById('disp-today-events-list');
-				const todayEvents = upcoming.filter((evt) => evt.date === todayStr);
-
-				if (todayList) {
-					if (todayEvents.length === 0) {
-						todayList.innerHTML = `
-							<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-								<div class="text-xl">🌿</div>
-								<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
-								<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
-							</div>
-						`;
-					} else {
-						let todayHtml = '';
-						todayEvents.forEach((evt) => {
-							const { time } = formatEventDate(evt.date, evt.time);
-							todayHtml += `
-								<div class="w-full bg-white p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
-									<div class="flex items-center gap-2 flex-wrap">
-										<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
-											TODAY
-										</span>
-										${
-											time
-												? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
-												: ''
-										}
-									</div>
-									<div class="text-lg sm:text-xl font-bold text-slate-900 pt-0.5">
-										${escapeHtml(evt.title)}
-									</div>
-									${
-										evt.notes
-											? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-base">🚗</span> ${escapeHtml(
-													evt.notes
-											  )}</div>`
-											: ''
-									}
-								</div>
-							`;
-						});
-						todayList.innerHTML = todayHtml;
-					}
-				}
+				// 0. Automatically Render Today's Holidays & Scheduled Events inside Main Message Section Column 2
+				renderTodayColumn();
 
 				// 1. Render Display View Scheduled Events Card
 				if (dispContainer) {
