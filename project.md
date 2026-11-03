@@ -16,18 +16,21 @@ GitHub serves as the version control platform, codebase repository, and hosting 
     cd senior-message-board
     ```
 2. **Local Development Workflow**:
-    - Make edits to `index.html` (or other project assets).
+    - Make edits to `index.html`, `app.js`, or `styles.css`.
     - Test locally by opening `index.html` directly in a browser or serving it with a local web server (e.g. Live Server in VS Code or `npx serve`).
 3. **Commit & Push Changes**:
     ```bash
-    git add index.html project.md
+    git add index.html app.js styles.css project.md
     git commit -m "Update feature or content"
     git push origin main
     ```
 
 ### B. Hosting with GitHub Pages
 
-The web application is hosted as a single-page app via GitHub Pages:
+The web application is hosted as a clean, modular zero-build static application via GitHub Pages:
+- `index.html`: Clean, semantic HTML layout (~1,100 lines) structure.
+- `styles.css`: Custom scrollbars, kiosk tap rules, and print stylesheet.
+- `app.js`: Client-side JavaScript containing Firebase integration, real-time board listeners, UI rendering, AI engines, and centralized contact normalization.
 
 1. Go to the repository on GitHub: `https://github.com/debsrant/senior-message-board`.
 2. Navigate to **Settings** > **Pages** (under the "Code and automation" sidebar).
