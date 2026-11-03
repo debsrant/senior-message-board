@@ -92,6 +92,7 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
          "evt_1700000001": {
            "title": "Dr. Miller - Eye Exam",
            "date": "2026-11-05",
+           "endDate": "",
            "time": "14:30",
            "notes": "Sarah is driving",
            "reminder": "Bring sunglasses and your current glasses",
@@ -174,7 +175,7 @@ Example rules:
 - **Two-Column Admin & Editor Panel Layout (Mobile-Responsive Light UI)**:
   - **Column 1 (Daily Board Content, AI Action Plan & Actions)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
-    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
+    2. **Calendar Events & Appointments**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
     3. **AI Daily Action Plan & Prep Rules (Admin & Editor)**: Configure caregiver preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine, and review/edit Today's Game Plan, Smart Prep & Health Nudges, and Next Few Days Look-Ahead.
     4. **Publish Changes**: Large action button to instantly push updates to the tablet.
   - **Column 2 (Profile, Maintenance, Contacts & Access Control)**:

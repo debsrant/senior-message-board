@@ -461,21 +461,30 @@
 										Editing Mode
 									</span>
 								</div>
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-									<div class="sm:col-span-2">
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Appointment Title</label>
+								<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+									<div class="sm:col-span-3">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Appointment / Event Title</label>
 										<input
 											type="text"
 											id="input-event-title"
-											placeholder="e.g. Dr. Miller - Eye Exam"
+											placeholder="e.g. Dr. Miller - Eye Exam, or Family Visit"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
 									<div>
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Date</label>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Start Date</label>
 										<input
 											type="date"
 											id="input-event-date"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">End Date (Optional)</label>
+										<input
+											type="date"
+											id="input-event-end-date"
+											title="Leave blank for a single-day event"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
@@ -487,7 +496,7 @@
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div class="sm:col-span-2">
+									<div class="sm:col-span-3">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">Notes / Driver (Optional)</label>
 										<input
 											type="text"
@@ -496,7 +505,7 @@
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div class="sm:col-span-2">
+									<div class="sm:col-span-3">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">
 											Event Reminders / Prep Advice (Used for AI Summary &amp; Display)
 										</label>
@@ -1986,6 +1995,31 @@
 				return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 			}
 
+			function getEventEffectiveEndDate(evt) {
+				if (!evt || !evt.date) return '';
+				return evt.endDate && evt.endDate >= evt.date ? evt.endDate : evt.date;
+			}
+
+			function isEventOnToday(evt, todayStr) {
+				if (!evt || !evt.date) return false;
+				const t = todayStr || getTodayDateString();
+				const endStr = getEventEffectiveEndDate(evt);
+				return evt.date <= t && endStr >= t;
+			}
+
+			function isEventUpcomingOrActive(evt, todayStr) {
+				if (!evt || !evt.date) return false;
+				const t = todayStr || getTodayDateString();
+				return getEventEffectiveEndDate(evt) >= t;
+			}
+
+			function getEventDaysFromToday(evt) {
+				if (!evt || !evt.date) return null;
+				const todayStr = getTodayDateString();
+				if (isEventOnToday(evt, todayStr)) return 0;
+				return getDaysFromToday(evt.date);
+			}
+
 			function getUpcomingBirthdayDiffDays(bdayStr) {
 				if (!bdayStr) return null;
 				const parts = bdayStr.split('-').map(Number);
@@ -2035,12 +2069,12 @@
 				}
 				todayPlan.push(`${medSentence} ${weatherSentence}`);
 
-				// 2. Concise Today's Pacing, Outings (with Event Reminders), Birthdays & Social Connection
+				// 2. Concise Today's Pacing, Outings (with Event Reminders & Multi-Day support), Birthdays & Social Connection
 				const allEvents = Object.entries(currentEventsMap || {})
 					.map(([id, evt]) => ({
 						id,
 						...evt,
-						diffDays: getDaysFromToday(evt.date),
+						diffDays: getEventDaysFromToday(evt),
 					}))
 					.filter((evt) => evt.diffDays !== null && evt.diffDays >= 0)
 					.sort((a, b) => {
@@ -2397,7 +2431,7 @@
 					const todayStr = getTodayDateString();
 					const { allContacts } = getCombinedContactsList();
 					const upcomingEventsList = Object.values(currentEventsMap || {})
-						.filter((e) => e.date >= todayStr)
+						.filter((e) => isEventUpcomingOrActive(e, todayStr))
 						.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
 					const boardSnapshot = {
@@ -3289,8 +3323,8 @@
 				return `${year}-${month}-${day}`;
 			}
 
-			function formatEventDate(dateStr, timeStr) {
-				if (!dateStr) return { badge: '', badgeColor: '', time: '' };
+			function formatEventDate(dateStr, timeStr, endDateStr) {
+				if (!dateStr) return { badge: '', badgeColor: '', time: '', isMultiDay: false, rangeLabel: '' };
 				const [year, month, day] = dateStr.split('-').map(Number);
 				const eventDate = new Date(year, month - 1, day);
 
@@ -3303,10 +3337,50 @@
 				const eventTimeZero = new Date(eventDate);
 				eventTimeZero.setHours(0, 0, 0, 0);
 
+				const isMultiDay = !!(endDateStr && endDateStr > dateStr);
+				let endDate = null;
+				let endTimeZero = null;
+				let rangeLabel = '';
+
+				if (isMultiDay) {
+					const [ey, em, ed] = endDateStr.split('-').map(Number);
+					endDate = new Date(ey, em - 1, ed);
+					endTimeZero = new Date(endDate);
+					endTimeZero.setHours(0, 0, 0, 0);
+					const startShort = eventDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+					const endShort = endDate.toLocaleDateString([], {
+						weekday: 'short',
+						month: 'short',
+						day: 'numeric',
+					});
+					rangeLabel = `${startShort} – ${endShort}`;
+				}
+
 				let badge = '';
 				let badgeColor = '';
 
-				if (eventTimeZero.getTime() === today.getTime()) {
+				if (isMultiDay) {
+					const endShort = endDate.toLocaleDateString([], {
+						weekday: 'short',
+						month: 'short',
+						day: 'numeric',
+					});
+					if (eventTimeZero.getTime() <= today.getTime() && endTimeZero.getTime() >= today.getTime()) {
+						badge = `TODAY • Thru ${endShort}`;
+						badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+					} else if (eventTimeZero.getTime() === tomorrow.getTime()) {
+						badge = `TOMORROW • Thru ${endShort}`;
+						badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
+					} else {
+						const startWithDay = eventDate.toLocaleDateString([], {
+							weekday: 'short',
+							month: 'short',
+							day: 'numeric',
+						});
+						badge = `${startWithDay} – ${endShort}`;
+						badgeColor = 'bg-white text-slate-700 border-slate-300';
+					}
+				} else if (eventTimeZero.getTime() === today.getTime()) {
 					badge = 'TODAY';
 					badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
 				} else if (eventTimeZero.getTime() === tomorrow.getTime()) {
@@ -3329,7 +3403,7 @@
 					formattedTime = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 				}
 
-				return { badge, badgeColor, time: formattedTime };
+				return { badge, badgeColor, time: formattedTime, isMultiDay, rangeLabel };
 			}
 
 			let editingEventId = null;
@@ -3525,7 +3599,7 @@
 				const entries = Object.entries(currentEventsMap || {});
 				const todayEvents = entries
 					.map(([id, evt]) => ({ id, ...evt }))
-					.filter((evt) => evt.date === todayStr)
+					.filter((evt) => isEventOnToday(evt, todayStr))
 					.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
 				if (todaysHolidays.length === 0 && todaysBirthdays.length === 0 && todayEvents.length === 0) {
@@ -3581,15 +3655,22 @@
 					`;
 				});
 
-				// 3. Render any Scheduled Appointments falling on today
+				// 3. Render any Scheduled Appointments / Multi-Day Events falling on today
 				todayEvents.forEach((evt) => {
-					const { time } = formatEventDate(evt.date, evt.time);
+					const { time, isMultiDay, rangeLabel } = formatEventDate(evt.date, evt.time, evt.endDate);
 					todayHtml += `
 						<div class="w-full bg-white p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
 							<div class="flex items-center gap-2 flex-wrap">
 								<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
 									TODAY
 								</span>
+								${
+									isMultiDay && rangeLabel
+										? `<span class="text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">📅 ${escapeHtml(
+												rangeLabel
+										  )}</span>`
+										: ''
+								}
 								${
 									time
 										? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
@@ -3629,23 +3710,27 @@
 
 				const entries = Object.entries(currentEventsMap);
 
-				// Automatic past-event cleanup for Admin & Editor
+				// Automatic past-event cleanup for Admin & Editor (only after effective end date has passed)
 				if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 					entries.forEach(([id, evt]) => {
-						if (evt.date && evt.date < todayStr) {
+						const effectiveEnd = getEventEffectiveEndDate(evt);
+						if (effectiveEnd && effectiveEnd < todayStr) {
 							console.log('Auto-removing past calendar event:', id, evt.title);
 							database.ref(`board/events/${id}`).remove();
 						}
 					});
 				}
 
-				// Filter for upcoming events (today or later)
+				// Filter for upcoming or currently active multi-day events (endDate >= today)
 				const upcoming = entries
 					.map(([id, evt]) => ({ id, ...evt }))
-					.filter((evt) => evt.date && evt.date >= todayStr);
+					.filter((evt) => isEventUpcomingOrActive(evt, todayStr));
 
-				// Sort chronologically: earliest date first, then by time
+				// Sort chronologically: active/earliest start date first, then by time
 				upcoming.sort((a, b) => {
+					const aActive = isEventOnToday(a, todayStr) ? 0 : 1;
+					const bActive = isEventOnToday(b, todayStr) ? 0 : 1;
+					if (aActive !== bActive) return aActive - bActive;
 					const dateCmp = (a.date || '').localeCompare(b.date || '');
 					if (dateCmp !== 0) return dateCmp;
 					return (a.time || '').localeCompare(b.time || '');
@@ -3673,7 +3758,7 @@
 					} else {
 						let html = '';
 						upcoming.forEach((evt) => {
-							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time);
+							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time, evt.endDate);
 							html += `
 								<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
 									<div class="space-y-1">
@@ -3723,7 +3808,7 @@
 					} else {
 						let adminHtml = '';
 						upcoming.forEach((evt) => {
-							const { badge, time } = formatEventDate(evt.date, evt.time);
+							const { badge, time } = formatEventDate(evt.date, evt.time, evt.endDate);
 							const isEditingThis = editingEventId === evt.id;
 							adminHtml += `
 								<div class="p-3 rounded-xl border ${
@@ -3786,12 +3871,14 @@
 
 				const titleInput = document.getElementById('input-event-title');
 				const dateInput = document.getElementById('input-event-date');
+				const endDateInput = document.getElementById('input-event-end-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
 				const reminderInput = document.getElementById('input-event-reminder');
 
 				if (titleInput) titleInput.value = evt.title || '';
 				if (dateInput) dateInput.value = evt.date || '';
+				if (endDateInput) endDateInput.value = evt.endDate || '';
 				if (timeInput) timeInput.value = evt.time || '';
 				if (notesInput) notesInput.value = evt.notes || '';
 				if (reminderInput) reminderInput.value = evt.reminder || '';
@@ -3824,12 +3911,14 @@
 
 				const titleInput = document.getElementById('input-event-title');
 				const dateInput = document.getElementById('input-event-date');
+				const endDateInput = document.getElementById('input-event-end-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
 				const reminderInput = document.getElementById('input-event-reminder');
 
 				if (titleInput) titleInput.value = '';
 				if (dateInput) dateInput.value = getTodayDateString();
+				if (endDateInput) endDateInput.value = '';
 				if (timeInput) timeInput.value = '';
 				if (notesInput) notesInput.value = '';
 				if (reminderInput) reminderInput.value = '';
@@ -3858,26 +3947,34 @@
 			async function addCalendarEvent() {
 				const titleInput = document.getElementById('input-event-title');
 				const dateInput = document.getElementById('input-event-date');
+				const endDateInput = document.getElementById('input-event-end-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
 				const reminderInput = document.getElementById('input-event-reminder');
 
 				const title = titleInput.value.trim();
 				const date = dateInput.value;
+				const rawEndDate = endDateInput ? endDateInput.value : '';
 				const time = timeInput.value;
 				const notes = notesInput.value.trim();
 				const reminder = reminderInput ? reminderInput.value.trim() : '';
 
 				if (!title) {
-					alert('Please enter an appointment title (e.g. "Dr. Miller - Eye Exam").');
+					alert('Please enter an appointment or event title (e.g. "Dr. Miller - Eye Exam").');
 					titleInput.focus();
 					return;
 				}
 				if (!date) {
-					alert('Please select an appointment date.');
+					alert('Please select a start date.');
 					dateInput.focus();
 					return;
 				}
+				if (rawEndDate && rawEndDate < date) {
+					alert('End date cannot be earlier than the start date.');
+					if (endDateInput) endDateInput.focus();
+					return;
+				}
+				const endDate = rawEndDate && rawEndDate > date ? rawEndDate : '';
 
 				if (editingEventId) {
 					const targetId = editingEventId;
@@ -3885,6 +3982,7 @@
 						await database.ref(`board/events/${targetId}`).update({
 							title,
 							date,
+							endDate,
 							time: time || '',
 							notes: notes || '',
 							reminder: reminder || '',
@@ -3904,6 +4002,7 @@
 				const newEvent = {
 					title,
 					date,
+					endDate,
 					time: time || '',
 					notes: notes || '',
 					reminder: reminder || '',
@@ -3914,6 +4013,7 @@
 				try {
 					await database.ref(`board/events/${eventId}`).set(newEvent);
 					titleInput.value = '';
+					if (endDateInput) endDateInput.value = '';
 					timeInput.value = '';
 					notesInput.value = '';
 					if (reminderInput) reminderInput.value = '';
