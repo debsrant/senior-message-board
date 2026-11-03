@@ -1930,15 +1930,36 @@
 				const aiAutoRefresh = document.getElementById('input-ai-auto-refresh')
 					? document.getElementById('input-ai-auto-refresh').checked
 					: true;
-				const todayPlanLines = (document.getElementById('input-ai-today-plan')?.value || '')
-					.split('\n')
-					.map((s) => s.trim())
-					.filter(Boolean);
-				const prepAlertLines = (document.getElementById('input-ai-prep-alerts')?.value || '')
-					.split('\n')
-					.map((s) => s.trim())
-					.filter(Boolean);
-				const lookAheadText = (document.getElementById('input-ai-look-ahead')?.value || '').trim();
+
+				// Recompute fresh Smart Plan from the newly edited form fields when Auto-Refresh is enabled
+				const freshSmartPlan = buildSmartRuleBasedPlan({
+					...latestBoardData,
+					announcement,
+					reminders,
+					medications,
+					medsTaken,
+					suggestSunny,
+					suggestCloudy,
+					suggestRain,
+					suggestSnow,
+					aiRules,
+				});
+
+				const todayPlanLines = aiAutoRefresh
+					? freshSmartPlan.todayPlan
+					: (document.getElementById('input-ai-today-plan')?.value || '')
+							.split('\n')
+							.map((s) => s.trim())
+							.filter(Boolean);
+				const prepAlertLines = aiAutoRefresh
+					? freshSmartPlan.prepAlerts
+					: (document.getElementById('input-ai-prep-alerts')?.value || '')
+							.split('\n')
+							.map((s) => s.trim())
+							.filter(Boolean);
+				const lookAheadText = aiAutoRefresh
+					? freshSmartPlan.lookAhead
+					: (document.getElementById('input-ai-look-ahead')?.value || '').trim();
 
 				const updatePayload = {
 					boardTitle: boardTitle,
@@ -1957,6 +1978,7 @@
 						todayPlan: todayPlanLines,
 						prepAlerts: prepAlertLines,
 						lookAhead: lookAheadText,
+						source: aiAutoRefresh ? 'smart' : 'manual',
 						generatedDate: getTodayDateString(),
 						updatedAt: Date.now(),
 					},
@@ -1975,6 +1997,9 @@
 							alert('Failed to save changes. ERROR: ' + error.message);
 						} else {
 							console.log('Board data saved successfully.');
+							if (aiAutoRefresh && loadGeminiApiKeyLocal()) {
+								generateAiActionPlan({ silent: true });
+							}
 							alert('Changes published successfully! Tablet will update instantly.');
 							switchView('display');
 						}
@@ -2296,6 +2321,18 @@
 				const autoRefresh = data.aiAutoRefresh !== false;
 				const isSavedFromToday = saved.generatedDate === getTodayDateString();
 
+				// When Auto-Refresh is enabled (default), always reflect live board changes immediately
+				// unless a fresh Gemini AI summary was just generated today.
+				if (autoRefresh) {
+					if (!isSavedFromToday || saved.source !== 'gemini') {
+						return {
+							todayPlan: [...smartPlan.todayPlan],
+							prepAlerts: [...smartPlan.prepAlerts],
+							lookAhead: smartPlan.lookAhead,
+						};
+					}
+				}
+
 				let todayPlan =
 					Array.isArray(saved.todayPlan) && saved.todayPlan.length > 0
 						? [...saved.todayPlan]
@@ -2309,22 +2346,15 @@
 				let lookAhead =
 					saved.lookAhead && saved.lookAhead.trim() ? saved.lookAhead.trim() : smartPlan.lookAhead;
 
-				// If Auto-Refresh is enabled (or saved summary is from a previous day), keep live prep alerts & today plan fresh
-				if (autoRefresh) {
-					if (!isSavedFromToday) {
-						todayPlan = [...smartPlan.todayPlan];
-						prepAlerts = [...smartPlan.prepAlerts];
-						lookAhead = smartPlan.lookAhead;
-					} else {
-						// Always merge any newly detected live prep alerts (e.g. an infusion added for 2 days from now)
-						smartPlan.prepAlerts.forEach((liveAlert) => {
-							const prefix = liveAlert.slice(0, 22).toLowerCase();
-							const alreadyPresent = prepAlerts.some((p) => p.toLowerCase().includes(prefix));
-							if (!alreadyPresent) {
-								prepAlerts.push(liveAlert);
-							}
-						});
-					}
+				if (autoRefresh && isSavedFromToday) {
+					// Merge any newly added live appointment prep alerts into a Gemini summary
+					smartPlan.prepAlerts.forEach((liveAlert) => {
+						const prefix = liveAlert.slice(0, 22).toLowerCase();
+						const alreadyPresent = prepAlerts.some((p) => p.toLowerCase().includes(prefix));
+						if (!alreadyPresent) {
+							prepAlerts.push(liveAlert);
+						}
+					});
 				}
 
 				return { todayPlan, prepAlerts, lookAhead };
@@ -2379,7 +2409,8 @@
 					'Your next few days are open and unhurried—enjoy a restful week at home.';
 			}
 
-			async function generateAiActionPlan() {
+			async function generateAiActionPlan(options = {}) {
+				const silent = !!options.silent;
 				const btn = document.getElementById('btn-generate-ai-plan');
 				const btnText = document.getElementById('btn-generate-ai-text');
 				const apiKeyInput = document.getElementById('input-gemini-api-key');
@@ -2389,7 +2420,7 @@
 				}
 
 				const rulesEl = document.getElementById('input-ai-rules');
-				const rulesText = (rulesEl?.value || DEFAULT_AI_RULES).trim();
+				const rulesText = (rulesEl?.value || latestBoardData?.aiRules || DEFAULT_AI_RULES).trim();
 
 				// Build the smart baseline context first
 				const smartBaseline = buildSmartRuleBasedPlan({
@@ -2413,13 +2444,16 @@
 								todayPlan: smartBaseline.todayPlan,
 								prepAlerts: smartBaseline.prepAlerts,
 								lookAhead: smartBaseline.lookAhead,
+								source: 'smart',
 								generatedDate: getTodayDateString(),
 								updatedAt: Date.now(),
 							},
 						});
 					}
 					renderAiSummaryCard();
-					showToast('✨ Conversational Action Plan generated and saved!');
+					if (!silent) {
+						showToast('✨ Conversational Action Plan generated and saved!');
+					}
 					return;
 				}
 
@@ -2551,13 +2585,16 @@
 								todayPlan: finalTodayPlan,
 								prepAlerts: finalPrepAlerts,
 								lookAhead: finalLookAhead,
+								source: 'gemini',
 								generatedDate: getTodayDateString(),
 								updatedAt: Date.now(),
 							},
 						});
 					}
 					renderAiSummaryCard();
-					showToast('✨ Gemini AI Action Plan generated and saved!');
+					if (!silent) {
+						showToast('✨ Gemini AI Action Plan generated and saved!');
+					}
 				} catch (err) {
 					console.error('Gemini AI generation error, falling back to Smart Plan:', err);
 					const todayPlanEl = document.getElementById('input-ai-today-plan');
@@ -2567,11 +2604,13 @@
 					if (prepAlertsEl) prepAlertsEl.value = smartBaseline.prepAlerts.join('\n');
 					if (lookAheadEl) lookAheadEl.value = smartBaseline.lookAhead;
 					renderAiSummaryCard();
-					alert(
-						'Used built-in Smart Plan (Gemini API returned an error: ' +
-							err.message +
-							'). Review the generated plan below!'
-					);
+					if (!silent) {
+						alert(
+							'Used built-in Smart Plan (Gemini API returned an error: ' +
+								err.message +
+								'). Review the generated plan below!'
+						);
+					}
 				} finally {
 					if (btn) btn.disabled = false;
 					if (btnText) btnText.innerText = 'Generate Action Plan Now';
@@ -3990,6 +4029,9 @@
 							updatedBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
 						});
 						cancelEditCalendarEvent();
+						if (latestBoardData?.aiAutoRefresh !== false) {
+							generateAiActionPlan({ silent: true });
+						}
 						showToast(`Appointment "${title}" updated!`);
 					} catch (err) {
 						console.error('Failed to update calendar event:', err);
@@ -4017,6 +4059,9 @@
 					timeInput.value = '';
 					notesInput.value = '';
 					if (reminderInput) reminderInput.value = '';
+					if (latestBoardData?.aiAutoRefresh !== false) {
+						generateAiActionPlan({ silent: true });
+					}
 					showToast(`Appointment "${title}" added to calendar!`);
 				} catch (err) {
 					console.error('Failed to add calendar event:', err);
@@ -4035,6 +4080,9 @@
 						cancelEditCalendarEvent();
 					}
 					await database.ref(`board/events/${eventId}`).remove();
+					if (latestBoardData?.aiAutoRefresh !== false) {
+						generateAiActionPlan({ silent: true });
+					}
 					showToast(`Appointment removed from calendar.`);
 				} catch (err) {
 					console.error('Failed to remove event:', err);
