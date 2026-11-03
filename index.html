@@ -143,45 +143,24 @@
 					</div>
 				</div>
 
-				<!-- Main Message Card (Hidden when empty) -->
+				<!-- Main Message Card -->
 				<div
 					id="card-announcement"
-					class="hidden bg-blue-50/80 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-2"
+					class="bg-blue-50/80 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-2"
 				>
 					<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
 						<span>📣</span> Today's Important Message
 					</h2>
-					<p id="disp-announcement" class="text-2xl sm:text-4xl font-bold text-slate-900 leading-snug"></p>
+					<p id="disp-announcement" class="text-2xl sm:text-4xl font-bold text-slate-900 leading-snug">
+						Loading announcement...
+					</p>
 				</div>
 
-				<!-- Calendar Events & Appointments Banner -->
-				<div
-					id="card-events"
-					class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4"
-				>
-					<div class="flex justify-between items-center border-b border-slate-100 pb-3">
-						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
-							<span class="text-xl sm:text-2xl">📅</span> Appointments & Events
-						</h2>
-						<span id="events-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-							0 Scheduled
-						</span>
-					</div>
-
-					<!-- Dynamic Events List Container -->
-					<div id="disp-events-list" class="flex flex-wrap gap-3 sm:gap-4">
-						<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-1">
-							<div class="text-2xl">🌿</div>
-							<div class="text-base sm:text-lg font-semibold text-slate-700">No appointments scheduled</div>
-							<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Two Column Layout: Reminders & Medications -->
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+				<!-- Two Column Layout: Reminders, Medications & Scheduled Events (Positionable 1, 2, 3) -->
+				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
 					<!-- Reminders -->
 					<div
+						id="card-reminders"
 						class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3"
 					>
 						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2.5">
@@ -234,6 +213,30 @@
 							Last taken: --:--
 						</p>
 					</div>
+
+					<!-- Calendar Events & Appointments Card -->
+					<div
+						id="card-events"
+						class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+					>
+						<div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>📅</span> Appointments & Events
+							</h2>
+							<span id="events-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+								0 Scheduled
+							</span>
+						</div>
+
+						<!-- Dynamic Events List Container -->
+						<div id="disp-events-list" class="flex flex-wrap gap-3 sm:gap-4">
+							<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-1">
+								<div class="text-2xl">🌿</div>
+								<div class="text-base sm:text-lg font-semibold text-slate-700">No appointments scheduled</div>
+								<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -285,7 +288,7 @@
 									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 								></textarea>
 								<p class="text-xs text-slate-500 mt-1">
-									Featured in large font on the main display. Leave blank to hide the card.
+									Featured in large font at the top of the main display.
 								</p>
 							</div>
 						</div>
@@ -574,6 +577,68 @@
 								</p>
 							</div>
 
+							<!-- Admin-Only Card Position Ordering -->
+							<div
+								id="admin-card-positions"
+								class="hidden pt-3 border-t border-slate-100 space-y-2.5"
+							>
+								<div class="flex items-center justify-between">
+									<h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+										<span>🔢</span> Display Card Order
+									</h4>
+									<span class="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md">
+										Admin Only
+									</span>
+								</div>
+								<p class="text-xs text-slate-500">
+									Choose the position (1, 2, or 3) for each card in the Reminders, Medications &amp; Appointments section:
+								</p>
+								<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+										<label for="select-pos-reminders" class="block text-xs font-semibold text-slate-700">
+											⏰ Daily Reminders
+										</label>
+										<select
+											id="select-pos-reminders"
+											onchange="handleCardPositionChange('reminders', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1">Position 1</option>
+											<option value="2">Position 2</option>
+											<option value="3">Position 3</option>
+										</select>
+									</div>
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+										<label for="select-pos-medications" class="block text-xs font-semibold text-slate-700">
+											💊 Medications
+										</label>
+										<select
+											id="select-pos-medications"
+											onchange="handleCardPositionChange('medications', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1">Position 1</option>
+											<option value="2" selected>Position 2</option>
+											<option value="3">Position 3</option>
+										</select>
+									</div>
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+										<label for="select-pos-events" class="block text-xs font-semibold text-slate-700">
+											📅 Scheduled Events
+										</label>
+										<select
+											id="select-pos-events"
+											onchange="handleCardPositionChange('events', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1">Position 1</option>
+											<option value="2">Position 2</option>
+											<option value="3" selected>Position 3</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
 							<div class="pt-1">
 								<button
 									type="button"
@@ -773,6 +838,7 @@
 					// Setup view permissions based on role
 					const btnAdmin = document.getElementById('btn-admin');
 					const sectionAdminOnly = document.getElementById('section-admin-only');
+					const adminCardPositions = document.getElementById('admin-card-positions');
 					const panelTitle = document.getElementById('admin-panel-title');
 					const publishBtn = document.getElementById('btn-publish-data');
 
@@ -782,6 +848,7 @@
 							btnAdmin.classList.remove('hidden');
 						}
 						if (sectionAdminOnly) sectionAdminOnly.classList.remove('hidden');
+						if (adminCardPositions) adminCardPositions.classList.remove('hidden');
 						if (panelTitle) panelTitle.innerText = 'Remote Administration Panel';
 						if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
 						initUsersManagement();
@@ -791,11 +858,13 @@
 							btnAdmin.classList.remove('hidden');
 						}
 						if (sectionAdminOnly) sectionAdminOnly.classList.add('hidden');
+						if (adminCardPositions) adminCardPositions.classList.add('hidden');
 						if (panelTitle) panelTitle.innerText = 'Editor & Maintenance Panel';
 						if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
 					} else {
 						// VIEWER role (tablet kiosk display)
 						if (btnAdmin) btnAdmin.classList.add('hidden');
+						if (adminCardPositions) adminCardPositions.classList.add('hidden');
 					}
 
 					initBoard();
@@ -1016,22 +1085,102 @@
 				);
 			}
 
+			let currentCardPositions = { reminders: 1, medications: 2, events: 3 };
+
+			function normalizeCardPositions(posData) {
+				const raw = posData || {};
+				let r = parseInt(raw.reminders, 10);
+				let m = parseInt(raw.medications, 10);
+				let e = parseInt(raw.events, 10);
+
+				const validSet = new Set([r, m, e]);
+				if (
+					![1, 2, 3].includes(r) ||
+					![1, 2, 3].includes(m) ||
+					![1, 2, 3].includes(e) ||
+					validSet.size !== 3
+				) {
+					return { reminders: 1, medications: 2, events: 3 };
+				}
+				return { reminders: r, medications: m, events: e };
+			}
+
+			function applyCardPositions(posData) {
+				currentCardPositions = normalizeCardPositions(posData);
+
+				const grid = document.getElementById('display-cards-grid');
+				const cardMap = {
+					reminders: document.getElementById('card-reminders'),
+					medications: document.getElementById('card-medications'),
+					events: document.getElementById('card-events'),
+				};
+
+				if (grid && cardMap.reminders && cardMap.medications && cardMap.events) {
+					const sortedKeys = Object.keys(currentCardPositions).sort(
+						(a, b) => currentCardPositions[a] - currentCardPositions[b]
+					);
+					sortedKeys.forEach((key) => {
+						const cardEl = cardMap[key];
+						if (cardEl) {
+							cardEl.style.order = String(currentCardPositions[key]);
+							grid.appendChild(cardEl);
+						}
+					});
+				}
+
+				const selRem = document.getElementById('select-pos-reminders');
+				const selMed = document.getElementById('select-pos-medications');
+				const selEvt = document.getElementById('select-pos-events');
+				if (selRem) selRem.value = String(currentCardPositions.reminders);
+				if (selMed) selMed.value = String(currentCardPositions.medications);
+				if (selEvt) selEvt.value = String(currentCardPositions.events);
+			}
+
+			async function handleCardPositionChange(changedCard, newPosValue) {
+				if (!userProfile || userProfile.role !== 'ADMIN') {
+					alert('Permission Denied: Only ADMIN users can change card positions.');
+					applyCardPositions(currentCardPositions);
+					return;
+				}
+
+				const targetPos = parseInt(newPosValue, 10);
+				if (![1, 2, 3].includes(targetPos)) return;
+
+				const oldPos = currentCardPositions[changedCard];
+				if (oldPos === targetPos) return;
+
+				const updatedPositions = { ...currentCardPositions };
+				// Swap with the card currently holding targetPos
+				Object.keys(updatedPositions).forEach((key) => {
+					if (key !== changedCard && updatedPositions[key] === targetPos) {
+						updatedPositions[key] = oldPos;
+					}
+				});
+				updatedPositions[changedCard] = targetPos;
+
+				applyCardPositions(updatedPositions);
+
+				try {
+					await database.ref('board/cardPositions').set(updatedPositions);
+					showToast('Display card order updated!');
+				} catch (err) {
+					console.error('Failed to update card positions:', err);
+					alert('Error saving card positions: ' + err.message);
+				}
+			}
+
 			function renderBoard(data) {
 				// Update Display Screen Elements
 				document.getElementById('disp-board-title').innerText =
 					data.boardTitle || 'Senior Message Board';
 
-				// Main announcement card: display if has content, hide if empty
+				// Main announcement card (always visible)
 				const announcement = (data.announcement || '').trim();
-				const cardAnnouncement = document.getElementById('card-announcement');
-				const dispAnnouncement = document.getElementById('disp-announcement');
-				if (announcement) {
-					dispAnnouncement.innerText = announcement;
-					cardAnnouncement.classList.remove('hidden');
-				} else {
-					dispAnnouncement.innerText = '';
-					cardAnnouncement.classList.add('hidden');
-				}
+				document.getElementById('disp-announcement').innerText =
+					announcement || 'No announcements for today.';
+
+				// Apply display card ordering (Position 1, 2, 3)
+				applyCardPositions(data.cardPositions);
 
 				document.getElementById('disp-reminders').innerText =
 					data.reminders || 'No reminders set.';
@@ -1190,20 +1339,26 @@
 				const suggestRain = document.getElementById('input-suggest-rain').value;
 				const suggestSnow = document.getElementById('input-suggest-snow').value;
 
+				const updatePayload = {
+					boardTitle: boardTitle,
+					announcement: announcement,
+					reminders: reminders,
+					medications: medications,
+					medsTaken: medsTaken,
+					zipcode: zipcode,
+					suggestSunny: suggestSunny,
+					suggestCloudy: suggestCloudy,
+					suggestRain: suggestRain,
+					suggestSnow: suggestSnow,
+					updatedAt: Date.now(),
+				};
+
+				if (userProfile.role === 'ADMIN') {
+					updatePayload.cardPositions = currentCardPositions;
+				}
+
 				database.ref('board').update(
-					{
-						boardTitle: boardTitle,
-						announcement: announcement,
-						reminders: reminders,
-						medications: medications,
-						medsTaken: medsTaken,
-						zipcode: zipcode,
-						suggestSunny: suggestSunny,
-						suggestCloudy: suggestCloudy,
-						suggestRain: suggestRain,
-						suggestSnow: suggestSnow,
-						updatedAt: Date.now(),
-					},
+					updatePayload,
 					(error) => {
 						if (error) {
 							console.error('Firebase Save Error:', error);

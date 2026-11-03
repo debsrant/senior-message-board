@@ -172,19 +172,19 @@ Example rules:
 ### E. Operating the Views
 - **Two-Column Admin & Editor Panel Layout (Mobile-Responsive Light UI)**:
   - **Column 1 (Daily Board Content & Actions)**:
-    1. **Today's Important Message / Announcement**: Enter a personalized message (hidden on the tablet when left empty).
+    1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
     2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Edit existing appointments inline or delete canceled events.
     3. **Publish Changes**: Large action button to instantly push updates to the tablet.
   - **Column 2 (Profile, Maintenance & Access Control)**:
     1. **My Profile (Admin & Editor)**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
-    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status.
+    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status. Includes **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, and **Scheduled Events** into Position 1, Position 2, or Position 3.
     3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), pre-assign new users, and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
-    *(Note: For users with the `EDITOR` role, the User Management card is hidden, while Board Maintenance & Schedules remains fully accessible).*
+    *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden, while Board Maintenance & Schedules remains fully accessible).*
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. **Appointments Banner**: Displays upcoming appointments chronologically in side-by-side cards with responsive wrapping across the tablet screen, badges ("TODAY", "TOMORROW", "Weekday, Date"), and driver notes. Shows a friendly placeholder ("No appointments scheduled. Relax and enjoy your day! ☀️") when none are scheduled. Past events are automatically cleaned up.
-  4. Displays time, date, local weather (with city name), announcements (hidden when empty), reminders, and medications.
+  3. **Main Message Card**: Always displayed full-width at the top of the board below the clock & weather card.
+  4. **Positionable 2-Column Section (Reminders, Medications & Scheduled Events)**: Displays **Daily Reminders**, **Medications**, and **Appointments & Events** in a 2-column grid ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3).
   5. Senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---

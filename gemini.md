@@ -21,8 +21,9 @@
 ## Key Setup Features
 
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
-- Calendar & Appointments: Full-width banner displaying upcoming doctor visits and events with side-by-side card wrapping, chronological sorting, senior-friendly badges ("TODAY", "TOMORROW"), notes/driver details, inline appointment editing, and automatic past-event cleanup.
-- Light, Mobile-First UI: High-contrast light color scheme (`bg-slate-100` background, `bg-white` cards, `blue-600` primary actions) with responsive mobile cards for user management and 16px (`text-base`) inputs to prevent mobile browser zoom.
+- Calendar & Appointments: Card inside the 2-column Reminders & Medications section displaying upcoming doctor visits and events with side-by-side card wrapping, chronological sorting, senior-friendly badges ("TODAY", "TOMORROW"), notes/driver details, inline appointment editing, and automatic past-event cleanup.
+- Admin Card Positioning: ADMIN users can order the 3 cards in the 2-column section (**Daily Reminders**, **Medications**, and **Scheduled Events**) into Position 1, Position 2, and Position 3 (`board/cardPositions`).
+- Light, Mobile-First UI: High-contrast light color scheme (`bg-slate-100` background, `bg-white` cards, `blue-600` primary actions) with always-visible Main Message card, responsive mobile cards for user management, and 16px (`text-base`) inputs to prevent mobile browser zoom.
 - Board Maintenance & Schedules: Available to both EDITOR and ADMIN roles to configure the board title, daily reminders, medication schedules, weather zipcode, activity suggestions, and reset medication check-off status.
 - Profile Management: Authenticated users can edit their profile (display name and notification settings) directly within the Admin panel.
 - In-App User Management & Account Deactivation: Admins can view all registered users in real time, assign roles (ADMIN, EDITOR, VIEWER), pre-configure new user accounts, and toggle users active/inactive to instantly revoke or restore access without deleting account data.
