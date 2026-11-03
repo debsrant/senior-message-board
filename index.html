@@ -319,6 +319,59 @@
 							</div>
 						</div>
 					</div>
+
+					<!-- AI Daily Action Plan & Look-Ahead Card -->
+					<div
+						id="card-ai-summary"
+						class="bg-white p-5 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4"
+					>
+						<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>✨</span> Daily Action Plan
+							</h2>
+							<button
+								type="button"
+								id="btn-read-ai-summary"
+								onclick="speakAiSummary()"
+								class="text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition flex items-center gap-1.5 shadow-sm"
+							>
+								<span id="btn-read-ai-icon">🔊</span>
+								<span id="btn-read-ai-text">Read Aloud</span>
+							</button>
+						</div>
+
+						<!-- Block 1: Today's Game Plan -->
+						<div class="space-y-2">
+							<h3 class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+								<span>☀️</span> Today's Game Plan
+							</h3>
+							<ul id="disp-ai-today-plan" class="space-y-2 text-base sm:text-lg text-slate-800 font-medium">
+								<li class="text-sm text-slate-400 italic">Building today's action plan...</li>
+							</ul>
+						</div>
+
+						<!-- Block 2: Smart Prep & Health Nudges (e.g. Drink extra water before infusion) -->
+						<div id="disp-ai-prep-section" class="space-y-2">
+							<h3 class="text-xs font-bold uppercase tracking-wider text-sky-800 flex items-center gap-1.5">
+								<span>💧</span> Smart Prep &amp; Health Nudges
+							</h3>
+							<div id="disp-ai-prep-alerts" class="space-y-2">
+								<div class="p-3 bg-sky-50/70 rounded-xl border border-sky-200 text-sm text-sky-900 font-medium">
+									No special preparation needed right now.
+								</div>
+							</div>
+						</div>
+
+						<!-- Block 3: Next Few Days at a Glance -->
+						<div class="pt-2 border-t border-slate-100 space-y-1.5">
+							<h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+								<span>🔭</span> Next Few Days
+							</h3>
+							<p id="disp-ai-look-ahead" class="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
+								Checking upcoming schedule...
+							</p>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -473,6 +526,114 @@
 									<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
 										No upcoming appointments.
 									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Card: AI Daily Action Plan & Care Rules (Admin & Editor) -->
+						<div id="section-ai-summary" class="bg-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
+							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+								<div>
+									<h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
+										<span>✨</span> AI Daily Action Plan &amp; Prep Rules
+									</h3>
+									<p class="text-xs text-slate-500 mt-0.5">
+										Summarizes weather, appointments, birthdays, and multi-day medical prep (like extra hydration before an infusion).
+									</p>
+								</div>
+								<span class="text-[11px] font-semibold text-indigo-700 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 shrink-0">
+									Admin &amp; Editor
+								</span>
+							</div>
+
+							<!-- Caregiver Prep Rules -->
+							<div>
+								<label class="block text-xs font-semibold mb-1 text-slate-700">
+									Caregiver Prep Rules &amp; Custom Guidance
+								</label>
+								<textarea
+									id="input-ai-rules"
+									rows="3"
+									placeholder="e.g. Infusion: Drink 2-3 extra glasses of water starting 3 days before a scheduled infusion."
+									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+								></textarea>
+								<p class="text-xs text-slate-500 mt-1">
+									Tip: Write rules like <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">Infusion: Drink 2-3 extra glasses of water 3 days before</code> or general instructions for Gemini AI.
+								</p>
+							</div>
+
+							<!-- Optional Gemini API Key + Generate Button -->
+							<div class="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-3">
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-indigo-950">
+											Gemini API Key <span class="text-slate-500 font-normal">(Optional — saved on this device)</span>
+										</label>
+										<input
+											type="password"
+											id="input-gemini-api-key"
+											onchange="saveGeminiApiKeyLocal(this.value)"
+											placeholder="AIza... (Leave blank for built-in Smart Plan)"
+											class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
+										/>
+									</div>
+									<button
+										type="button"
+										id="btn-generate-ai-plan"
+										onclick="generateAiActionPlan()"
+										class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
+									>
+										<span>✨</span>
+										<span id="btn-generate-ai-text">Generate Action Plan Now</span>
+									</button>
+								</div>
+								<label class="flex items-center gap-2.5 cursor-pointer pt-0.5">
+									<input
+										type="checkbox"
+										id="input-ai-auto-refresh"
+										checked
+										class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+									/>
+									<span class="text-xs font-semibold text-slate-700">
+										Automatically merge live weather, medication status &amp; upcoming appointment prep alerts each day
+									</span>
+								</label>
+							</div>
+
+							<!-- Editable AI Summary Output Fields -->
+							<div class="space-y-3 pt-1">
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-600">
+										☀️ Today's Game Plan (One bullet per line)
+									</label>
+									<textarea
+										id="input-ai-today-plan"
+										rows="3"
+										placeholder="Click 'Generate Action Plan Now' or write custom daily steps..."
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+									></textarea>
+								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-600">
+										💧 Smart Prep &amp; Health Nudges (One alert per line)
+									</label>
+									<textarea
+										id="input-ai-prep-alerts"
+										rows="2"
+										placeholder="e.g. 💧 Hydration Reminder: Drink 2-3 extra glasses of water today before your upcoming infusion."
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+									></textarea>
+								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-600">
+										🔭 Next Few Days at a Glance
+									</label>
+									<textarea
+										id="input-ai-look-ahead"
+										rows="2"
+										placeholder="Summary of the next few days..."
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+									></textarea>
 								</div>
 							</div>
 						</div>
@@ -699,9 +860,26 @@
 									</span>
 								</div>
 								<p class="text-xs text-slate-500">
-									Choose the position (1 to 5) for each card in the Reminders, Medications, Appointments, Holidays &amp; Contacts section:
+									Choose the position (1 to 6) for each card in the 3-column Display Grid:
 								</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+										<label for="select-pos-ai" class="block text-xs font-semibold text-slate-700">
+											✨ Daily Action Plan
+										</label>
+										<select
+											id="select-pos-ai"
+											onchange="handleCardPositionChange('aiSummary', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1" selected>Position 1</option>
+											<option value="2">Position 2</option>
+											<option value="3">Position 3</option>
+											<option value="4">Position 4</option>
+											<option value="5">Position 5</option>
+											<option value="6">Position 6</option>
+										</select>
+									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-reminders" class="block text-xs font-semibold text-slate-700">
 											⏰ Daily Reminders
@@ -711,11 +889,12 @@
 											onchange="handleCardPositionChange('reminders', this.value)"
 											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 										>
-											<option value="1" selected>Position 1</option>
-											<option value="2">Position 2</option>
+											<option value="1">Position 1</option>
+											<option value="2" selected>Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
 											<option value="5">Position 5</option>
+											<option value="6">Position 6</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -728,10 +907,11 @@
 											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 										>
 											<option value="1">Position 1</option>
-											<option value="2" selected>Position 2</option>
-											<option value="3">Position 3</option>
+											<option value="2">Position 2</option>
+											<option value="3" selected>Position 3</option>
 											<option value="4">Position 4</option>
 											<option value="5">Position 5</option>
+											<option value="6">Position 6</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -745,9 +925,10 @@
 										>
 											<option value="1">Position 1</option>
 											<option value="2">Position 2</option>
-											<option value="3" selected>Position 3</option>
-											<option value="4">Position 4</option>
+											<option value="3">Position 3</option>
+											<option value="4" selected>Position 4</option>
 											<option value="5">Position 5</option>
+											<option value="6">Position 6</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -762,11 +943,12 @@
 											<option value="1">Position 1</option>
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
-											<option value="4" selected>Position 4</option>
-											<option value="5">Position 5</option>
+											<option value="4">Position 4</option>
+											<option value="5" selected>Position 5</option>
+											<option value="6">Position 6</option>
 										</select>
 									</div>
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1 sm:col-span-2">
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-contacts" class="block text-xs font-semibold text-slate-700">
 											📇 Contacts List
 										</label>
@@ -779,7 +961,8 @@
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
-											<option value="5" selected>Position 5</option>
+											<option value="5">Position 5</option>
+											<option value="6" selected>Position 6</option>
 										</select>
 									</div>
 								</div>
@@ -1183,6 +1366,8 @@
 			// Clock & Weather Functionality
 			let currentZip = '';
 			let weatherSuggestions = { sunny: '', cloudy: '', rain: '', snow: '' };
+			let lastWeatherData = null;
+			let latestBoardData = {};
 
 			async function updateWeather(zip) {
 				if (!zip) return;
@@ -1248,12 +1433,27 @@
 							}
 						}
 
+						const desc = getWeatherDesc(code);
+						const suggestion = getWeatherSuggestion(code);
+
 						document.getElementById('weather-temp').innerText = `${temp}°F`;
 						document.getElementById('weather-range').innerText = `High: ${high}° | Low: ${low}°`;
 						document.getElementById('weather-icon').innerText = weatherIcons[code] || '🌤️';
-						document.getElementById('weather-desc').innerText = getWeatherDesc(code);
-						document.getElementById('weather-suggestion').innerText = `✨ ${getWeatherSuggestion(code)}`;
+						document.getElementById('weather-desc').innerText = desc;
+						document.getElementById('weather-suggestion').innerText = `✨ ${suggestion}`;
 						document.getElementById('weather-widget').classList.remove('hidden');
+
+						lastWeatherData = {
+							city,
+							temp,
+							high,
+							low,
+							code,
+							icon: weatherIcons[code] || '🌤️',
+							desc,
+							suggestion,
+						};
+						renderAiSummaryCard();
 					}
 				} catch (err) {
 					console.warn('Weather fetch failed:', err);
@@ -1371,11 +1571,12 @@
 			}
 
 			let currentCardPositions = {
-				reminders: 1,
-				medications: 2,
-				events: 3,
-				holidays: 4,
-				contacts: 5,
+				aiSummary: 1,
+				reminders: 2,
+				medications: 3,
+				events: 4,
+				holidays: 5,
+				contacts: 6,
 			};
 			let currentBoardUserContacts = {};
 			let currentAdditionalContacts = {};
@@ -1383,17 +1584,18 @@
 
 			function normalizeCardPositions(posData) {
 				const raw = posData || {};
+				let a = parseInt(raw.aiSummary, 10);
 				let r = parseInt(raw.reminders, 10);
 				let m = parseInt(raw.medications, 10);
 				let e = parseInt(raw.events, 10);
 				let h = parseInt(raw.holidays, 10);
 				let c = parseInt(raw.contacts, 10);
 
-				// Upgrade legacy 3-card or 4-card position objects
+				// Upgrade legacy 3-card, 4-card, or 5-card position objects
 				if ([1, 2, 3].includes(r) && [1, 2, 3].includes(m) && [1, 2, 3].includes(e) && isNaN(h)) {
 					const set3 = new Set([r, m, e]);
 					if (set3.size === 3) {
-						return { reminders: r, medications: m, events: e, holidays: 4, contacts: 5 };
+						return { aiSummary: 1, reminders: r + 1, medications: m + 1, events: e + 1, holidays: 5, contacts: 6 };
 					}
 				}
 				if (
@@ -1405,22 +1607,36 @@
 				) {
 					const set4 = new Set([r, m, e, h]);
 					if (set4.size === 4) {
-						return { reminders: r, medications: m, events: e, holidays: h, contacts: 5 };
+						return { aiSummary: 1, reminders: r + 1, medications: m + 1, events: e + 1, holidays: h + 1, contacts: 6 };
+					}
+				}
+				if (
+					[1, 2, 3, 4, 5].includes(r) &&
+					[1, 2, 3, 4, 5].includes(m) &&
+					[1, 2, 3, 4, 5].includes(e) &&
+					[1, 2, 3, 4, 5].includes(h) &&
+					[1, 2, 3, 4, 5].includes(c) &&
+					isNaN(a)
+				) {
+					const set5 = new Set([r, m, e, h, c]);
+					if (set5.size === 5) {
+						return { aiSummary: 1, reminders: r + 1, medications: m + 1, events: e + 1, holidays: h + 1, contacts: c + 1 };
 					}
 				}
 
-				const validSet = new Set([r, m, e, h, c]);
+				const validSet = new Set([a, r, m, e, h, c]);
 				if (
-					![1, 2, 3, 4, 5].includes(r) ||
-					![1, 2, 3, 4, 5].includes(m) ||
-					![1, 2, 3, 4, 5].includes(e) ||
-					![1, 2, 3, 4, 5].includes(h) ||
-					![1, 2, 3, 4, 5].includes(c) ||
-					validSet.size !== 5
+					![1, 2, 3, 4, 5, 6].includes(a) ||
+					![1, 2, 3, 4, 5, 6].includes(r) ||
+					![1, 2, 3, 4, 5, 6].includes(m) ||
+					![1, 2, 3, 4, 5, 6].includes(e) ||
+					![1, 2, 3, 4, 5, 6].includes(h) ||
+					![1, 2, 3, 4, 5, 6].includes(c) ||
+					validSet.size !== 6
 				) {
-					return { reminders: 1, medications: 2, events: 3, holidays: 4, contacts: 5 };
+					return { aiSummary: 1, reminders: 2, medications: 3, events: 4, holidays: 5, contacts: 6 };
 				}
-				return { reminders: r, medications: m, events: e, holidays: h, contacts: c };
+				return { aiSummary: a, reminders: r, medications: m, events: e, holidays: h, contacts: c };
 			}
 
 			function applyCardPositions(posData) {
@@ -1428,6 +1644,7 @@
 
 				const grid = document.getElementById('display-cards-grid');
 				const cardMap = {
+					aiSummary: document.getElementById('card-ai-summary'),
 					reminders: document.getElementById('card-reminders'),
 					medications: document.getElementById('card-medications'),
 					events: document.getElementById('card-events'),
@@ -1437,6 +1654,7 @@
 
 				if (
 					grid &&
+					cardMap.aiSummary &&
 					cardMap.reminders &&
 					cardMap.medications &&
 					cardMap.events &&
@@ -1455,11 +1673,13 @@
 					});
 				}
 
+				const selAi = document.getElementById('select-pos-ai');
 				const selRem = document.getElementById('select-pos-reminders');
 				const selMed = document.getElementById('select-pos-medications');
 				const selEvt = document.getElementById('select-pos-events');
 				const selHol = document.getElementById('select-pos-holidays');
 				const selCon = document.getElementById('select-pos-contacts');
+				if (selAi) selAi.value = String(currentCardPositions.aiSummary);
 				if (selRem) selRem.value = String(currentCardPositions.reminders);
 				if (selMed) selMed.value = String(currentCardPositions.medications);
 				if (selEvt) selEvt.value = String(currentCardPositions.events);
@@ -1475,7 +1695,7 @@
 				}
 
 				const targetPos = parseInt(newPosValue, 10);
-				if (![1, 2, 3, 4, 5].includes(targetPos)) return;
+				if (![1, 2, 3, 4, 5, 6].includes(targetPos)) return;
 
 				const oldPos = currentCardPositions[changedCard];
 				if (oldPos === targetPos) return;
@@ -1500,7 +1720,35 @@
 				}
 			}
 
+			const DEFAULT_AI_RULES =
+				'Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion.\n' +
+				'Blood Draw: Drink plenty of water the day before and morning of your lab visit.\n' +
+				'Physical Therapy: Set out comfortable sneakers and loose clothing.';
+
+			function saveGeminiApiKeyLocal(key) {
+				try {
+					const trimmed = (key || '').trim();
+					if (trimmed) {
+						localStorage.setItem('smb_gemini_api_key', trimmed);
+					} else {
+						localStorage.removeItem('smb_gemini_api_key');
+					}
+				} catch (e) {
+					console.warn('Could not save Gemini API key to localStorage:', e);
+				}
+			}
+
+			function loadGeminiApiKeyLocal() {
+				try {
+					return localStorage.getItem('smb_gemini_api_key') || '';
+				} catch (e) {
+					return '';
+				}
+			}
+
 			function renderBoard(data) {
+				latestBoardData = data || {};
+
 				// Update Display Screen Elements
 				document.getElementById('disp-board-title').innerText =
 					data.boardTitle || 'Senior Message Board';
@@ -1510,7 +1758,7 @@
 				document.getElementById('disp-announcement').innerText =
 					announcement || 'No announcements for today.';
 
-				// Apply display card ordering (Position 1 to 5)
+				// Apply display card ordering (Position 1 to 6)
 				applyCardPositions(data.cardPositions);
 
 				// Update Contacts state from board
@@ -1582,7 +1830,7 @@
 					announceInput.value = data.announcement || '';
 				}
 
-				// Populate Maintenance Inputs if user is admin or editor
+				// Populate Maintenance & AI Summary Inputs if user is admin or editor
 				if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 					const titleEl = document.getElementById('input-board-title');
 					if (titleEl && document.activeElement !== titleEl) titleEl.value = data.boardTitle || 'Senior Message Board';
@@ -1602,6 +1850,36 @@
 					if (rainEl && document.activeElement !== rainEl) rainEl.value = data.suggestRain || '';
 					const snowEl = document.getElementById('input-suggest-snow');
 					if (snowEl && document.activeElement !== snowEl) snowEl.value = data.suggestSnow || '';
+
+					const aiRulesEl = document.getElementById('input-ai-rules');
+					if (aiRulesEl && document.activeElement !== aiRulesEl) {
+						aiRulesEl.value = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
+					}
+					const apiKeyEl = document.getElementById('input-gemini-api-key');
+					if (apiKeyEl && document.activeElement !== apiKeyEl && !apiKeyEl.value) {
+						apiKeyEl.value = loadGeminiApiKeyLocal();
+					}
+					const autoRefreshEl = document.getElementById('input-ai-auto-refresh');
+					if (autoRefreshEl) {
+						autoRefreshEl.checked = data.aiAutoRefresh !== false;
+					}
+					const aiSaved = data.aiSummary || {};
+					const todayPlanEl = document.getElementById('input-ai-today-plan');
+					if (todayPlanEl && document.activeElement !== todayPlanEl) {
+						todayPlanEl.value = Array.isArray(aiSaved.todayPlan)
+							? aiSaved.todayPlan.join('\n')
+							: aiSaved.todayPlan || '';
+					}
+					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
+					if (prepAlertsEl && document.activeElement !== prepAlertsEl) {
+						prepAlertsEl.value = Array.isArray(aiSaved.prepAlerts)
+							? aiSaved.prepAlerts.join('\n')
+							: aiSaved.prepAlerts || '';
+					}
+					const lookAheadEl = document.getElementById('input-ai-look-ahead');
+					if (lookAheadEl && document.activeElement !== lookAheadEl) {
+						lookAheadEl.value = aiSaved.lookAhead || '';
+					}
 				}
 
 				// Notify on Medication Completion Transition
@@ -1614,6 +1892,9 @@
 
 				// Render Calendar Events & Appointments
 				renderEvents(data.events || {});
+
+				// Render AI Daily Action Plan & Prep Card
+				renderAiSummaryCard();
 
 				// Auto-Reset Check
 				checkAutoReset(data.medsTaken, data.medsTakenTime);
@@ -1670,6 +1951,20 @@
 				const suggestRain = document.getElementById('input-suggest-rain').value;
 				const suggestSnow = document.getElementById('input-suggest-snow').value;
 
+				const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
+				const aiAutoRefresh = document.getElementById('input-ai-auto-refresh')
+					? document.getElementById('input-ai-auto-refresh').checked
+					: true;
+				const todayPlanLines = (document.getElementById('input-ai-today-plan')?.value || '')
+					.split('\n')
+					.map((s) => s.trim())
+					.filter(Boolean);
+				const prepAlertLines = (document.getElementById('input-ai-prep-alerts')?.value || '')
+					.split('\n')
+					.map((s) => s.trim())
+					.filter(Boolean);
+				const lookAheadText = (document.getElementById('input-ai-look-ahead')?.value || '').trim();
+
 				const updatePayload = {
 					boardTitle: boardTitle,
 					announcement: announcement,
@@ -1681,6 +1976,15 @@
 					suggestCloudy: suggestCloudy,
 					suggestRain: suggestRain,
 					suggestSnow: suggestSnow,
+					aiRules: aiRules,
+					aiAutoRefresh: aiAutoRefresh,
+					aiSummary: {
+						todayPlan: todayPlanLines,
+						prepAlerts: prepAlertLines,
+						lookAhead: lookAheadText,
+						generatedDate: getTodayDateString(),
+						updatedAt: Date.now(),
+					},
 					updatedAt: Date.now(),
 				};
 
@@ -1701,6 +2005,603 @@
 						}
 					}
 				);
+			}
+
+			// ================= AI DAILY ACTION PLAN & SMART PREP ENGINE =================
+
+			function getDaysFromToday(dateStr) {
+				if (!dateStr) return null;
+				const parts = dateStr.split('-').map(Number);
+				if (parts.length !== 3) return null;
+				const target = new Date(parts[0], parts[1] - 1, parts[2]);
+				target.setHours(0, 0, 0, 0);
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+			}
+
+			function getUpcomingBirthdayDiffDays(bdayStr) {
+				if (!bdayStr) return null;
+				const parts = bdayStr.split('-').map(Number);
+				if (parts.length < 3) return null;
+				const month = parts[1];
+				const day = parts[2];
+				const today = new Date();
+				today.setHours(0, 0, 0, 0);
+				let target = new Date(today.getFullYear(), month - 1, day);
+				target.setHours(0, 0, 0, 0);
+				if (target.getTime() < today.getTime()) {
+					target = new Date(today.getFullYear() + 1, month - 1, day);
+				}
+				return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+			}
+
+			function buildSmartRuleBasedPlan(boardData) {
+				const data = boardData || latestBoardData || {};
+				const todayStr = getTodayDateString();
+				const todayPlan = [];
+				const prepAlerts = [];
+
+				// 1. Weather & Activity Guidance
+				if (lastWeatherData) {
+					const cityPart = lastWeatherData.city ? ` in ${lastWeatherData.city}` : '';
+					todayPlan.push(
+						`${lastWeatherData.icon} Weather${cityPart}: ${lastWeatherData.temp}°F and ${lastWeatherData.desc.toLowerCase()} (High ${lastWeatherData.high}° / Low ${lastWeatherData.low}°). ${lastWeatherData.suggestion}`
+					);
+				}
+
+				// 2. Medication Check-In Guidance
+				if (data.medsTaken) {
+					todayPlan.push('✅ Great job! Your daily medications are already logged for today.');
+				} else {
+					const firstMedLine = (data.medications || '')
+						.split('\n')
+						.map((l) => l.trim())
+						.filter(Boolean)[0];
+					if (firstMedLine) {
+						todayPlan.push(
+							`💊 Take your medications as scheduled (${firstMedLine}) and tap "I TOOK MY MEDS" above.`
+						);
+					} else {
+						todayPlan.push('💊 Remember to take your daily medicine and tap "I TOOK MY MEDS" above.');
+					}
+				}
+
+				// 3. Today's Holidays, Birthdays & Appointments
+				const todaysHolidays = (upcomingHolidays || []).filter((h) => h.date === todayStr);
+				todaysHolidays.forEach((h) => {
+					todayPlan.push(`${getHolidayEmoji(h.name)} Today is ${h.name} — enjoy the special day!`);
+				});
+
+				const { allContacts } = getCombinedContactsList();
+				const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
+				todaysBirthdays.forEach((c) => {
+					const phoneHint = c.phone ? ` (${c.phone})` : '';
+					todayPlan.push(`🎂 It's ${c.name}'s birthday today! Consider giving them a call${phoneHint}.`);
+				});
+
+				const allEvents = Object.entries(currentEventsMap || {})
+					.map(([id, evt]) => ({
+						id,
+						...evt,
+						diffDays: getDaysFromToday(evt.date),
+					}))
+					.filter((evt) => evt.diffDays !== null && evt.diffDays >= 0)
+					.sort((a, b) => {
+						if (a.diffDays !== b.diffDays) return a.diffDays - b.diffDays;
+						return (a.time || '').localeCompare(b.time || '');
+					});
+
+				const todayEvents = allEvents.filter((e) => e.diffDays === 0);
+				todayEvents.forEach((evt) => {
+					const { time } = formatEventDate(evt.date, evt.time);
+					const timePart = time ? ` at ${time}` : '';
+					const notesPart = evt.notes ? ` — ${evt.notes}` : '';
+					todayPlan.push(`📅 Today's Appointment: ${evt.title}${timePart}${notesPart}.`);
+				});
+
+				// Include a helpful daily reminder if today's list is short
+				if (todayPlan.length < 3 && data.reminders) {
+					const remLines = data.reminders
+						.split('\n')
+						.map((l) => l.trim())
+						.filter(Boolean);
+					if (remLines.length > 0) {
+						todayPlan.push(`⏰ Daily Focus: ${remLines[0]}`);
+					}
+				}
+
+				// 4. Smart Multi-Day Prep & Health Nudges (e.g. Drink extra water days before an infusion)
+				const rulesText = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
+				const customRules = [];
+				(rulesText || '')
+					.split('\n')
+					.map((l) => l.trim())
+					.filter(Boolean)
+					.forEach((line) => {
+						const colonIdx = line.indexOf(':');
+						if (colonIdx > 0 && colonIdx < 40) {
+							const keyword = line.slice(0, colonIdx).trim().toLowerCase();
+							const instruction = line.slice(colonIdx + 1).trim();
+							if (keyword && instruction) {
+								customRules.push({ keyword, instruction });
+							}
+						}
+					});
+
+				allEvents.forEach((evt) => {
+					if (evt.diffDays > 4) return;
+					const combinedText = `${evt.title || ''} ${evt.notes || ''}`.toLowerCase();
+					const { badge, time } = formatEventDate(evt.date, evt.time);
+					const whenLabel =
+						evt.diffDays === 0
+							? 'today'
+							: evt.diffDays === 1
+							? 'tomorrow'
+							: `in ${evt.diffDays} days (${badge})`;
+					const timeSuffix = time ? ` at ${time}` : '';
+
+					// Built-in Infusion / IV Hydration Rule (0 to 3 days before)
+					if (
+						evt.diffDays <= 3 &&
+						(combinedText.includes('infusion') ||
+							combinedText.includes(' iv ') ||
+							combinedText.startsWith('iv ') ||
+							combinedText.includes('hydration'))
+					) {
+						if (evt.diffDays === 0) {
+							prepAlerts.push(
+								`💧 Infusion Today (${evt.title}${timeSuffix}): Keep sipping water this morning and wear a comfortable top with easy sleeve access.`
+							);
+						} else if (evt.diffDays === 1) {
+							prepAlerts.push(
+								`💧 Infusion Tomorrow (${evt.title}${timeSuffix}): Drink 2–3 extra glasses of water today so you feel great and stay well-hydrated for tomorrow!`
+							);
+						} else {
+							prepAlerts.push(
+								`💧 Hydration Prep (${evt.title} ${whenLabel}): Start drinking 2–3 extra glasses of water each day now so your body is well-hydrated before your infusion.`
+							);
+						}
+						return;
+					}
+
+					// Built-in Blood Draw / Lab / Fasting Rule (0 to 2 days before)
+					if (
+						evt.diffDays <= 2 &&
+						(combinedText.includes('blood') ||
+							combinedText.includes('lab') ||
+							combinedText.includes('fasting'))
+					) {
+						prepAlerts.push(
+							`💧 Lab Visit Prep (${evt.title} ${whenLabel}): Drink plenty of water ahead of your visit, and check if you need to fast before ${time || 'your appointment'}.`
+						);
+						return;
+					}
+
+					// Built-in Physical Therapy / Exercise Rule (0 to 1 day before)
+					if (
+						evt.diffDays <= 1 &&
+						(combinedText.includes('physical therapy') ||
+							combinedText.includes(' pt ') ||
+							combinedText.startsWith('pt ') ||
+							combinedText.includes('therapy') ||
+							combinedText.includes('rehab'))
+					) {
+						prepAlerts.push(
+							`👟 Therapy Prep (${evt.title} ${whenLabel}): Set out comfortable walking shoes and loose, easy-to-move-in clothing.`
+						);
+						return;
+					}
+
+					// Built-in Eye Exam / Dentist / Doctor Prep (0 to 2 days before)
+					if (evt.diffDays <= 2 && (combinedText.includes('eye') || combinedText.includes('optom') || combinedText.includes('ophthalm'))) {
+						prepAlerts.push(
+							`👓 Eye Exam Prep (${evt.title} ${whenLabel}): Have your current glasses and sunglasses ready.`
+						);
+						return;
+					}
+
+					// Check any Caregiver Custom "Keyword: Instruction" Rules (0 to 3 days before)
+					if (evt.diffDays <= 3) {
+						customRules.forEach((rule) => {
+							if (
+								!['infusion', 'blood draw', 'physical therapy'].includes(rule.keyword) &&
+								combinedText.includes(rule.keyword)
+							) {
+								prepAlerts.push(`📌 Prep for ${evt.title} (${whenLabel}): ${rule.instruction}`);
+							}
+						});
+					}
+				});
+
+				// Weather + Outing Prep Alert if going out today in cold or rain
+				if (todayEvents.length > 0 && lastWeatherData) {
+					if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
+						prepAlerts.push(
+							`☔ Rainy Day Outing: Bring an umbrella and rain jacket for your trip to ${todayEvents[0].title} today.`
+						);
+					} else if (lastWeatherData.temp < 48 || (lastWeatherData.code >= 71 && lastWeatherData.code <= 75)) {
+						prepAlerts.push(
+							`🧥 Chilly Weather Today (${lastWeatherData.temp}°F): Bundle up with a warm coat for your appointment today.`
+						);
+					}
+				}
+
+				// 5. Next Few Days at a Glance (1 to 5 days out)
+				const upcomingSoonEvents = allEvents.filter((e) => e.diffDays >= 1 && e.diffDays <= 5);
+				const upcomingSoonHolidays = (upcomingHolidays || []).filter((h) => {
+					const d = getDaysFromToday(h.date);
+					return d !== null && d >= 1 && d <= 5;
+				});
+				const upcomingSoonBirthdays = allContacts
+					.map((c) => ({ ...c, diffDays: getUpcomingBirthdayDiffDays(c.birthday) }))
+					.filter((c) => c.diffDays !== null && c.diffDays >= 1 && c.diffDays <= 5)
+					.sort((a, b) => a.diffDays - b.diffDays);
+
+				const lookAheadParts = [];
+				if (upcomingSoonEvents.length === 0) {
+					lookAheadParts.push('No medical appointments or errands are scheduled for the next few days.');
+				} else {
+					const summaries = upcomingSoonEvents.slice(0, 3).map((evt) => {
+						const { badge, time } = formatEventDate(evt.date, evt.time);
+						const dayStr = evt.diffDays === 1 ? 'Tomorrow' : badge;
+						const timeStr = time ? ` at ${time}` : '';
+						const driverStr = evt.notes ? ` (${evt.notes})` : '';
+						return `${evt.title} on ${dayStr}${timeStr}${driverStr}`;
+					});
+					lookAheadParts.push(`Coming up soon: ${summaries.join('; ')}.`);
+				}
+
+				upcomingSoonBirthdays.forEach((b) => {
+					const whenStr = b.diffDays === 1 ? 'tomorrow' : `in ${b.diffDays} days`;
+					lookAheadParts.push(`🎂 ${b.name}'s birthday is ${whenStr}!`);
+				});
+
+				upcomingSoonHolidays.forEach((h) => {
+					const d = getDaysFromToday(h.date);
+					const whenStr = d === 1 ? 'tomorrow' : `in ${d} days`;
+					lookAheadParts.push(`${getHolidayEmoji(h.name)} ${h.name} is ${whenStr}.`);
+				});
+
+				return {
+					todayPlan,
+					prepAlerts,
+					lookAhead: lookAheadParts.join(' '),
+				};
+			}
+
+			function getEffectiveAiSummary() {
+				const data = latestBoardData || {};
+				const smartPlan = buildSmartRuleBasedPlan(data);
+				const saved = data.aiSummary || {};
+				const autoRefresh = data.aiAutoRefresh !== false;
+				const isSavedFromToday = saved.generatedDate === getTodayDateString();
+
+				let todayPlan =
+					Array.isArray(saved.todayPlan) && saved.todayPlan.length > 0
+						? [...saved.todayPlan]
+						: [...smartPlan.todayPlan];
+
+				let prepAlerts =
+					Array.isArray(saved.prepAlerts) && saved.prepAlerts.length > 0
+						? [...saved.prepAlerts]
+						: [...smartPlan.prepAlerts];
+
+				let lookAhead =
+					saved.lookAhead && saved.lookAhead.trim() ? saved.lookAhead.trim() : smartPlan.lookAhead;
+
+				// If Auto-Refresh is enabled (or saved summary is from a previous day), keep live prep alerts & today plan fresh
+				if (autoRefresh) {
+					if (!isSavedFromToday) {
+						todayPlan = [...smartPlan.todayPlan];
+						prepAlerts = [...smartPlan.prepAlerts];
+						lookAhead = smartPlan.lookAhead;
+					} else {
+						// Always merge any newly detected live prep alerts (e.g. an infusion added for 2 days from now)
+						smartPlan.prepAlerts.forEach((liveAlert) => {
+							const prefix = liveAlert.slice(0, 22).toLowerCase();
+							const alreadyPresent = prepAlerts.some((p) => p.toLowerCase().includes(prefix));
+							if (!alreadyPresent) {
+								prepAlerts.push(liveAlert);
+							}
+						});
+					}
+				}
+
+				return { todayPlan, prepAlerts, lookAhead };
+			}
+
+			function renderAiSummaryCard() {
+				const todayPlanEl = document.getElementById('disp-ai-today-plan');
+				const prepAlertsEl = document.getElementById('disp-ai-prep-alerts');
+				const lookAheadEl = document.getElementById('disp-ai-look-ahead');
+				if (!todayPlanEl || !prepAlertsEl || !lookAheadEl) return;
+
+				const { todayPlan, prepAlerts, lookAhead } = getEffectiveAiSummary();
+
+				if (todayPlan.length === 0) {
+					todayPlanEl.innerHTML = `
+						<li class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">
+							☀️ Enjoy a peaceful, relaxing day!
+						</li>
+					`;
+				} else {
+					todayPlanEl.innerHTML = todayPlan
+						.map(
+							(item) => `
+							<li class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-slate-900 leading-snug">
+								${escapeHtml(item)}
+							</li>
+						`
+						)
+						.join('');
+				}
+
+				if (prepAlerts.length === 0) {
+					prepAlertsEl.innerHTML = `
+						<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-600 font-medium">
+							✨ All caught up — no special appointment prep needed right now.
+						</div>
+					`;
+				} else {
+					prepAlertsEl.innerHTML = prepAlerts
+						.map(
+							(alertText) => `
+							<div class="p-3.5 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-bold leading-snug shadow-sm">
+								${escapeHtml(alertText)}
+							</div>
+						`
+						)
+						.join('');
+				}
+
+				lookAheadEl.innerText =
+					lookAhead || 'Your schedule for the next few days is open and relaxing.';
+			}
+
+			async function generateAiActionPlan() {
+				const btn = document.getElementById('btn-generate-ai-plan');
+				const btnText = document.getElementById('btn-generate-ai-text');
+				const apiKeyInput = document.getElementById('input-gemini-api-key');
+				const apiKey = (apiKeyInput?.value || loadGeminiApiKeyLocal() || '').trim();
+				if (apiKeyInput && apiKey) {
+					saveGeminiApiKeyLocal(apiKey);
+				}
+
+				const rulesEl = document.getElementById('input-ai-rules');
+				const rulesText = (rulesEl?.value || DEFAULT_AI_RULES).trim();
+
+				// Build the smart baseline context first
+				const smartBaseline = buildSmartRuleBasedPlan({
+					...latestBoardData,
+					aiRules: rulesText,
+				});
+
+				if (!apiKey) {
+					// Instant Smart Care Companion generation without requiring an external key
+					const todayPlanEl = document.getElementById('input-ai-today-plan');
+					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
+					const lookAheadEl = document.getElementById('input-ai-look-ahead');
+					if (todayPlanEl) todayPlanEl.value = smartBaseline.todayPlan.join('\n');
+					if (prepAlertsEl) prepAlertsEl.value = smartBaseline.prepAlerts.join('\n');
+					if (lookAheadEl) lookAheadEl.value = smartBaseline.lookAhead;
+
+					if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
+						await database.ref('board').update({
+							aiRules: rulesText,
+							aiSummary: {
+								todayPlan: smartBaseline.todayPlan,
+								prepAlerts: smartBaseline.prepAlerts,
+								lookAhead: smartBaseline.lookAhead,
+								generatedDate: getTodayDateString(),
+								updatedAt: Date.now(),
+							},
+						});
+					}
+					renderAiSummaryCard();
+					showToast('✨ Daily Action Plan generated from live board & prep rules!');
+					return;
+				}
+
+				// Call Gemini 3.8 Flash via the official Gemini Interactions API
+				if (btn) btn.disabled = true;
+				if (btnText) btnText.innerText = 'Generating with Gemini AI...';
+
+				try {
+					const todayStr = getTodayDateString();
+					const { allContacts } = getCombinedContactsList();
+					const upcomingEventsList = Object.values(currentEventsMap || {})
+						.filter((e) => e.date >= todayStr)
+						.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+					const boardSnapshot = {
+						todayDate: todayStr,
+						announcement: document.getElementById('input-announcement')?.value || latestBoardData.announcement || '',
+						reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
+						medications: document.getElementById('input-medications')?.value || latestBoardData.medications || '',
+						medsTakenToday: !!latestBoardData.medsTaken,
+						weather: lastWeatherData || 'Weather not loaded yet',
+						upcomingAppointments: upcomingEventsList,
+						upcomingHolidays: (upcomingHolidays || []).slice(0, 4),
+						contactsAndBirthdays: allContacts.map((c) => ({
+							name: c.name,
+							relation: c.relation,
+							birthday: c.birthday,
+							isBirthdayToday: isBirthdayToday(c.birthday),
+						})),
+						caregiverPrepRules: rulesText,
+						detectedSmartPrepAlerts: smartBaseline.prepAlerts,
+					};
+
+					const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Api-Revision': '2026-05-20',
+							'x-goog-api-key': apiKey,
+						},
+						body: JSON.stringify({
+							model: 'gemini-3.8-flash',
+							store: false,
+							system_instruction:
+								'You are a warm, caring, senior-friendly daily care companion creating a clear summary and multi-day action plan for an older adult looking at their home message board. ' +
+								'Write directly to the senior in second person ("you"). Keep sentences short, encouraging, and easy to read. ' +
+								'Always inspect upcoming appointments in the next 1 to 4 days for preparation needs—especially reminding the senior to drink 2-3 extra glasses of water several days before any scheduled infusion, IV, or blood draw, and honoring all caregiverPrepRules.',
+							input:
+								'Generate a senior-friendly Daily Action Plan JSON from this live board data:\n' +
+								JSON.stringify(boardSnapshot, null, 2),
+							response_format: {
+								type: 'text',
+								mime_type: 'application/json',
+								schema: {
+									type: 'object',
+									properties: {
+										todayPlan: {
+											type: 'array',
+											items: { type: 'string' },
+											description:
+												'2 to 4 short, encouraging action bullets for today combining weather, medications, today appointments, birthdays, and reminders.',
+										},
+										prepAlerts: {
+											type: 'array',
+											items: { type: 'string' },
+											description:
+												'1 to 3 proactive health or appointment preparation nudges for today and the next 3 days (e.g. drink extra water days before a scheduled infusion).',
+										},
+										lookAhead: {
+											type: 'string',
+											description:
+												'A warm 1-2 sentence summary of what is happening over the next 3 to 5 days.',
+										},
+									},
+									required: ['todayPlan', 'prepAlerts', 'lookAhead'],
+								},
+							},
+						}),
+					});
+
+					if (!response.ok) {
+						const errText = await response.text();
+						throw new Error(`Gemini API HTTP ${response.status}: ${errText}`);
+					}
+
+					const result = await response.json();
+					let rawJsonText = '';
+					if (typeof result.output_text === 'string' && result.output_text) {
+						rawJsonText = result.output_text;
+					} else if (Array.isArray(result.steps)) {
+						for (let i = result.steps.length - 1; i >= 0; i--) {
+							const step = result.steps[i];
+							if (step && step.type === 'model_output' && Array.isArray(step.content)) {
+								const textParts = step.content
+									.filter((part) => part && part.type === 'text' && typeof part.text === 'string')
+									.map((part) => part.text);
+								if (textParts.length > 0) {
+									rawJsonText = textParts.join('');
+									break;
+								}
+							}
+						}
+					}
+
+					const parsed = JSON.parse(rawJsonText);
+					const finalTodayPlan =
+						Array.isArray(parsed.todayPlan) && parsed.todayPlan.length > 0
+							? parsed.todayPlan
+							: smartBaseline.todayPlan;
+					const finalPrepAlerts =
+						Array.isArray(parsed.prepAlerts) && parsed.prepAlerts.length > 0
+							? parsed.prepAlerts
+							: smartBaseline.prepAlerts;
+					const finalLookAhead = parsed.lookAhead || smartBaseline.lookAhead;
+
+					const todayPlanEl = document.getElementById('input-ai-today-plan');
+					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
+					const lookAheadEl = document.getElementById('input-ai-look-ahead');
+					if (todayPlanEl) todayPlanEl.value = finalTodayPlan.join('\n');
+					if (prepAlertsEl) prepAlertsEl.value = finalPrepAlerts.join('\n');
+					if (lookAheadEl) lookAheadEl.value = finalLookAhead;
+
+					if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
+						await database.ref('board').update({
+							aiRules: rulesText,
+							aiSummary: {
+								todayPlan: finalTodayPlan,
+								prepAlerts: finalPrepAlerts,
+								lookAhead: finalLookAhead,
+								generatedDate: getTodayDateString(),
+								updatedAt: Date.now(),
+							},
+						});
+					}
+					renderAiSummaryCard();
+					showToast('✨ Gemini AI Action Plan generated and saved!');
+				} catch (err) {
+					console.error('Gemini AI generation error, falling back to Smart Plan:', err);
+					const todayPlanEl = document.getElementById('input-ai-today-plan');
+					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
+					const lookAheadEl = document.getElementById('input-ai-look-ahead');
+					if (todayPlanEl) todayPlanEl.value = smartBaseline.todayPlan.join('\n');
+					if (prepAlertsEl) prepAlertsEl.value = smartBaseline.prepAlerts.join('\n');
+					if (lookAheadEl) lookAheadEl.value = smartBaseline.lookAhead;
+					renderAiSummaryCard();
+					alert(
+						'Used built-in Smart Plan (Gemini API returned an error: ' +
+							err.message +
+							'). Review the generated plan below!'
+					);
+				} finally {
+					if (btn) btn.disabled = false;
+					if (btnText) btnText.innerText = 'Generate Action Plan Now';
+				}
+			}
+
+			function speakAiSummary() {
+				if (!('speechSynthesis' in window)) {
+					alert('Text-to-speech is not supported on this browser.');
+					return;
+				}
+				const btnText = document.getElementById('btn-read-ai-text');
+				const btnIcon = document.getElementById('btn-read-ai-icon');
+
+				if (window.speechSynthesis.speaking) {
+					window.speechSynthesis.cancel();
+					if (btnIcon) btnIcon.innerText = '🔊';
+					if (btnText) btnText.innerText = 'Read Aloud';
+					return;
+				}
+
+				const { todayPlan, prepAlerts, lookAhead } = getEffectiveAiSummary();
+				const stripEmojis = (str) =>
+					String(str)
+						.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+						.trim();
+
+				const parts = ['Here is your daily action plan.'];
+				todayPlan.forEach((item) => parts.push(stripEmojis(item)));
+				if (prepAlerts.length > 0) {
+					parts.push('Important preparation reminders:');
+					prepAlerts.forEach((alertItem) => parts.push(stripEmojis(alertItem)));
+				}
+				if (lookAhead) {
+					parts.push('Looking ahead to the next few days: ' + stripEmojis(lookAhead));
+				}
+
+				const utterance = new SpeechSynthesisUtterance(parts.join(' ... '));
+				utterance.rate = 0.92;
+				utterance.onstart = () => {
+					if (btnIcon) btnIcon.innerText = '⏹️';
+					if (btnText) btnText.innerText = 'Stop Reading';
+				};
+				utterance.onend = () => {
+					if (btnIcon) btnIcon.innerText = '🔊';
+					if (btnText) btnText.innerText = 'Read Aloud';
+				};
+				utterance.onerror = () => {
+					if (btnIcon) btnIcon.innerText = '🔊';
+					if (btnText) btnText.innerText = 'Read Aloud';
+				};
+				window.speechSynthesis.speak(utterance);
 			}
 
 			// Profile Management in Admin Panel
@@ -2593,6 +3494,7 @@
 
 				renderHolidaysCard();
 				renderTodayColumn();
+				renderAiSummaryCard();
 			}
 
 			function formatHolidayCountdown(dateStr) {
