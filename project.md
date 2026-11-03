@@ -170,10 +170,10 @@ Example rules:
 ```
 
 ### E. Operating the Views
-- **Two-Column Admin & Editor Panel Layout**:
+- **Two-Column Admin & Editor Panel Layout (Mobile-Responsive Light UI)**:
   - **Column 1 (Daily Board Content & Actions)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message (hidden on the tablet when left empty).
-    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Delete events when canceled.
+    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Edit existing appointments inline or delete canceled events.
     3. **Publish Changes**: Large action button to instantly push updates to the tablet.
   - **Column 2 (Profile, Maintenance & Access Control)**:
     1. **My Profile (Admin & Editor)**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
