@@ -175,19 +175,20 @@ Example rules:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
     2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Edit existing appointments inline or delete canceled events.
     3. **Publish Changes**: Large action button to instantly push updates to the tablet.
-  - **Column 2 (Profile, Maintenance & Access Control)**:
-    1. **My Profile (Admin & Editor)**: Display name, Firebase email, assigned role badge, and toggle for medication alerts.
-    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status. Includes **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, **Scheduled Events**, and **Upcoming Holidays** into Position 1, 2, 3, or 4.
-    3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), pre-assign new users, and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
-    *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden, while Board Maintenance & Schedules remains fully accessible).*
+  - **Column 2 (Profile, Maintenance, Contacts & Access Control)**:
+    1. **My Profile (Admin & Editor)**: Display name, phone number, relationship/label, birthday, Firebase email, assigned role badge, and toggle for medication alerts.
+    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status. Includes **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, **Scheduled Events**, **Upcoming Holidays**, and **Contacts List** into Position 1, 2, 3, 4, or 5.
+    3. **Contacts & Birthdays (Admin & Editor)**: Add, edit, or delete additional contacts who are not registered users (with name, relationship/role, phone number, and birthday). Active registered users are automatically included on the Contacts List card.
+    4. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), set or update user birthdays, pre-assign new users (including birthday), and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
+    *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden, while Board Maintenance & Schedules and Contacts & Birthdays remain fully accessible).*
 - **Display View (Tablet & Phone)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
   3. **Main Message Card (3-Column Today Hub)**: Displayed full-width at the top of the board below the clock & weather card using a 3-column layout on tablet/desktop (stacking vertically on phones):
      - **Column 1**: Today's Important Message.
-     - **Column 2**: Scheduled for Today — automatically lists any major US holiday falling on the current day along with today's appointments, or displays `"No events scheduled for today"` when empty so content positions never shift for the senior.
+     - **Column 2**: Scheduled for Today — automatically lists any major US holiday and any active user or contact birthday falling on the current day along with today's appointments, or displays `"No events scheduled for today"` when empty so content positions never shift for the senior.
      - **Column 3**: Medication Check-In status banner and **"I TOOK MY MEDS"** action button.
-  4. **Positionable 3-Column Section (Reminders, Medications, Scheduled Events & Upcoming Holidays)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events**, and **Upcoming Holidays** (major US holidays with countdown badges) in a 3-column grid on tablet/desktop (stacking on phones), ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3, 4).
+  4. **Positionable 3-Column Section (Reminders, Medications, Scheduled Events, Upcoming Holidays & Contacts List)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events**, **Upcoming Holidays** (major US holidays with countdown badges), and **Contacts List** (automatically listing active users plus additional contacts with phone numbers and birthdays) in a 3-column grid on tablet/desktop (stacking on phones), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 5).
   5. Senior taps **"I TOOK MY MEDS"** in the Main Message section to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---

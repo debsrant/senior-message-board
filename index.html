@@ -294,6 +294,31 @@
 							</div>
 						</div>
 					</div>
+
+					<!-- Contacts List Card (Active Users + Additional Contacts) -->
+					<div
+						id="card-contacts"
+						class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4"
+					>
+						<div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>📇</span> Contacts List
+							</h2>
+							<span
+								id="contacts-count-badge"
+								class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+							>
+								0 Contacts
+							</span>
+						</div>
+
+						<!-- Dynamic Contacts List Container -->
+						<div id="disp-contacts-list" class="space-y-2.5">
+							<div class="py-4 text-center text-sm text-slate-400 italic">
+								Loading contacts...
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -497,6 +522,32 @@
 										class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-slate-500 text-sm cursor-not-allowed outline-none font-mono"
 									/>
 								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-600">Phone Number (for Contacts List)</label>
+									<input
+										type="tel"
+										id="input-profile-phone"
+										placeholder="e.g. (555) 123-4567"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+									/>
+								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-600">Relationship / Label</label>
+									<input
+										type="text"
+										id="input-profile-relation"
+										placeholder="e.g. Daughter, Son, Caregiver"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+									/>
+								</div>
+								<div class="sm:col-span-2">
+									<label class="block text-xs font-semibold mb-1 text-slate-600">Birthday (Surfaces on Board &amp; Main Message Card)</label>
+									<input
+										type="date"
+										id="input-profile-birthday"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+									/>
+								</div>
 							</div>
 
 							<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
@@ -648,7 +699,7 @@
 									</span>
 								</div>
 								<p class="text-xs text-slate-500">
-									Choose the position (1, 2, 3, or 4) for each card in the Reminders, Medications, Appointments &amp; Holidays section:
+									Choose the position (1 to 5) for each card in the Reminders, Medications, Appointments, Holidays &amp; Contacts section:
 								</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -664,6 +715,7 @@
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
+											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -679,6 +731,7 @@
 											<option value="2" selected>Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
+											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -694,6 +747,7 @@
 											<option value="2">Position 2</option>
 											<option value="3" selected>Position 3</option>
 											<option value="4">Position 4</option>
+											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -709,6 +763,23 @@
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4" selected>Position 4</option>
+											<option value="5">Position 5</option>
+										</select>
+									</div>
+									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1 sm:col-span-2">
+										<label for="select-pos-contacts" class="block text-xs font-semibold text-slate-700">
+											📇 Contacts List
+										</label>
+										<select
+											id="select-pos-contacts"
+											onchange="handleCardPositionChange('contacts', this.value)"
+											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="1">Position 1</option>
+											<option value="2">Position 2</option>
+											<option value="3">Position 3</option>
+											<option value="4">Position 4</option>
+											<option value="5" selected>Position 5</option>
 										</select>
 									</div>
 								</div>
@@ -725,7 +796,112 @@
 							</div>
 						</div>
 
-						<!-- Section 3: User Management & Roles (Admin Only) -->
+						<!-- Section 3: Contacts Directory (Admin & Editor) -->
+						<div id="section-contacts" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+								<div>
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+										<span>📇</span> Contacts &amp; Birthdays
+									</h3>
+									<p class="text-xs text-slate-500 mt-0.5">
+										Active users are included automatically. Add additional family, doctors, or neighbors below.
+									</p>
+								</div>
+								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+									Admin &amp; Editor
+								</span>
+							</div>
+
+							<!-- Add / Edit Additional Contact Form -->
+							<div
+								id="contact-form-container"
+								class="p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 transition-colors"
+							>
+								<div class="flex items-center justify-between">
+									<div
+										id="contact-form-heading"
+										class="text-xs font-bold text-slate-700 uppercase tracking-wider"
+									>
+										Add Additional Contact
+									</div>
+									<span
+										id="contact-editing-badge"
+										class="hidden text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full"
+									>
+										Editing Mode
+									</span>
+								</div>
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Full Name</label>
+										<input
+											type="text"
+											id="input-contact-name"
+											placeholder="e.g. Aunt Mary or Dr. Smith"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Relationship / Label</label>
+										<input
+											type="text"
+											id="input-contact-relation"
+											placeholder="e.g. Sister, Neighbor, Doctor"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Phone Number (Optional)</label>
+										<input
+											type="tel"
+											id="input-contact-phone"
+											placeholder="e.g. (555) 234-5678"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Birthday (Optional)</label>
+										<input
+											type="date"
+											id="input-contact-birthday"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+								</div>
+								<div class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
+									<button
+										type="button"
+										id="btn-cancel-edit-contact"
+										onclick="cancelEditContact()"
+										class="hidden w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm transition"
+									>
+										Cancel
+									</button>
+									<button
+										type="button"
+										id="btn-submit-contact"
+										onclick="saveAdditionalContact()"
+										class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
+									>
+										<span id="btn-submit-contact-text">+ Add Contact</span>
+									</button>
+								</div>
+							</div>
+
+							<!-- Current Contacts List in Panel -->
+							<div class="space-y-2">
+								<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+									Contacts Directory (Active Users &amp; Additional Contacts)
+								</div>
+								<div id="admin-contacts-list" class="space-y-2 max-h-72 overflow-y-auto">
+									<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
+										Loading contacts...
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Section 4: User Management & Roles (Admin Only) -->
 						<div id="section-admin-only" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
 								<div>
@@ -751,7 +927,7 @@
 								<p class="text-xs text-slate-500">
 									Enter the UID from Firebase Auth Console to assign a role before their first sign-in:
 								</p>
-								<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<input
 										type="text"
 										id="input-new-uid"
@@ -762,6 +938,12 @@
 										type="email"
 										id="input-new-email"
 										placeholder="user@example.com"
+										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+									/>
+									<input
+										type="date"
+										id="input-new-birthday"
+										title="User Birthday (Optional)"
 										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
 									/>
 									<select
@@ -900,12 +1082,37 @@
 					if (nameInput) nameInput.value = userProfile.displayName || user.displayName || '';
 					const emailInput = document.getElementById('input-profile-email');
 					if (emailInput) emailInput.value = user.email || '';
+					const phoneInput = document.getElementById('input-profile-phone');
+					if (phoneInput) phoneInput.value = userProfile.phone || '';
+					const relationInput = document.getElementById('input-profile-relation');
+					if (relationInput) relationInput.value = userProfile.relationship || '';
+					const birthdayInput = document.getElementById('input-profile-birthday');
+					if (birthdayInput) birthdayInput.value = userProfile.birthday || '';
 					const roleBadge = document.getElementById('profile-role-badge');
 					if (roleBadge) roleBadge.innerText = 'Role: ' + (userProfile.role || 'VIEWER');
 					const panelRolePill = document.getElementById('panel-role-pill');
 					if (panelRolePill) panelRolePill.innerText = userProfile.role || 'VIEWER';
 					const notifyBox = document.getElementById('input-profile-notify-meds');
 					if (notifyBox) notifyBox.checked = !!userProfile.notifyOnMeds;
+
+					// Sync active Admin/Editor user contact entry to board/userContacts so tablet display can render active users
+					if (
+						userProfile.active !== false &&
+						(userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')
+					) {
+						database.ref(`board/userContacts/${user.uid}`).update({
+							displayName:
+								userProfile.displayName ||
+								user.displayName ||
+								(user.email ? user.email.split('@')[0] : 'User'),
+							email: userProfile.email || user.email || '',
+							phone: userProfile.phone || '',
+							relationship: userProfile.relationship || '',
+							birthday: userProfile.birthday || '',
+							role: userProfile.role,
+							active: true,
+						});
+					}
 
 					updatePermStatus();
 					updateUserBadge();
@@ -1163,7 +1370,16 @@
 				);
 			}
 
-			let currentCardPositions = { reminders: 1, medications: 2, events: 3, holidays: 4 };
+			let currentCardPositions = {
+				reminders: 1,
+				medications: 2,
+				events: 3,
+				holidays: 4,
+				contacts: 5,
+			};
+			let currentBoardUserContacts = {};
+			let currentAdditionalContacts = {};
+			let liveUsersData = {};
 
 			function normalizeCardPositions(posData) {
 				const raw = posData || {};
@@ -1171,26 +1387,40 @@
 				let m = parseInt(raw.medications, 10);
 				let e = parseInt(raw.events, 10);
 				let h = parseInt(raw.holidays, 10);
+				let c = parseInt(raw.contacts, 10);
 
-				// Upgrade legacy 3-card position objects by assigning holidays to the remaining slot
+				// Upgrade legacy 3-card or 4-card position objects
 				if ([1, 2, 3].includes(r) && [1, 2, 3].includes(m) && [1, 2, 3].includes(e) && isNaN(h)) {
 					const set3 = new Set([r, m, e]);
 					if (set3.size === 3) {
-						return { reminders: r, medications: m, events: e, holidays: 4 };
+						return { reminders: r, medications: m, events: e, holidays: 4, contacts: 5 };
+					}
+				}
+				if (
+					[1, 2, 3, 4].includes(r) &&
+					[1, 2, 3, 4].includes(m) &&
+					[1, 2, 3, 4].includes(e) &&
+					[1, 2, 3, 4].includes(h) &&
+					isNaN(c)
+				) {
+					const set4 = new Set([r, m, e, h]);
+					if (set4.size === 4) {
+						return { reminders: r, medications: m, events: e, holidays: h, contacts: 5 };
 					}
 				}
 
-				const validSet = new Set([r, m, e, h]);
+				const validSet = new Set([r, m, e, h, c]);
 				if (
-					![1, 2, 3, 4].includes(r) ||
-					![1, 2, 3, 4].includes(m) ||
-					![1, 2, 3, 4].includes(e) ||
-					![1, 2, 3, 4].includes(h) ||
-					validSet.size !== 4
+					![1, 2, 3, 4, 5].includes(r) ||
+					![1, 2, 3, 4, 5].includes(m) ||
+					![1, 2, 3, 4, 5].includes(e) ||
+					![1, 2, 3, 4, 5].includes(h) ||
+					![1, 2, 3, 4, 5].includes(c) ||
+					validSet.size !== 5
 				) {
-					return { reminders: 1, medications: 2, events: 3, holidays: 4 };
+					return { reminders: 1, medications: 2, events: 3, holidays: 4, contacts: 5 };
 				}
-				return { reminders: r, medications: m, events: e, holidays: h };
+				return { reminders: r, medications: m, events: e, holidays: h, contacts: c };
 			}
 
 			function applyCardPositions(posData) {
@@ -1202,6 +1432,7 @@
 					medications: document.getElementById('card-medications'),
 					events: document.getElementById('card-events'),
 					holidays: document.getElementById('card-holidays'),
+					contacts: document.getElementById('card-contacts'),
 				};
 
 				if (
@@ -1209,7 +1440,8 @@
 					cardMap.reminders &&
 					cardMap.medications &&
 					cardMap.events &&
-					cardMap.holidays
+					cardMap.holidays &&
+					cardMap.contacts
 				) {
 					const sortedKeys = Object.keys(currentCardPositions).sort(
 						(a, b) => currentCardPositions[a] - currentCardPositions[b]
@@ -1227,10 +1459,12 @@
 				const selMed = document.getElementById('select-pos-medications');
 				const selEvt = document.getElementById('select-pos-events');
 				const selHol = document.getElementById('select-pos-holidays');
+				const selCon = document.getElementById('select-pos-contacts');
 				if (selRem) selRem.value = String(currentCardPositions.reminders);
 				if (selMed) selMed.value = String(currentCardPositions.medications);
 				if (selEvt) selEvt.value = String(currentCardPositions.events);
 				if (selHol) selHol.value = String(currentCardPositions.holidays);
+				if (selCon) selCon.value = String(currentCardPositions.contacts);
 			}
 
 			async function handleCardPositionChange(changedCard, newPosValue) {
@@ -1241,7 +1475,7 @@
 				}
 
 				const targetPos = parseInt(newPosValue, 10);
-				if (![1, 2, 3, 4].includes(targetPos)) return;
+				if (![1, 2, 3, 4, 5].includes(targetPos)) return;
 
 				const oldPos = currentCardPositions[changedCard];
 				if (oldPos === targetPos) return;
@@ -1276,8 +1510,13 @@
 				document.getElementById('disp-announcement').innerText =
 					announcement || 'No announcements for today.';
 
-				// Apply display card ordering (Position 1, 2, 3)
+				// Apply display card ordering (Position 1 to 5)
 				applyCardPositions(data.cardPositions);
+
+				// Update Contacts state from board
+				currentBoardUserContacts = data.userContacts || {};
+				currentAdditionalContacts = data.contacts || {};
+				renderContacts();
 
 				document.getElementById('disp-reminders').innerText =
 					data.reminders || 'No reminders set.';
@@ -1468,18 +1707,42 @@
 			async function saveUserProfile() {
 				if (!currentUser) return;
 				const name = document.getElementById('input-profile-name').value.trim();
+				const phone = (document.getElementById('input-profile-phone')?.value || '').trim();
+				const relationship = (document.getElementById('input-profile-relation')?.value || '').trim();
+				const birthday = document.getElementById('input-profile-birthday')?.value || '';
 				const notifyMeds = document.getElementById('input-profile-notify-meds').checked;
 				const statusEl = document.getElementById('profile-save-status');
 
 				try {
 					if (!userProfile) userProfile = {};
 					userProfile.displayName = name;
+					userProfile.phone = phone;
+					userProfile.relationship = relationship;
+					userProfile.birthday = birthday;
 					userProfile.notifyOnMeds = notifyMeds;
 
 					await database.ref(`users/${currentUser.uid}`).update({
 						displayName: name,
+						phone: phone,
+						relationship: relationship,
+						birthday: birthday,
 						notifyOnMeds: notifyMeds,
 					});
+
+					if (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR') {
+						await database.ref(`board/userContacts/${currentUser.uid}`).update({
+							displayName:
+								name ||
+								currentUser.displayName ||
+								(currentUser.email ? currentUser.email.split('@')[0] : 'User'),
+							email: userProfile.email || currentUser.email || '',
+							phone: phone,
+							relationship: relationship,
+							birthday: birthday,
+							role: userProfile.role,
+							active: userProfile.active !== false,
+						});
+					}
 
 					if (currentUser.updateProfile) {
 						await currentUser.updateProfile({ displayName: name });
@@ -1506,10 +1769,31 @@
 				const textEl = document.getElementById('user-info-text');
 				if (!badge || !textEl || !currentUser) return;
 
-				const name = userProfile?.displayName || currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : 'User');
+				const name =
+					userProfile?.displayName ||
+					currentUser.displayName ||
+					(currentUser.email ? currentUser.email.split('@')[0] : 'User');
 				const role = userProfile?.role || 'VIEWER';
 				textEl.innerText = `${name} (${role})`;
 				badge.classList.remove('hidden');
+			}
+
+			function syncUsersDirectoryToBoard(usersData) {
+				if (!userProfile || userProfile.role !== 'ADMIN') return;
+				const syncedMap = {};
+				Object.entries(usersData || {}).forEach(([uid, u]) => {
+					if (!u || u.active === false) return;
+					syncedMap[uid] = {
+						displayName: u.displayName || (u.email ? u.email.split('@')[0] : 'User'),
+						email: u.email || '',
+						phone: u.phone || '',
+						relationship: u.relationship || '',
+						birthday: u.birthday || '',
+						role: u.role || 'VIEWER',
+						active: true,
+					};
+				});
+				database.ref('board/userContacts').set(syncedMap);
 			}
 
 			// User Management & Roles Functions (Admin Only)
@@ -1522,7 +1806,11 @@
 				database.ref('users').on(
 					'value',
 					(snapshot) => {
-						renderUsersTable(snapshot.val() || {});
+						liveUsersData = snapshot.val() || {};
+						syncUsersDirectoryToBoard(liveUsersData);
+						renderUsersTable(liveUsersData);
+						renderContacts();
+						renderTodayColumn();
 					},
 					(err) => {
 						console.warn('Could not read users directory:', err);
@@ -1552,6 +1840,7 @@
 					const displayName = escapeHtml(user.displayName || 'No display name');
 					const email = escapeHtml(user.email || 'No email');
 					const role = user.role || 'VIEWER';
+					const birthday = user.birthday || '';
 					const hasMedsAlert = !!user.notifyOnMeds;
 					const isActive = user.active !== false; // default true if undefined
 
@@ -1580,6 +1869,18 @@
 							</div>
 
 							<div class="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/70">
+								<div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1" title="User Birthday">
+									<span class="text-xs">🎂</span>
+									<input
+										type="date"
+										value="${escapeHtml(birthday)}"
+										onchange="updateUserBirthday('${uid}', this.value)"
+										${!isActive ? 'disabled' : ''}
+										class="text-xs text-slate-800 outline-none bg-transparent font-medium ${
+											!isActive ? 'opacity-50 cursor-not-allowed' : ''
+										}"
+									/>
+								</div>
 								${
 									hasMedsAlert
 										? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">🔔 Alerts On</span>'
@@ -1633,6 +1934,21 @@
 				tbody.innerHTML = html;
 			}
 
+			async function updateUserBirthday(uid, newBirthday) {
+				if (!currentUser) return;
+				try {
+					await database.ref(`users/${uid}/birthday`).set(newBirthday || '');
+					if (currentUser && uid === currentUser.uid) {
+						const profileBirthday = document.getElementById('input-profile-birthday');
+						if (profileBirthday) profileBirthday.value = newBirthday || '';
+					}
+					showToast('User birthday updated.');
+				} catch (err) {
+					console.error('Failed to update user birthday:', err);
+					alert('Failed to update user birthday: ' + err.message);
+				}
+			}
+
 			async function toggleUserActive(uid, newActiveState, label) {
 				if (!currentUser) return;
 				if (uid === currentUser.uid && !newActiveState) {
@@ -1640,7 +1956,6 @@
 					return;
 				}
 
-				const actionWord = newActiveState ? 'activate' : 'deactivate';
 				const confirmMsg = newActiveState
 					? `Activate the account for "${label}"? They will regain access to the board.`
 					: `Deactivate the account for "${label}"?\n\nThey will be immediately signed out and blocked from logging in until reactivated.`;
@@ -1689,6 +2004,7 @@
 
 				try {
 					await database.ref(`users/${uid}`).remove();
+					await database.ref(`board/userContacts/${uid}`).remove();
 					showToast(`User profile removed for ${label}.`);
 				} catch (err) {
 					console.error('Failed to delete user profile:', err);
@@ -1710,6 +2026,7 @@
 			async function savePreconfiguredUser() {
 				const uid = document.getElementById('input-new-uid').value.trim();
 				const email = document.getElementById('input-new-email').value.trim();
+				const birthday = document.getElementById('input-new-birthday')?.value || '';
 				const role = document.getElementById('select-new-role').value;
 
 				if (!uid) {
@@ -1721,6 +2038,7 @@
 					await database.ref(`users/${uid}`).set({
 						email: email,
 						displayName: email ? email.split('@')[0] : 'User',
+						birthday: birthday,
 						role: role,
 						active: true,
 						notifyOnMeds: false,
@@ -1728,11 +2046,387 @@
 					});
 					document.getElementById('input-new-uid').value = '';
 					document.getElementById('input-new-email').value = '';
+					if (document.getElementById('input-new-birthday')) {
+						document.getElementById('input-new-birthday').value = '';
+					}
 					toggleAddUserForm(false);
 					showToast(`User pre-configured successfully with role ${role}.`);
 				} catch (err) {
 					console.error('Failed to pre-configure user:', err);
 					alert('Error saving user: ' + err.message);
+				}
+			}
+
+			// Contacts & Birthdays Functions (Active Users + Additional Non-User Contacts)
+			let editingContactId = null;
+
+			function isBirthdayToday(birthdayStr) {
+				if (!birthdayStr) return false;
+				const parts = String(birthdayStr).split('-');
+				if (parts.length < 2) return false;
+				const mmdd = parts.slice(-2).join('-');
+				const todayMmdd = getTodayDateString().slice(5);
+				return mmdd === todayMmdd;
+			}
+
+			function formatBirthdayDisplay(birthdayStr) {
+				if (!birthdayStr) return '';
+				const parts = String(birthdayStr).split('-').map(Number);
+				if (parts.length < 2) return '';
+				const month = parts.length === 3 ? parts[1] : parts[0];
+				const day = parts.length === 3 ? parts[2] : parts[1];
+				if (!month || !day) return '';
+				const d = new Date(2000, month - 1, day);
+				return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+			}
+
+			function getCombinedContactsList() {
+				// Merge active users from board/userContacts and liveUsersData
+				const mergedUsersMap = { ...(currentBoardUserContacts || {}) };
+				Object.entries(liveUsersData || {}).forEach(([uid, u]) => {
+					if (!u) return;
+					if (u.active === false) {
+						delete mergedUsersMap[uid];
+					} else {
+						mergedUsersMap[uid] = {
+							displayName: u.displayName || (u.email ? u.email.split('@')[0] : 'User'),
+							email: u.email || '',
+							phone: u.phone || '',
+							relationship: u.relationship || '',
+							birthday: u.birthday || '',
+							role: u.role || 'VIEWER',
+							active: true,
+						};
+					}
+				});
+
+				const activeUsersList = Object.entries(mergedUsersMap)
+					.filter(([, u]) => u && u.active !== false)
+					.map(([uid, u]) => ({
+						id: uid,
+						isUser: true,
+						name: u.displayName || (u.email ? u.email.split('@')[0] : 'User'),
+						relation: u.relationship || u.role || 'USER',
+						phone: u.phone || '',
+						email: u.email || '',
+						birthday: u.birthday || '',
+					}));
+
+				const additionalContactsList = Object.entries(currentAdditionalContacts || {}).map(
+					([id, c]) => ({
+						id,
+						isUser: false,
+						name: c.name || 'Unnamed Contact',
+						relation: c.relation || '',
+						phone: c.phone || '',
+						email: c.email || '',
+						birthday: c.birthday || '',
+					})
+				);
+
+				activeUsersList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+				additionalContactsList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+				return {
+					activeUsersList,
+					additionalContactsList,
+					allContacts: [...activeUsersList, ...additionalContactsList],
+				};
+			}
+
+			function renderContacts() {
+				const dispContainer = document.getElementById('disp-contacts-list');
+				const adminContainer = document.getElementById('admin-contacts-list');
+				const countBadge = document.getElementById('contacts-count-badge');
+
+				const { allContacts } = getCombinedContactsList();
+
+				if (countBadge) {
+					countBadge.innerText = `${allContacts.length} ${
+						allContacts.length === 1 ? 'Contact' : 'Contacts'
+					}`;
+				}
+
+				// 1. Render Display View Contacts Card
+				if (dispContainer) {
+					if (allContacts.length === 0) {
+						dispContainer.innerHTML = `
+							<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
+								<div class="text-2xl">📇</div>
+								<div class="text-base font-bold text-slate-700">No contacts listed</div>
+								<div class="text-xs text-slate-500">Add family or contacts in the panel.</div>
+							</div>
+						`;
+					} else {
+						let html = '';
+						allContacts.forEach((c) => {
+							const bdayText = formatBirthdayDisplay(c.birthday);
+							const bdayToday = isBirthdayToday(c.birthday);
+							html += `
+								<div class="p-3.5 bg-slate-50 rounded-xl border ${
+									bdayToday ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200'
+								} space-y-1">
+									<div class="flex items-center justify-between gap-2 flex-wrap">
+										<div class="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-1.5 flex-wrap">
+											<span>${escapeHtml(c.name)}</span>
+											${
+												c.relation
+													? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+															c.isUser
+																? 'bg-blue-50 text-blue-700 border border-blue-200'
+																: 'bg-white text-slate-600 border border-slate-200'
+													  }">${escapeHtml(c.relation)}</span>`
+													: ''
+											}
+										</div>
+										${
+											bdayText
+												? `<span class="text-xs font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+														bdayToday
+															? 'bg-amber-100 text-amber-800 border-amber-300 font-bold'
+															: 'bg-white text-slate-600 border-slate-200'
+												  }">🎂 ${bdayText}${bdayToday ? ' (TODAY!)' : ''}</span>`
+												: ''
+										}
+									</div>
+									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600 font-medium">
+										${c.phone ? `<span>📞 ${escapeHtml(c.phone)}</span>` : ''}
+										${c.email ? `<span class="truncate">✉️ ${escapeHtml(c.email)}</span>` : ''}
+									</div>
+								</div>
+							`;
+						});
+						dispContainer.innerHTML = html;
+					}
+				}
+
+				// 2. Render Admin / Editor Contacts Directory List
+				if (adminContainer) {
+					if (allContacts.length === 0) {
+						adminContainer.innerHTML = `
+							<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
+								No contacts found.
+							</div>
+						`;
+					} else {
+						let adminHtml = '';
+						allContacts.forEach((c) => {
+							const bdayText = formatBirthdayDisplay(c.birthday);
+							const isEditingThis = !c.isUser && editingContactId === c.id;
+							adminHtml += `
+								<div class="p-3 rounded-xl border ${
+									isEditingThis
+										? 'bg-blue-50/70 border-blue-300 ring-1 ring-blue-300'
+										: 'bg-slate-50 border-slate-200'
+								} flex items-center justify-between gap-3 transition">
+									<div class="space-y-0.5 min-w-0">
+										<div class="flex items-center gap-1.5 flex-wrap">
+											<span class="font-bold text-slate-800 text-sm">${escapeHtml(c.name)}</span>
+											${
+												c.isUser
+													? '<span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded">Active User</span>'
+													: ''
+											}
+											${
+												c.relation
+													? `<span class="text-[11px] font-semibold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">${escapeHtml(
+															c.relation
+													  )}</span>`
+													: ''
+											}
+											${
+												bdayText
+													? `<span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">🎂 ${bdayText}</span>`
+													: ''
+											}
+											${
+												isEditingThis
+													? '<span class="text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white px-1.5 py-0.5 rounded">Editing</span>'
+													: ''
+											}
+										</div>
+										<div class="text-xs text-slate-500 truncate">
+											${[c.phone ? `📞 ${escapeHtml(c.phone)}` : '', c.email ? `✉️ ${escapeHtml(c.email)}` : '']
+												.filter(Boolean)
+												.join(' • ') || 'No phone or email listed'}
+										</div>
+									</div>
+									${
+										c.isUser
+											? '<span class="text-[11px] text-slate-400 italic shrink-0">Edit in Profile</span>'
+											: `
+											<div class="flex items-center gap-1 shrink-0">
+												<button
+													type="button"
+													onclick="startEditContact('${c.id}')"
+													class="text-blue-600 hover:text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition"
+												>
+													Edit
+												</button>
+												<button
+													type="button"
+													onclick="deleteAdditionalContact('${c.id}')"
+													class="text-rose-600 hover:text-rose-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-50 transition"
+												>
+													Delete
+												</button>
+											</div>
+										`
+									}
+								</div>
+							`;
+						});
+						adminContainer.innerHTML = adminHtml;
+					}
+				}
+			}
+
+			function startEditContact(contactId) {
+				const c = currentAdditionalContacts[contactId];
+				if (!c) return;
+
+				editingContactId = contactId;
+
+				const nameInput = document.getElementById('input-contact-name');
+				const relationInput = document.getElementById('input-contact-relation');
+				const phoneInput = document.getElementById('input-contact-phone');
+				const bdayInput = document.getElementById('input-contact-birthday');
+
+				if (nameInput) nameInput.value = c.name || '';
+				if (relationInput) relationInput.value = c.relation || '';
+				if (phoneInput) phoneInput.value = c.phone || '';
+				if (bdayInput) bdayInput.value = c.birthday || '';
+
+				const formContainer = document.getElementById('contact-form-container');
+				const formHeading = document.getElementById('contact-form-heading');
+				const editingBadge = document.getElementById('contact-editing-badge');
+				const cancelBtn = document.getElementById('btn-cancel-edit-contact');
+				const submitBtnText = document.getElementById('btn-submit-contact-text');
+
+				if (formContainer) {
+					formContainer.className =
+						'p-3.5 sm:p-4 bg-blue-50/40 rounded-xl border-2 border-blue-400 space-y-3 transition-colors';
+					formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+				}
+				if (formHeading) {
+					formHeading.innerText = 'Edit Contact';
+					formHeading.className = 'text-xs font-bold text-blue-700 uppercase tracking-wider';
+				}
+				if (editingBadge) editingBadge.classList.remove('hidden');
+				if (cancelBtn) cancelBtn.classList.remove('hidden');
+				if (submitBtnText) submitBtnText.innerText = 'Save Contact Changes';
+
+				renderContacts();
+				if (nameInput) nameInput.focus();
+			}
+
+			function cancelEditContact() {
+				editingContactId = null;
+
+				const nameInput = document.getElementById('input-contact-name');
+				const relationInput = document.getElementById('input-contact-relation');
+				const phoneInput = document.getElementById('input-contact-phone');
+				const bdayInput = document.getElementById('input-contact-birthday');
+
+				if (nameInput) nameInput.value = '';
+				if (relationInput) relationInput.value = '';
+				if (phoneInput) phoneInput.value = '';
+				if (bdayInput) bdayInput.value = '';
+
+				const formContainer = document.getElementById('contact-form-container');
+				const formHeading = document.getElementById('contact-form-heading');
+				const editingBadge = document.getElementById('contact-editing-badge');
+				const cancelBtn = document.getElementById('btn-cancel-edit-contact');
+				const submitBtnText = document.getElementById('btn-submit-contact-text');
+
+				if (formContainer) {
+					formContainer.className =
+						'p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 transition-colors';
+				}
+				if (formHeading) {
+					formHeading.innerText = 'Add Additional Contact';
+					formHeading.className = 'text-xs font-bold text-slate-700 uppercase tracking-wider';
+				}
+				if (editingBadge) editingBadge.classList.add('hidden');
+				if (cancelBtn) cancelBtn.classList.add('hidden');
+				if (submitBtnText) submitBtnText.innerText = '+ Add Contact';
+
+				renderContacts();
+			}
+
+			async function saveAdditionalContact() {
+				if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+					alert('Permission Denied: Only ADMIN and EDITOR users can modify contacts.');
+					return;
+				}
+
+				const nameInput = document.getElementById('input-contact-name');
+				const relationInput = document.getElementById('input-contact-relation');
+				const phoneInput = document.getElementById('input-contact-phone');
+				const bdayInput = document.getElementById('input-contact-birthday');
+
+				const name = (nameInput?.value || '').trim();
+				const relation = (relationInput?.value || '').trim();
+				const phone = (phoneInput?.value || '').trim();
+				const birthday = bdayInput?.value || '';
+
+				if (!name) {
+					alert('Please enter a contact name.');
+					if (nameInput) nameInput.focus();
+					return;
+				}
+
+				if (editingContactId) {
+					const targetId = editingContactId;
+					try {
+						await database.ref(`board/contacts/${targetId}`).update({
+							name,
+							relation,
+							phone,
+							birthday,
+							updatedAt: Date.now(),
+						});
+						cancelEditContact();
+						showToast(`Contact "${name}" updated!`);
+					} catch (err) {
+						console.error('Failed to update contact:', err);
+						alert('Error updating contact: ' + err.message);
+					}
+					return;
+				}
+
+				const contactId = 'cnt_' + Date.now();
+				try {
+					await database.ref(`board/contacts/${contactId}`).set({
+						name,
+						relation,
+						phone,
+						birthday,
+						createdAt: Date.now(),
+					});
+					cancelEditContact();
+					showToast(`Contact "${name}" added!`);
+				} catch (err) {
+					console.error('Failed to add contact:', err);
+					alert('Error adding contact: ' + err.message);
+				}
+			}
+
+			async function deleteAdditionalContact(contactId) {
+				const c = currentAdditionalContacts[contactId];
+				const name = c ? c.name : 'this contact';
+				const proceed = confirm(`Remove "${name}" from the contacts list?`);
+				if (!proceed) return;
+
+				try {
+					if (editingContactId === contactId) {
+						cancelEditContact();
+					}
+					await database.ref(`board/contacts/${contactId}`).remove();
+					showToast(`Contact "${name}" removed.`);
+				} catch (err) {
+					console.error('Failed to remove contact:', err);
+					alert('Error removing contact: ' + err.message);
 				}
 			}
 
@@ -1983,6 +2677,8 @@
 
 				const todayStr = getTodayDateString();
 				const todaysHolidays = upcomingHolidays.filter((h) => h.date === todayStr);
+				const { allContacts } = getCombinedContactsList();
+				const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
 
 				const entries = Object.entries(currentEventsMap || {});
 				const todayEvents = entries
@@ -1990,7 +2686,7 @@
 					.filter((evt) => evt.date === todayStr)
 					.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-				if (todaysHolidays.length === 0 && todayEvents.length === 0) {
+				if (todaysHolidays.length === 0 && todaysBirthdays.length === 0 && todayEvents.length === 0) {
 					todayList.innerHTML = `
 						<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
 							<div class="text-xl">🌿</div>
@@ -2021,7 +2717,29 @@
 					`;
 				});
 
-				// 2. Render any Scheduled Appointments falling on today
+				// 2. Render any User or Contact Birthday falling on today
+				todaysBirthdays.forEach((c) => {
+					todayHtml += `
+						<div class="w-full bg-amber-50 p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+							<span class="text-2xl sm:text-3xl shrink-0">🎂</span>
+							<div>
+								<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+									Birthday Today!
+								</div>
+								<div class="text-lg sm:text-xl font-bold text-slate-900">
+									Happy Birthday, ${escapeHtml(c.name)}!
+								</div>
+								${
+									c.relation
+										? `<div class="text-xs font-medium text-amber-900/80">${escapeHtml(c.relation)}</div>`
+										: ''
+								}
+							</div>
+						</div>
+					`;
+				});
+
+				// 3. Render any Scheduled Appointments falling on today
 				todayEvents.forEach((evt) => {
 					const { time } = formatEventDate(evt.date, evt.time);
 					todayHtml += `
