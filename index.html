@@ -327,7 +327,7 @@
 					>
 						<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
-								<span>✨</span> Daily Action Plan
+								<span>✨</span> Daily Companion &amp; Action Plan
 							</h2>
 							<button
 								type="button"
@@ -340,35 +340,38 @@
 							</button>
 						</div>
 
-						<!-- Block 1: Today's Game Plan -->
+						<!-- Block 1: Conversational Guidance for Today -->
 						<div class="space-y-2">
 							<h3 class="text-xs font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
-								<span>☀️</span> Today's Game Plan
+								<span>💬</span> Suggestions for Today
 							</h3>
-							<ul id="disp-ai-today-plan" class="space-y-2 text-base sm:text-lg text-slate-800 font-medium">
-								<li class="text-sm text-slate-400 italic">Building today's action plan...</li>
-							</ul>
+							<div
+								id="disp-ai-today-plan"
+								class="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-100 space-y-2.5 text-base sm:text-lg text-slate-800 leading-relaxed font-medium"
+							>
+								<p class="text-sm text-slate-400 italic">Putting together friendly suggestions for your day...</p>
+							</div>
 						</div>
 
 						<!-- Block 2: Smart Prep & Health Nudges (e.g. Drink extra water before infusion) -->
 						<div id="disp-ai-prep-section" class="space-y-2">
 							<h3 class="text-xs font-bold uppercase tracking-wider text-sky-800 flex items-center gap-1.5">
-								<span>💧</span> Smart Prep &amp; Health Nudges
+								<span>💧</span> Helpful Health &amp; Prep Tips
 							</h3>
-							<div id="disp-ai-prep-alerts" class="space-y-2">
-								<div class="p-3 bg-sky-50/70 rounded-xl border border-sky-200 text-sm text-sky-900 font-medium">
-									No special preparation needed right now.
+							<div id="disp-ai-prep-alerts" class="space-y-2.5">
+								<div class="p-3.5 bg-sky-50/70 rounded-xl border border-sky-200 text-sm sm:text-base text-sky-900 leading-relaxed font-medium">
+									No special preparation needed right now—just keep sipping water throughout the day.
 								</div>
 							</div>
 						</div>
 
-						<!-- Block 3: Next Few Days at a Glance -->
+						<!-- Block 3: Pacing the Next Few Days -->
 						<div class="pt-2 border-t border-slate-100 space-y-1.5">
 							<h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-								<span>🔭</span> Next Few Days
+								<span>🌿</span> Pacing the Next Few Days
 							</h3>
-							<p id="disp-ai-look-ahead" class="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
-								Checking upcoming schedule...
+							<p id="disp-ai-look-ahead" class="text-base sm:text-lg text-slate-700 leading-relaxed font-medium">
+								Looking ahead at your week...
 							</p>
 						</div>
 					</div>
@@ -604,34 +607,34 @@
 							<div class="space-y-3 pt-1">
 								<div>
 									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										☀️ Today's Game Plan (One bullet per line)
+										💬 Conversational Suggestions for Today (Natural sentences, one paragraph per line)
 									</label>
 									<textarea
 										id="input-ai-today-plan"
 										rows="3"
-										placeholder="Click 'Generate Action Plan Now' or write custom daily steps..."
+										placeholder="Click 'Generate Action Plan Now' for warm, conversational daily advice..."
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
 									></textarea>
 								</div>
 								<div>
 									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										💧 Smart Prep &amp; Health Nudges (One alert per line)
+										💧 Helpful Health &amp; Prep Tips (Conversational prep coaching for upcoming events)
 									</label>
 									<textarea
 										id="input-ai-prep-alerts"
 										rows="2"
-										placeholder="e.g. 💧 Hydration Reminder: Drink 2-3 extra glasses of water today before your upcoming infusion."
+										placeholder="e.g. With your infusion coming up in a couple of days, try keeping a full glass of water next to your favorite chair today..."
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
 									></textarea>
 								</div>
 								<div>
 									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										🔭 Next Few Days at a Glance
+										🌿 Pacing the Next Few Days (Conversational look-ahead advice)
 									</label>
 									<textarea
 										id="input-ai-look-ahead"
 										rows="2"
-										placeholder="Summary of the next few days..."
+										placeholder="Friendly advice on how to pace the next few days..."
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
 									></textarea>
 								</div>
@@ -2042,44 +2045,53 @@
 				const todayPlan = [];
 				const prepAlerts = [];
 
-				// 1. Weather & Activity Guidance
-				if (lastWeatherData) {
-					const cityPart = lastWeatherData.city ? ` in ${lastWeatherData.city}` : '';
-					todayPlan.push(
-						`${lastWeatherData.icon} Weather${cityPart}: ${lastWeatherData.temp}°F and ${lastWeatherData.desc.toLowerCase()} (High ${lastWeatherData.high}° / Low ${lastWeatherData.low}°). ${lastWeatherData.suggestion}`
-					);
-				}
-
-				// 2. Medication Check-In Guidance
+				// 1. Morning Routine, Medication & Weather Coaching (Conversational, Actionable Sentences)
+				let routineAndWeatherSentence = '';
 				if (data.medsTaken) {
-					todayPlan.push('✅ Great job! Your daily medications are already logged for today.');
+					routineAndWeatherSentence =
+						"You're off to a wonderful start today with your medicine already taken and logged! ";
 				} else {
-					const firstMedLine = (data.medications || '')
-						.split('\n')
-						.map((l) => l.trim())
-						.filter(Boolean)[0];
-					if (firstMedLine) {
-						todayPlan.push(
-							`💊 Take your medications as scheduled (${firstMedLine}) and tap "I TOOK MY MEDS" above.`
-						);
+					const hasBreakfastMed = (data.medications || '').toLowerCase().includes('breakfast') ||
+						(data.medications || '').toLowerCase().includes('food') ||
+						(data.medications || '').toLowerCase().includes('meal');
+					if (hasBreakfastMed) {
+						routineAndWeatherSentence =
+							'Start your morning at an easy pace by taking your medicine alongside a nourishing bite to eat and a full glass of water, then tap the red button above so your family knows you are all set. ';
 					} else {
-						todayPlan.push('💊 Remember to take your daily medicine and tap "I TOOK MY MEDS" above.');
+						routineAndWeatherSentence =
+							'When you are ready this morning, take your daily medicine with a full glass of water and tap the red button above so everyone knows you are taken care of. ';
 					}
 				}
 
-				// 3. Today's Holidays, Birthdays & Appointments
-				const todaysHolidays = (upcomingHolidays || []).filter((h) => h.date === todayStr);
-				todaysHolidays.forEach((h) => {
-					todayPlan.push(`${getHolidayEmoji(h.name)} Today is ${h.name} — enjoy the special day!`);
-				});
+				if (lastWeatherData) {
+					const code = lastWeatherData.code;
+					const temp = lastWeatherData.temp;
+					if (code >= 51 && code <= 65) {
+						routineAndWeatherSentence +=
+							"Since it's rainy outside, today is a wonderful day to stay cozy indoors—perhaps put on a favorite playlist, work on a puzzle, or enjoy a warm drink by the window.";
+					} else if (code >= 71 && code <= 75) {
+						routineAndWeatherSentence +=
+							"With snowy weather out there, keep warm in your favorite sweater or blanket and enjoy a relaxing indoor day with a hot cup of tea.";
+					} else if (temp >= 82) {
+						routineAndWeatherSentence +=
+							"It's warming up quite a bit outside today, so if you'd like to sit on the porch or get some fresh air, the cooler morning hours are your best bet—and keep a cool glass of water within reach this afternoon.";
+					} else if (temp < 52) {
+						routineAndWeatherSentence +=
+							"There's a crisp chill in the air today, so dress in warm, comfortable layers if you step out for fresh air or sit near the window.";
+					} else if (code === 0 || code === 1) {
+						routineAndWeatherSentence +=
+							"The weather is lovely and mild right now, making it a great day to step outside for a few minutes of sunshine or take a gentle, unhurried stroll.";
+					} else {
+						routineAndWeatherSentence +=
+							"Conditions outside are calm and comfortable—a nice day to open the blinds for natural light or step out for a breath of fresh air whenever you feel like stretching your legs.";
+					}
+				} else {
+					routineAndWeatherSentence +=
+						'Take a few gentle stretches as you settle into the day and keep a glass of water nearby to stay refreshed.';
+				}
+				todayPlan.push(routineAndWeatherSentence.trim());
 
-				const { allContacts } = getCombinedContactsList();
-				const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
-				todaysBirthdays.forEach((c) => {
-					const phoneHint = c.phone ? ` (${c.phone})` : '';
-					todayPlan.push(`🎂 It's ${c.name}'s birthday today! Consider giving them a call${phoneHint}.`);
-				});
-
+				// 2. Today's Pacing, Outings, Birthdays & Social Connection Advice
 				const allEvents = Object.entries(currentEventsMap || {})
 					.map(([id, evt]) => ({
 						id,
@@ -2093,25 +2105,58 @@
 					});
 
 				const todayEvents = allEvents.filter((e) => e.diffDays === 0);
-				todayEvents.forEach((evt) => {
-					const { time } = formatEventDate(evt.date, evt.time);
-					const timePart = time ? ` at ${time}` : '';
-					const notesPart = evt.notes ? ` — ${evt.notes}` : '';
-					todayPlan.push(`📅 Today's Appointment: ${evt.title}${timePart}${notesPart}.`);
-				});
+				const { allContacts } = getCombinedContactsList();
+				const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
+				const todaysHolidays = (upcomingHolidays || []).filter((h) => h.date === todayStr);
 
-				// Include a helpful daily reminder if today's list is short
-				if (todayPlan.length < 3 && data.reminders) {
-					const remLines = data.reminders
-						.split('\n')
-						.map((l) => l.trim())
-						.filter(Boolean);
-					if (remLines.length > 0) {
-						todayPlan.push(`⏰ Daily Focus: ${remLines[0]}`);
+				if (todayEvents.length > 0) {
+					const firstEvt = todayEvents[0];
+					const hour = firstEvt.time ? parseInt(firstEvt.time.split(':')[0], 10) : null;
+					const hasDriverNote = firstEvt.notes && firstEvt.notes.trim().length > 0;
+					let outingAdvice = '';
+					if (hour !== null && hour < 12) {
+						outingAdvice =
+							'Since you have a morning outing on the schedule today, give yourself plenty of unhurried time to get dressed and have a light breakfast beforehand. ';
+					} else if (hour !== null && hour >= 12) {
+						outingAdvice =
+							'Because your appointment is later today, you can enjoy a relaxed morning at home—aim to have a light lunch a little early so you feel comfortable and unhurried when it is time to get ready. ';
+					} else {
+						outingAdvice =
+							'With an outing on your schedule today, pace your energy this morning so you feel rested and ready to go. ';
+					}
+					if (hasDriverNote) {
+						outingAdvice +=
+							'Set your eyeglasses, ID, and a sweater near the front door ahead of time so everything is in one spot when your ride arrives.';
+					} else {
+						outingAdvice +=
+							'Set your eyeglasses, ID, and any questions you want to ask near the front door ahead of time so leaving the house feels effortless.';
+					}
+					todayPlan.push(outingAdvice);
+				}
+
+				if (todaysBirthdays.length > 0) {
+					const names = todaysBirthdays.map((c) => c.name).join(' and ');
+					todayPlan.push(
+						`Today is a special day to celebrate ${names}—late morning or early afternoon would be a wonderful time to give them a quick phone call and share your warm birthday wishes!`
+					);
+				} else if (todaysHolidays.length > 0) {
+					todayPlan.push(
+						`In the spirit of ${todaysHolidays[0].name} today, treat yourself to something you enjoy and keep your phone handy in case family members call to check in and say hello.`
+					);
+				} else if (todayEvents.length === 0) {
+					const hasCallReminder = (data.reminders || '').toLowerCase().includes('call');
+					if (hasCallReminder) {
+						todayPlan.push(
+							'With no outside appointments on the calendar today, you can move completely at your own rhythm—the afternoon is a lovely time to sit back in your favorite chair and catch up with family or a friend over the phone.'
+						);
+					} else {
+						todayPlan.push(
+							'Since you have a wide-open schedule with no appointments away from home today, enjoy moving at your own comfortable pace and take a short walk around the house every hour or two to keep your energy up.'
+						);
 					}
 				}
 
-				// 4. Smart Multi-Day Prep & Health Nudges (e.g. Drink extra water days before an infusion)
+				// 3. Conversational Multi-Day Prep & Health Coaching (e.g. Hydration days before an infusion)
 				const rulesText = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
 				const customRules = [];
 				(rulesText || '')
@@ -2132,16 +2177,14 @@
 				allEvents.forEach((evt) => {
 					if (evt.diffDays > 4) return;
 					const combinedText = `${evt.title || ''} ${evt.notes || ''}`.toLowerCase();
-					const { badge, time } = formatEventDate(evt.date, evt.time);
-					const whenLabel =
+					const whenPhrase =
 						evt.diffDays === 0
 							? 'today'
 							: evt.diffDays === 1
 							? 'tomorrow'
-							: `in ${evt.diffDays} days (${badge})`;
-					const timeSuffix = time ? ` at ${time}` : '';
+							: `in ${evt.diffDays} days`;
 
-					// Built-in Infusion / IV Hydration Rule (0 to 3 days before)
+					// Built-in Infusion / IV Hydration Coaching (0 to 3 days before)
 					if (
 						evt.diffDays <= 3 &&
 						(combinedText.includes('infusion') ||
@@ -2151,21 +2194,21 @@
 					) {
 						if (evt.diffDays === 0) {
 							prepAlerts.push(
-								`💧 Infusion Today (${evt.title}${timeSuffix}): Keep sipping water this morning and wear a comfortable top with easy sleeve access.`
+								'💧 Since your infusion is today, keep sipping water or decaf herbal tea this morning and wear a comfortable, loose-sleeved top with a cozy sweater or cardigan you can easily drape over your shoulders.'
 							);
 						} else if (evt.diffDays === 1) {
 							prepAlerts.push(
-								`💧 Infusion Tomorrow (${evt.title}${timeSuffix}): Drink 2–3 extra glasses of water today so you feel great and stay well-hydrated for tomorrow!`
+								'💧 With your infusion coming up tomorrow, make it a gentle goal to drink two or three extra glasses of water throughout the day today. Hydrating well the day before makes the visit much smoother and helps you feel your best!'
 							);
 						} else {
 							prepAlerts.push(
-								`💧 Hydration Prep (${evt.title} ${whenLabel}): Start drinking 2–3 extra glasses of water each day now so your body is well-hydrated before your infusion.`
+								`💧 Because you have an infusion scheduled ${whenPhrase}, now is the ideal time to start giving your body extra fluids. Try keeping a full glass of water or decaf tea right next to your favorite chair today and tomorrow so sipping extra water feels effortless.`
 							);
 						}
 						return;
 					}
 
-					// Built-in Blood Draw / Lab / Fasting Rule (0 to 2 days before)
+					// Built-in Blood Draw / Lab / Fasting Coaching (0 to 2 days before)
 					if (
 						evt.diffDays <= 2 &&
 						(combinedText.includes('blood') ||
@@ -2173,12 +2216,12 @@
 							combinedText.includes('fasting'))
 					) {
 						prepAlerts.push(
-							`💧 Lab Visit Prep (${evt.title} ${whenLabel}): Drink plenty of water ahead of your visit, and check if you need to fast before ${time || 'your appointment'}.`
+							`💧 To make your lab visit ${whenPhrase} as quick and comfortable as possible, drink a few extra glasses of water today so you are well-hydrated, and check if you should hold off on breakfast before the appointment.`
 						);
 						return;
 					}
 
-					// Built-in Physical Therapy / Exercise Rule (0 to 1 day before)
+					// Built-in Physical Therapy / Exercise Coaching (0 to 1 day before)
 					if (
 						evt.diffDays <= 1 &&
 						(combinedText.includes('physical therapy') ||
@@ -2188,46 +2231,53 @@
 							combinedText.includes('rehab'))
 					) {
 						prepAlerts.push(
-							`👟 Therapy Prep (${evt.title} ${whenLabel}): Set out comfortable walking shoes and loose, easy-to-move-in clothing.`
+							`👟 To help you feel steady and comfortable for therapy ${whenPhrase}, take it easy on your legs beforehand and lay out your most supportive walking shoes and loose-fitting clothes.`
 						);
 						return;
 					}
 
-					// Built-in Eye Exam / Dentist / Doctor Prep (0 to 2 days before)
-					if (evt.diffDays <= 2 && (combinedText.includes('eye') || combinedText.includes('optom') || combinedText.includes('ophthalm'))) {
+					// Built-in Eye Exam / Dentist / Doctor Coaching (0 to 2 days before)
+					if (
+						evt.diffDays <= 2 &&
+						(combinedText.includes('eye') ||
+							combinedText.includes('optom') ||
+							combinedText.includes('ophthalm'))
+					) {
 						prepAlerts.push(
-							`👓 Eye Exam Prep (${evt.title} ${whenLabel}): Have your current glasses and sunglasses ready.`
+							`👓 For your eye visit ${whenPhrase}, set out both your everyday glasses and a pair of sunglasses just in case your eyes are sensitive to the bright light afterward.`
 						);
 						return;
 					}
 
-					// Check any Caregiver Custom "Keyword: Instruction" Rules (0 to 3 days before)
+					// Check Caregiver Custom "Keyword: Instruction" Rules (0 to 3 days before)
 					if (evt.diffDays <= 3) {
 						customRules.forEach((rule) => {
 							if (
 								!['infusion', 'blood draw', 'physical therapy'].includes(rule.keyword) &&
 								combinedText.includes(rule.keyword)
 							) {
-								prepAlerts.push(`📌 Prep for ${evt.title} (${whenLabel}): ${rule.instruction}`);
+								prepAlerts.push(
+									`📌 Looking ahead to ${whenPhrase}, here is a helpful way to get ready: ${rule.instruction}`
+								);
 							}
 						});
 					}
 				});
 
-				// Weather + Outing Prep Alert if going out today in cold or rain
+				// Weather + Outing Prep Coaching if going out today in cold or rain
 				if (todayEvents.length > 0 && lastWeatherData) {
 					if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
 						prepAlerts.push(
-							`☔ Rainy Day Outing: Bring an umbrella and rain jacket for your trip to ${todayEvents[0].title} today.`
+							'☔ Since you are heading out today and rain is in the forecast, wear non-slip shoes and keep an umbrella or hooded rain jacket by the door.'
 						);
 					} else if (lastWeatherData.temp < 48 || (lastWeatherData.code >= 71 && lastWeatherData.code <= 75)) {
 						prepAlerts.push(
-							`🧥 Chilly Weather Today (${lastWeatherData.temp}°F): Bundle up with a warm coat for your appointment today.`
+							'🧥 Because it is chilly outside for your trip today, bundle up with a warm coat and gloves before you head out the door.'
 						);
 					}
 				}
 
-				// 5. Next Few Days at a Glance (1 to 5 days out)
+				// 4. Conversational Advice for Pacing the Next Few Days (1 to 5 days out)
 				const upcomingSoonEvents = allEvents.filter((e) => e.diffDays >= 1 && e.diffDays <= 5);
 				const upcomingSoonHolidays = (upcomingHolidays || []).filter((h) => {
 					const d = getDaysFromToday(h.date);
@@ -2240,28 +2290,37 @@
 
 				const lookAheadParts = [];
 				if (upcomingSoonEvents.length === 0) {
-					lookAheadParts.push('No medical appointments or errands are scheduled for the next few days.');
+					lookAheadParts.push(
+						'Your calendar for the next few days is delightfully clear of appointments, so you can enjoy a restful, unhurried week at home and focus on things that bring you joy.'
+					);
 				} else {
-					const summaries = upcomingSoonEvents.slice(0, 3).map((evt) => {
-						const { badge, time } = formatEventDate(evt.date, evt.time);
-						const dayStr = evt.diffDays === 1 ? 'Tomorrow' : badge;
-						const timeStr = time ? ` at ${time}` : '';
-						const driverStr = evt.notes ? ` (${evt.notes})` : '';
-						return `${evt.title} on ${dayStr}${timeStr}${driverStr}`;
-					});
-					lookAheadParts.push(`Coming up soon: ${summaries.join('; ')}.`);
+					const tomorrowEvents = upcomingSoonEvents.filter((e) => e.diffDays === 1);
+					if (tomorrowEvents.length > 0) {
+						lookAheadParts.push(
+							'Since you have an outing on the calendar for tomorrow, plan on a relaxing evening tonight, lay out your clothes before bed, and get a good night of rest so tomorrow morning feels easy.'
+						);
+					} else {
+						const nextEvt = upcomingSoonEvents[0];
+						lookAheadParts.push(
+							`You have a quiet stretch before your next outing in ${nextEvt.diffDays} days, making the next day or two a great time to rest up, stay well-hydrated, and enjoy home routines without any rush.`
+						);
+					}
 				}
 
-				upcomingSoonBirthdays.forEach((b) => {
+				if (upcomingSoonBirthdays.length > 0) {
+					const b = upcomingSoonBirthdays[0];
 					const whenStr = b.diffDays === 1 ? 'tomorrow' : `in ${b.diffDays} days`;
-					lookAheadParts.push(`🎂 ${b.name}'s birthday is ${whenStr}!`);
-				});
-
-				upcomingSoonHolidays.forEach((h) => {
+					lookAheadParts.push(
+						`With ${b.name}'s birthday coming up ${whenStr}, you might also enjoy picking out a card or thinking of a favorite memory to share when you call.`
+					);
+				} else if (upcomingSoonHolidays.length > 0) {
+					const h = upcomingSoonHolidays[0];
 					const d = getDaysFromToday(h.date);
 					const whenStr = d === 1 ? 'tomorrow' : `in ${d} days`;
-					lookAheadParts.push(`${getHolidayEmoji(h.name)} ${h.name} is ${whenStr}.`);
-				});
+					lookAheadParts.push(
+						`With ${h.name} arriving ${whenStr}, it's a lovely week to look forward to festive conversations with family.`
+					);
+				}
 
 				return {
 					todayPlan,
@@ -2321,17 +2380,17 @@
 
 				if (todayPlan.length === 0) {
 					todayPlanEl.innerHTML = `
-						<li class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-700">
-							☀️ Enjoy a peaceful, relaxing day!
-						</li>
+						<p class="text-slate-700 leading-relaxed">
+							Take your day at a gentle, comfortable pace, keep a glass of water nearby, and enjoy a relaxing afternoon at home.
+						</p>
 					`;
 				} else {
 					todayPlanEl.innerHTML = todayPlan
 						.map(
-							(item) => `
-							<li class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 text-slate-900 leading-snug">
-								${escapeHtml(item)}
-							</li>
+							(paragraph) => `
+							<p class="text-slate-900 leading-relaxed">
+								${escapeHtml(paragraph)}
+							</p>
 						`
 						)
 						.join('');
@@ -2339,15 +2398,15 @@
 
 				if (prepAlerts.length === 0) {
 					prepAlertsEl.innerHTML = `
-						<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-600 font-medium">
-							✨ All caught up — no special appointment prep needed right now.
+						<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-sm sm:text-base text-slate-600 leading-relaxed font-medium">
+							✨ You don't have any upcoming appointments that need special preparation right now—just keep sipping water throughout the day to stay feeling great.
 						</div>
 					`;
 				} else {
 					prepAlertsEl.innerHTML = prepAlerts
 						.map(
 							(alertText) => `
-							<div class="p-3.5 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-bold leading-snug shadow-sm">
+							<div class="p-4 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-semibold leading-relaxed shadow-sm">
 								${escapeHtml(alertText)}
 							</div>
 						`
@@ -2356,7 +2415,8 @@
 				}
 
 				lookAheadEl.innerText =
-					lookAhead || 'Your schedule for the next few days is open and relaxing.';
+					lookAhead ||
+					'Your calendar for the next few days is open and unhurried, giving you plenty of time to rest and enjoy your week.';
 			}
 
 			async function generateAiActionPlan() {
@@ -2399,7 +2459,7 @@
 						});
 					}
 					renderAiSummaryCard();
-					showToast('✨ Daily Action Plan generated from live board & prep rules!');
+					showToast('✨ Conversational Action Plan generated and saved!');
 					return;
 				}
 
@@ -2444,11 +2504,12 @@
 							model: 'gemini-3.8-flash',
 							store: false,
 							system_instruction:
-								'You are a warm, caring, senior-friendly daily care companion creating a clear summary and multi-day action plan for an older adult looking at their home message board. ' +
-								'Write directly to the senior in second person ("you"). Keep sentences short, encouraging, and easy to read. ' +
-								'Always inspect upcoming appointments in the next 1 to 4 days for preparation needs—especially reminding the senior to drink 2-3 extra glasses of water several days before any scheduled infusion, IV, or blood draw, and honoring all caregiverPrepRules.',
+								'You are a warm, caring, conversational daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
+								'CRITICAL RULE: Do NOT simply repeat, list, or parrot the schedule items, appointment titles, raw weather numbers, or reminder text that are already displayed on the board. ' +
+								'Instead, synthesize the board context into natural, flowing conversational sentences that give practical, actionable advice and thoughtful suggestions (for example: how to pace their morning or meal times around an afternoon appointment, what to set by the door before their ride arrives, when to enjoy the weather or how to dress comfortably, or how to prepare days in advance such as keeping a glass of water by their chair to drink extra fluids for 2-3 days before a scheduled infusion). ' +
+								'Always honor all caregiverPrepRules in a warm, conversational coaching tone.',
 							input:
-								'Generate a senior-friendly Daily Action Plan JSON from this live board data:\n' +
+								'Write a conversational, actionable Daily Companion & Action Plan JSON from this live board context (give practical advice rather than repeating items):\n' +
 								JSON.stringify(boardSnapshot, null, 2),
 							response_format: {
 								type: 'text',
@@ -2460,18 +2521,18 @@
 											type: 'array',
 											items: { type: 'string' },
 											description:
-												'2 to 4 short, encouraging action bullets for today combining weather, medications, today appointments, birthdays, and reminders.',
+												'1 to 2 natural, conversational paragraphs offering practical, actionable advice for enjoying and pacing today (combining medication habits, weather advice, and how to prepare smoothly for today plans without just listing them).',
 										},
 										prepAlerts: {
 											type: 'array',
 											items: { type: 'string' },
 											description:
-												'1 to 3 proactive health or appointment preparation nudges for today and the next 3 days (e.g. drink extra water days before a scheduled infusion).',
+												'1 to 2 conversational coaching sentences giving proactive multi-day health or appointment preparation advice (e.g., keeping a water glass nearby to drink 2-3 extra glasses of water in the days before a scheduled infusion).',
 										},
 										lookAhead: {
 											type: 'string',
 											description:
-												'A warm 1-2 sentence summary of what is happening over the next 3 to 5 days.',
+												'A warm, conversational 1-2 sentence suggestion on how to pace energy and prepare gently for the next 3 to 5 days.',
 										},
 									},
 									required: ['todayPlan', 'prepAlerts', 'lookAhead'],
