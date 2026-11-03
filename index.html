@@ -143,66 +143,83 @@
 					</div>
 				</div>
 
-				<!-- Main Message Card (Includes Today's Events & Medication Action Button) -->
+				<!-- Main Message Card (3-Column Layout on Tablet/Desktop, Stacked on Phone) -->
 				<div
 					id="card-announcement"
-					class="bg-blue-50/80 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-4"
+					class="bg-blue-50/80 p-5 sm:p-6 rounded-2xl border-2 border-blue-300 shadow-sm"
 				>
-					<div class="flex flex-wrap justify-between items-center gap-2">
-						<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-							<span>📣</span> Today's Important Message
-						</h2>
-						<div id="meds-status-badge" class="hidden">
-							<span
-								class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-300"
-								>💊 MEDS COMPLETED</span
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
+						<!-- Column 1: Today's Important Message -->
+						<div class="flex flex-col space-y-2 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
+							<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
+								<span>📣</span> Today's Important Message
+							</h2>
+							<p
+								id="disp-announcement"
+								class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug flex-1 flex items-center"
 							>
+								Loading announcement...
+							</p>
 						</div>
-					</div>
 
-					<p id="disp-announcement" class="text-2xl sm:text-4xl font-bold text-slate-900 leading-snug">
-						Loading announcement...
-					</p>
-
-					<!-- Automatically Included Today's Scheduled Events -->
-					<div
-						id="disp-today-events-section"
-						class="hidden pt-3 border-t border-blue-200/80 space-y-2.5"
-					>
-						<div class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-							<span>📅</span> Scheduled for Today
-						</div>
-						<div id="disp-today-events-list" class="flex flex-wrap gap-3"></div>
-					</div>
-
-					<!-- Take Medication Action Section -->
-					<div class="pt-3 border-t border-blue-200/80 space-y-2.5">
+						<!-- Column 2: Scheduled for Today (Always Visible for Consistent Layout) -->
 						<div
-							id="meds-instruction"
-							class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2"
+							id="disp-today-events-section"
+							class="flex flex-col space-y-2.5 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5"
 						>
-							<span class="text-base">⚠️</span> Action Required: Please take your medicine.
+							<h2 class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+								<span>📅</span> Scheduled for Today
+							</h2>
+							<div id="disp-today-events-list" class="space-y-2.5 flex-1 flex flex-col justify-center">
+								<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
+									<div class="text-xl">🌿</div>
+									<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
+									<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+								</div>
+							</div>
 						</div>
 
-						<button
-							id="btn-take-meds"
-							onclick="markMedsTaken()"
-							class="w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl"
-						>
-							<span>I TOOK MY MEDS</span>
-							<span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>
-						</button>
-						<p
-							id="meds-taken-time"
-							class="text-center text-xs sm:text-sm text-slate-600 font-medium hidden"
-						>
-							Last taken: --:--
-						</p>
+						<!-- Column 3: Take Medication Action Section -->
+						<div class="flex flex-col justify-between space-y-2.5">
+							<div class="flex flex-wrap justify-between items-center gap-2">
+								<h2 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+									<span>💊</span> Medication Check-In
+								</h2>
+								<div id="meds-status-badge" class="hidden">
+									<span
+										class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-emerald-300"
+										>COMPLETED</span
+									>
+								</div>
+							</div>
+
+							<div
+								id="meds-instruction"
+								class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2"
+							>
+								<span class="text-base">⚠️</span> Action Required: Please take your medicine.
+							</div>
+
+							<button
+								id="btn-take-meds"
+								onclick="markMedsTaken()"
+								class="w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl"
+							>
+								<span>I TOOK MY MEDS</span>
+								<span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>
+							</button>
+							<p
+								id="meds-taken-time"
+								class="text-center text-xs sm:text-sm text-slate-600 font-medium hidden"
+							>
+								Last taken: --:--
+							</p>
+						</div>
 					</div>
 				</div>
 
-				<!-- Two Column Layout: Reminders, Medications & Scheduled Events (Positionable 1, 2, 3) -->
-				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+				<!-- Three Column Layout: Reminders, Medications & Scheduled Events (Positionable 1, 2, 3) -->
+				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
 					<!-- Reminders -->
 					<div
 						id="card-reminders"
@@ -247,7 +264,7 @@
 						</div>
 
 						<!-- Dynamic Events List Container -->
-						<div id="disp-events-list" class="flex flex-wrap gap-3 sm:gap-4">
+						<div id="disp-events-list" class="space-y-3">
 							<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-1">
 								<div class="text-2xl">🌿</div>
 								<div class="text-base sm:text-lg font-semibold text-slate-700">No appointments scheduled</div>
@@ -1757,21 +1774,25 @@
 					countBadge.innerText = `${upcoming.length} Scheduled`;
 				}
 
-				// 0. Automatically Render Today's Scheduled Events inside Main Message Section
-				const todaySection = document.getElementById('disp-today-events-section');
+				// 0. Automatically Render Today's Scheduled Events inside Main Message Section (Always Visible)
 				const todayList = document.getElementById('disp-today-events-list');
 				const todayEvents = upcoming.filter((evt) => evt.date === todayStr);
 
-				if (todaySection && todayList) {
+				if (todayList) {
 					if (todayEvents.length === 0) {
-						todayList.innerHTML = '';
-						todaySection.classList.add('hidden');
+						todayList.innerHTML = `
+							<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
+								<div class="text-xl">🌿</div>
+								<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
+								<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+							</div>
+						`;
 					} else {
 						let todayHtml = '';
 						todayEvents.forEach((evt) => {
 							const { time } = formatEventDate(evt.date, evt.time);
 							todayHtml += `
-								<div class="w-full sm:flex-1 sm:min-w-[260px] bg-white p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
+								<div class="w-full bg-white p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
 									<div class="flex items-center gap-2 flex-wrap">
 										<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
 											TODAY
@@ -1782,7 +1803,7 @@
 												: ''
 										}
 									</div>
-									<div class="text-xl sm:text-2xl font-bold text-slate-900 pt-0.5">
+									<div class="text-lg sm:text-xl font-bold text-slate-900 pt-0.5">
 										${escapeHtml(evt.title)}
 									</div>
 									${
@@ -1796,7 +1817,6 @@
 							`;
 						});
 						todayList.innerHTML = todayHtml;
-						todaySection.classList.remove('hidden');
 					}
 				}
 
@@ -1815,7 +1835,7 @@
 						upcoming.forEach((evt) => {
 							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time);
 							html += `
-								<div class="w-full sm:flex-1 sm:min-w-[280px] bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
+								<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
 									<div class="space-y-1">
 										<div class="flex items-center gap-2 flex-wrap">
 											<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${badgeColor}">

@@ -180,11 +180,14 @@ Example rules:
     2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status. Includes **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, and **Scheduled Events** into Position 1, Position 2, or Position 3.
     3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), pre-assign new users, and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
     *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden, while Board Maintenance & Schedules remains fully accessible).*
-- **Display View (Tablet)**:
+- **Display View (Tablet & Phone)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. **Main Message Card (Today Hub)**: Always displayed full-width at the top of the board below the clock & weather card. Automatically includes any appointment(s) scheduled for the current day (`Scheduled for Today`) as well as the medication status banner and **"I TOOK MY MEDS"** action button.
-  4. **Positionable 2-Column Section (Reminders, Medications & Scheduled Events)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), and **Appointments & Events** in a 2-column grid ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3).
+  3. **Main Message Card (3-Column Today Hub)**: Displayed full-width at the top of the board below the clock & weather card using a 3-column layout on tablet/desktop (stacking vertically on phones):
+     - **Column 1**: Today's Important Message.
+     - **Column 2**: Scheduled for Today — automatically lists today's appointments or displays `"No events scheduled for today"` when empty so content positions never shift for the senior.
+     - **Column 3**: Medication Check-In status banner and **"I TOOK MY MEDS"** action button.
+  4. **Positionable 3-Column Section (Reminders, Medications & Scheduled Events)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), and **Appointments & Events** in a 3-column grid on tablet/desktop (stacking on phones), ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3).
   5. Senior taps **"I TOOK MY MEDS"** in the Main Message section to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---
