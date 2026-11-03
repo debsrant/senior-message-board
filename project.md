@@ -183,9 +183,9 @@ Example rules:
 - **Display View (Tablet)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. **Main Message Card**: Always displayed full-width at the top of the board below the clock & weather card.
-  4. **Positionable 2-Column Section (Reminders, Medications & Scheduled Events)**: Displays **Daily Reminders**, **Medications**, and **Appointments & Events** in a 2-column grid ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3).
-  5. Senior taps **"I TOOK MY MEDS"** to log their medication, updating Firebase and notifying subscribed caregivers.
+  3. **Main Message Card (Today Hub)**: Always displayed full-width at the top of the board below the clock & weather card. Automatically includes any appointment(s) scheduled for the current day (`Scheduled for Today`) as well as the medication status banner and **"I TOOK MY MEDS"** action button.
+  4. **Positionable 2-Column Section (Reminders, Medications & Scheduled Events)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), and **Appointments & Events** in a 2-column grid ordered dynamically according to the Admin's chosen positions (Position 1, 2, 3).
+  5. Senior taps **"I TOOK MY MEDS"** in the Main Message section to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---
 

@@ -143,17 +143,62 @@
 					</div>
 				</div>
 
-				<!-- Main Message Card -->
+				<!-- Main Message Card (Includes Today's Events & Medication Action Button) -->
 				<div
 					id="card-announcement"
-					class="bg-blue-50/80 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-2"
+					class="bg-blue-50/80 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-4"
 				>
-					<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-						<span>📣</span> Today's Important Message
-					</h2>
+					<div class="flex flex-wrap justify-between items-center gap-2">
+						<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
+							<span>📣</span> Today's Important Message
+						</h2>
+						<div id="meds-status-badge" class="hidden">
+							<span
+								class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-300"
+								>💊 MEDS COMPLETED</span
+							>
+						</div>
+					</div>
+
 					<p id="disp-announcement" class="text-2xl sm:text-4xl font-bold text-slate-900 leading-snug">
 						Loading announcement...
 					</p>
+
+					<!-- Automatically Included Today's Scheduled Events -->
+					<div
+						id="disp-today-events-section"
+						class="hidden pt-3 border-t border-blue-200/80 space-y-2.5"
+					>
+						<div class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+							<span>📅</span> Scheduled for Today
+						</div>
+						<div id="disp-today-events-list" class="flex flex-wrap gap-3"></div>
+					</div>
+
+					<!-- Take Medication Action Section -->
+					<div class="pt-3 border-t border-blue-200/80 space-y-2.5">
+						<div
+							id="meds-instruction"
+							class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2"
+						>
+							<span class="text-base">⚠️</span> Action Required: Please take your medicine.
+						</div>
+
+						<button
+							id="btn-take-meds"
+							onclick="markMedsTaken()"
+							class="w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl"
+						>
+							<span>I TOOK MY MEDS</span>
+							<span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>
+						</button>
+						<p
+							id="meds-taken-time"
+							class="text-center text-xs sm:text-sm text-slate-600 font-medium hidden"
+						>
+							Last taken: --:--
+						</p>
+					</div>
 				</div>
 
 				<!-- Two Column Layout: Reminders, Medications & Scheduled Events (Positionable 1, 2, 3) -->
@@ -171,46 +216,19 @@
 						</p>
 					</div>
 
-					<!-- Medications -->
+					<!-- Medications (Simplified Information Panel) -->
 					<div
 						id="card-medications"
-						class="bg-white p-5 sm:p-6 rounded-2xl border-2 border-slate-200 shadow-sm space-y-3 transition-all duration-300"
+						class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3"
 					>
-						<div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
-								<span>💊</span> Medications
-							</h2>
-							<div id="meds-status-badge" class="hidden">
-								<span
-									class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-300"
-									>COMPLETED</span
-								>
-							</div>
-						</div>
-						<div id="meds-instruction" class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2">
-							<span class="text-base">⚠️</span> Action Required: Please take your medicine.
-						</div>
+						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2.5">
+							<span>💊</span> Medications
+						</h2>
 						<p
 							id="disp-medications"
-							class="text-xl sm:text-2xl text-slate-700 whitespace-pre-line py-1 leading-relaxed"
+							class="text-xl sm:text-2xl text-slate-700 whitespace-pre-line leading-relaxed"
 						>
 							Loading medications...
-						</p>
-
-						<!-- Interactive Check-off Button -->
-						<button
-							id="btn-take-meds"
-							onclick="markMedsTaken()"
-							class="w-full mt-2 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl"
-						>
-							<span>I TOOK MY MEDS</span>
-							<span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>
-						</button>
-						<p
-							id="meds-taken-time"
-							class="text-center text-xs sm:text-sm text-slate-500 mt-2 hidden"
-						>
-							Last taken: --:--
 						</p>
 					</div>
 
@@ -1198,18 +1216,15 @@
 					updateWeather(data.zipcode);
 				}
 
-				// Update Medication Card State
-				const medCard = document.getElementById('card-medications');
+				// Update Medication Action State (in Main Message Card)
 				const medBtn = document.getElementById('btn-take-meds');
 				const medBadge = document.getElementById('meds-status-badge');
 				const medTime = document.getElementById('meds-taken-time');
 				const medInstr = document.getElementById('meds-instruction');
 
 				if (data.medsTaken) {
-					medCard.className =
-						'bg-white p-5 sm:p-6 rounded-2xl border-2 border-emerald-400 shadow-sm space-y-3 transition-all duration-300';
 					medBtn.className =
-						'w-full mt-2 py-4 sm:py-5 bg-slate-100 text-slate-500 border border-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
+						'w-full py-4 sm:py-5 bg-white/80 text-slate-500 border border-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
 					medBtn.innerHTML =
 						'<span>MEDS LOGGED</span><span class="text-xs font-semibold text-slate-400">Successfully saved</span>';
 					medBadge.classList.remove('hidden');
@@ -1230,10 +1245,8 @@
 						medTime.innerText = `Taken ${dayDate} at ${time}`;
 					}
 				} else {
-					medCard.className =
-						'bg-white p-5 sm:p-6 rounded-2xl border-2 border-rose-300 shadow-sm space-y-3 transition-all duration-300';
 					medBtn.className =
-						'w-full mt-2 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
+						'w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
 					medBtn.innerHTML =
 						'<span>I TOOK MY MEDS</span><span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>';
 					medBadge.classList.add('hidden');
@@ -1744,7 +1757,50 @@
 					countBadge.innerText = `${upcoming.length} Scheduled`;
 				}
 
-				// 1. Render Display View Banner
+				// 0. Automatically Render Today's Scheduled Events inside Main Message Section
+				const todaySection = document.getElementById('disp-today-events-section');
+				const todayList = document.getElementById('disp-today-events-list');
+				const todayEvents = upcoming.filter((evt) => evt.date === todayStr);
+
+				if (todaySection && todayList) {
+					if (todayEvents.length === 0) {
+						todayList.innerHTML = '';
+						todaySection.classList.add('hidden');
+					} else {
+						let todayHtml = '';
+						todayEvents.forEach((evt) => {
+							const { time } = formatEventDate(evt.date, evt.time);
+							todayHtml += `
+								<div class="w-full sm:flex-1 sm:min-w-[260px] bg-white p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
+									<div class="flex items-center gap-2 flex-wrap">
+										<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+											TODAY
+										</span>
+										${
+											time
+												? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+												: ''
+										}
+									</div>
+									<div class="text-xl sm:text-2xl font-bold text-slate-900 pt-0.5">
+										${escapeHtml(evt.title)}
+									</div>
+									${
+										evt.notes
+											? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-base">🚗</span> ${escapeHtml(
+													evt.notes
+											  )}</div>`
+											: ''
+									}
+								</div>
+							`;
+						});
+						todayList.innerHTML = todayHtml;
+						todaySection.classList.remove('hidden');
+					}
+				}
+
+				// 1. Render Display View Scheduled Events Card
 				if (dispContainer) {
 					if (upcoming.length === 0) {
 						dispContainer.innerHTML = `
