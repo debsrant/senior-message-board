@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -99,10 +99,11 @@
 		<main class="p-3 sm:p-6 max-w-6xl mx-auto">
 			<!-- ================= DISPLAY VIEW ================= -->
 			<div id="view-display" class="space-y-4 sm:space-y-6">
-				<!-- Clock & Weather Header -->
+				<!-- Clock, Weather & Simplified Medication Action Header -->
 				<div
 					class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 shadow-sm"
 				>
+					<!-- Date & Time (Left) -->
 					<div>
 						<div id="display-date" class="text-lg sm:text-2xl text-blue-600 font-semibold">
 							Loading date...
@@ -115,7 +116,7 @@
 						</div>
 					</div>
 
-					<!-- Weather Widget -->
+					<!-- Weather Widget (Center) -->
 					<div
 						id="weather-widget"
 						class="hidden border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 flex items-center gap-4"
@@ -136,30 +137,62 @@
 							</div>
 						</div>
 					</div>
+
+					<!-- Simplified Medication Check-In (Right) -->
+					<div
+						id="header-meds-section"
+						class="border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center sm:items-end gap-1.5 min-w-[14rem]"
+					>
+						<div class="flex items-center justify-between sm:justify-end gap-2">
+							<span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+								<span>💊</span> Medication Check-In
+							</span>
+							<span
+								id="meds-status-badge"
+								class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"
+							>
+								COMPLETED
+							</span>
+						</div>
+
+						<button
+							id="btn-take-meds"
+							onclick="markMedsTaken()"
+							class="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl"
+						>
+							<span>💊 I TOOK MY MEDS</span>
+						</button>
+
+						<p
+							id="meds-taken-time"
+							class="text-xs sm:text-sm text-slate-600 font-medium text-center sm:text-right hidden"
+						>
+							Taken at --:--
+						</p>
+					</div>
 				</div>
 
-				<!-- Main Message & AI Daily Companion Hub (Unified 3-Column Layout on Tablet/Desktop, Stacked on Phone) -->
+				<!-- Main Message & AI Daily Companion Hub (2-Column Layout on Tablet/Desktop, Stacked on Phone) -->
 				<div
 					id="card-announcement"
 					class="bg-blue-50/80 p-5 sm:p-6 rounded-2xl border-2 border-blue-300 shadow-sm"
 				>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
-						<!-- Column 1: Today's Important Message + AI Suggestions for Today -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 items-stretch">
+						<!-- Column 1: Today's Important Message (Hidden if empty) + AI Suggestions for Today -->
 						<div class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
-							<div class="space-y-2">
+							<!-- Announcement Block (Hidden if empty) -->
+							<div id="disp-announcement-container" class="space-y-2 hidden">
 								<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
 									<span>📣</span> Today's Important Message
 								</h2>
 								<p
 									id="disp-announcement"
 									class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug"
-								>
-									Loading announcement...
-								</p>
+								></p>
 							</div>
 
 							<!-- Integrated AI Suggestions for Today -->
-							<div class="pt-3 border-t border-blue-200/70 space-y-1.5">
+							<div id="disp-ai-today-section" class="space-y-1.5">
 								<h3 class="text-indigo-800 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
 									<span>💬</span> Suggestions for Today
 								</h3>
@@ -175,7 +208,7 @@
 						<!-- Column 2: Scheduled for Today + AI Health & Prep Tips + Look-Ahead -->
 						<div
 							id="disp-today-events-section"
-							class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5"
+							class="flex flex-col justify-between space-y-3"
 						>
 							<div class="space-y-2">
 								<div class="flex items-center justify-between gap-2">
@@ -191,7 +224,7 @@
 								</div>
 								<div id="disp-today-events-list" class="space-y-2 max-h-52 overflow-y-auto pr-1">
 									<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-										<div class="text-lg">🌿</div>
+										<div class="text-lg">ðŸŒ¿</div>
 										<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
 										<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
 									</div>
@@ -206,58 +239,20 @@
 									</h3>
 									<div id="disp-ai-prep-alerts" class="space-y-1.5">
 										<div class="p-2.5 sm:p-3 bg-white/90 rounded-xl border border-sky-200 text-xs sm:text-sm text-sky-900 leading-snug font-medium">
-											No special preparation needed right now—just keep sipping water throughout the day.
+											No special preparation needed right nowâ€”just keep sipping water throughout the day.
 										</div>
 									</div>
 								</div>
 								<div class="p-2.5 sm:p-3 bg-white/80 rounded-xl border border-indigo-100 flex items-start gap-2">
-									<span class="text-sm shrink-0 mt-0.5">🌿</span>
+									<span class="text-sm shrink-0 mt-0.5">ðŸŒ¿</span>
 									<p id="disp-ai-look-ahead" class="text-xs sm:text-sm text-slate-700 leading-snug font-medium">
 										Looking ahead at your week...
 									</p>
 								</div>
 							</div>
 						</div>
-
-						<!-- Column 3: Take Medication Action Section -->
-						<div class="flex flex-col justify-between space-y-2.5">
-							<div class="flex flex-wrap justify-between items-center gap-2">
-								<h2 class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-									<span>💊</span> Medication Check-In
-								</h2>
-								<div id="meds-status-badge" class="hidden">
-									<span
-										class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-emerald-300"
-										>COMPLETED</span
-									>
-								</div>
-							</div>
-
-							<div
-								id="meds-instruction"
-								class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2"
-							>
-								<span class="text-base">⚠️</span> Action Required: Please take your medicine.
-							</div>
-
-							<button
-								id="btn-take-meds"
-								onclick="markMedsTaken()"
-								class="w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl"
-							>
-								<span>I TOOK MY MEDS</span>
-								<span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>
-							</button>
-							<p
-								id="meds-taken-time"
-								class="text-center text-xs sm:text-sm text-slate-600 font-medium hidden"
-							>
-								Last taken: --:--
-							</p>
-						</div>
 					</div>
 				</div>
-
 				<!-- Responsive Grid: Stacked on Phones, 2 Columns on Tablet, 3 Columns on Bigger Screens (4 Cards, Positionable 1 to 4, Scrollable with Entry Count Badges) -->
 				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
 					<!-- Reminders -->

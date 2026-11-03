@@ -582,10 +582,21 @@ function renderBoard(data) {
 	document.getElementById('disp-board-title').innerText =
 		data.boardTitle || 'Senior Message Board';
 
-	// Main announcement card (always visible)
+	// Main announcement card (hidden if empty)
 	const announcement = (data.announcement || '').trim();
-	document.getElementById('disp-announcement').innerText =
-		announcement || 'No announcements for today.';
+	const announceContainer = document.getElementById('disp-announcement-container');
+	const announceEl = document.getElementById('disp-announcement');
+	const aiTodaySection = document.getElementById('disp-ai-today-section');
+
+	if (announcement) {
+		if (announceEl) announceEl.innerText = announcement;
+		if (announceContainer) announceContainer.classList.remove('hidden');
+		if (aiTodaySection) aiTodaySection.className = 'pt-3 border-t border-blue-200/70 space-y-1.5';
+	} else {
+		if (announceContainer) announceContainer.classList.add('hidden');
+		if (announceEl) announceEl.innerText = '';
+		if (aiTodaySection) aiTodaySection.className = 'space-y-1.5';
+	}
 
 	// Apply display card ordering (Position 1 to 4)
 	applyCardPositions(data.cardPositions);
@@ -617,48 +628,48 @@ function renderBoard(data) {
 		updateWeather(data.zipcode);
 	}
 
-	// Update Medication Action State (in Main Message Card)
+	// Update Medication Action State (in Header Card)
 	const medBtn = document.getElementById('btn-take-meds');
 	const medBadge = document.getElementById('meds-status-badge');
 	const medTime = document.getElementById('meds-taken-time');
 	const medInstr = document.getElementById('meds-instruction');
 
 	if (data.medsTaken) {
-		medBtn.className =
-			'w-full py-4 sm:py-5 bg-white/80 text-slate-500 border border-slate-200 font-bold rounded-xl transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
-		medBtn.innerHTML =
-			'<span>MEDS LOGGED</span><span class="text-xs font-semibold text-slate-400">Successfully saved</span>';
-		medBadge.classList.remove('hidden');
-		medTime.classList.remove('hidden');
-
-		medInstr.innerText = '✅ ALL DONE: Medications are logged for today.';
-		medInstr.className =
-			'bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-emerald-800 text-sm font-semibold flex items-center gap-2';
-
-		if (data.medsTakenTime) {
-			const dateObj = new Date(data.medsTakenTime);
-			const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-			const dayDate = dateObj.toLocaleDateString([], {
-				weekday: 'short',
-				month: 'short',
-				day: 'numeric',
-			});
-			medTime.innerText = `Taken ${dayDate} at ${time}`;
+		if (medBtn) {
+			medBtn.className =
+				'w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl shadow-none';
+			medBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
+		}
+		if (medBadge) medBadge.classList.remove('hidden');
+		if (medTime) {
+			medTime.classList.remove('hidden');
+			if (data.medsTakenTime) {
+				const dateObj = new Date(data.medsTakenTime);
+				const time = dateObj.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+				medTime.innerText = `Logged today at ${time}`;
+			} else {
+				medTime.innerText = 'Logged for today';
+			}
+		}
+		if (medInstr) {
+			medInstr.innerText = 'All done: Medications are logged for today.';
+			medInstr.className =
+				'bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2';
 		}
 	} else {
-		medBtn.className =
-			'w-full py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex flex-col items-center justify-center gap-0.5 text-xl sm:text-2xl';
-		medBtn.innerHTML =
-			'<span>I TOOK MY MEDS</span><span class="text-xs uppercase font-semibold opacity-90 tracking-wider">Tap here to log</span>';
-		medBadge.classList.add('hidden');
-		medTime.classList.add('hidden');
-
-		medInstr.innerHTML =
-			'<span class="text-lg">⚠️</span> ACTION REQUIRED: Please take your medicine.';
-		medInstr.className =
-			'bg-rose-50 border border-rose-200 p-3 rounded-xl text-rose-800 text-sm font-semibold flex items-center gap-2';
+		if (medBtn) {
+			medBtn.className =
+				'w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl';
+			medBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
+		}
+		if (medBadge) medBadge.classList.add('hidden');
+		if (medTime) medTime.classList.add('hidden');
+		if (medInstr) {
+			medInstr.innerText = 'Please take your medicine.';
+			medInstr.className =
+				'bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2';
+		}
 	}
-
 	// Populate Announcement Input for both Admin and Editor
 	const announceInput = document.getElementById('input-announcement');
 	if (announceInput && document.activeElement !== announceInput) {
