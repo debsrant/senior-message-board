@@ -105,10 +105,6 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
        "medsTaken": false,
        "medsTakenTime": 0,
        "zipcode": "90210",
-       "suggestSunny": "Great day for a short walk outside!",
-       "suggestCloudy": "Perfect for some light bird watching.",
-       "suggestRain": "Stay dry! Maybe call a friend today?",
-       "suggestSnow": "Stay warm! Time for a hot cup of tea.",
        "updatedAt": 1700000000000
      }
      ```
@@ -172,18 +168,19 @@ Example rules:
 ```
 
 ### E. Operating the Views
-- **Two-Column Admin & Editor Panel Layout (Mobile-Responsive Light UI)**:
-  - **Column 1 (Daily Board Content, AI Action Plan & Actions)**:
+- **3-Tab Admin & Editor Panel Layout (Eliminating Scroll Fatigue)**:
+  - **Tab 1: `📅 Daily Updates` (Default Tab)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
-    2. **Calendar Events & Appointments**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
-    3. **AI Daily Action Plan & Prep Rules (Admin & Editor)**: Configure caregiver preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine, and review/edit Today's Game Plan, Smart Prep & Health Nudges, and Next Few Days Look-Ahead.
-    4. **Publish Changes**: Large action button to instantly push updates to the tablet.
-  - **Column 2 (Profile, Maintenance, Contacts & Access Control)**:
-    1. **My Profile (Admin & Editor)**: Display name, phone number, relationship/label, birthday, Firebase email, assigned role badge, and toggle for medication alerts.
-    2. **Board Maintenance & Schedules (Admin & Editor)**: Update board title, reminders, medications, zipcode, custom weather suggestions, and reset medication check-off status. Includes **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, **Scheduled Events**, **Upcoming Holidays**, and **Contacts List** into Position 1 through Position 5.
-    3. **Contacts & Birthdays (Admin & Editor)**: Add, edit, or delete additional contacts who are not registered users (with name, relationship/role, phone number, and birthday). Active registered users are automatically included on the Contacts List card.
-    4. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), set or update user birthdays, pre-assign new users (including birthday), and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
-    *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden, while Board Maintenance & Schedules, AI Daily Action Plan, and Contacts & Birthdays remain fully accessible).*
+    2. **Daily Reminders & Medications**: Update daily reminders, medication instructions, and reset the "Medications Taken Today" check-off status, with a prominent **Publish Changes Instantly** button right below.
+    3. **Appointments & Events**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
+  - **Tab 2: `🤖 AI & Board Settings`**:
+    1. **AI Daily Companion & Prep Rules (Admin & Editor)**: Configure caregiver `Keyword: Instruction` preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine. Summaries update automatically whenever the board changes.
+    2. **Board Title, Weather & Layout**: Update the board title, weather ZIP code, and **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, **Scheduled Events**, **Upcoming Holidays**, and **Contacts List** into Position 1 through Position 5.
+  - **Tab 3: `👥 Contacts, Profile & Users`**:
+    1. **Contacts & Birthdays (Admin & Editor)**: Add, edit, or delete additional contacts who are not registered users (with name, relationship/role, phone number, and birthday). Active registered users are automatically included on the Contacts List card.
+    2. **My Profile (Admin & Editor)**: Display name, phone number, relationship/label, birthday, Firebase email, assigned role badge, and toggle for medication alerts.
+    3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), set or update user birthdays, pre-assign new users (including birthday), and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
+    *(Note: For users with the `EDITOR` role, the User Management card and Display Card Order controls are hidden).*
 - **Display View (Tablet & Phone)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
@@ -192,7 +189,7 @@ Example rules:
      - **Column 2**: Scheduled for Today — automatically lists any major US holiday and any active user or contact birthday falling on the current day along with today's appointments, or displays `"No events scheduled for today"` when empty so content positions never shift for the senior.
      - **Column 3**: Medication Check-In status banner and **"I TOOK MY MEDS"** action button.
   4. **AI Daily Companion & Action Plan Section (3-Column Section Below Main Message)**: Full-width 3-column banner directly below the Main Message section (stacking on phones) providing concise, easy-to-scan conversational guidance:
-     - **Column 1 (`💬 Suggestions for Today`)**: Concise 1–2 sentence suggestions for today, incorporating medication check-in, the weather activity suggestion (`suggestSunny`/`suggestCloudy`/`suggestRain`/`suggestSnow`), and today's schedule pacing.
+     - **Column 1 (`💬 Suggestions for Today`)**: Concise 1–2 sentence suggestions for today, incorporating medication check-in, the automatic weather activity suggestion, and today's schedule pacing.
      - **Column 2 (`💧 Helpful Health & Prep Tips`)**: Concise proactive multi-day preparation advice incorporating each appointment's `reminder` field and health rules (e.g., drinking 2–3 extra glasses of water starting 3 days before a scheduled infusion).
      - **Column 3 (`🌿 Pacing the Next Few Days`)**: Short, warm look-ahead on how to pace energy over the next few days.
   5. **Positionable Reminders Section (1 Column on Phones, 2 Columns on Tablets, 3 Columns on Larger Screens)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events**, **Upcoming Holidays** (major US holidays with countdown badges), and **Contacts List** (automatically listing active users plus additional contacts with phone numbers and birthdays) in a responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`, with card height `max-h-[22.5rem] sm:max-h-96` and internal scrolling to view additional items), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 5).

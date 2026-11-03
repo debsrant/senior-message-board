@@ -378,67 +378,153 @@
 				id="view-admin"
 				class="hidden space-y-5 sm:space-y-6 max-w-6xl mx-auto"
 			>
-				<!-- Panel Top Header Card -->
-				<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
-					<div>
-						<h2 id="admin-panel-title" class="text-xl sm:text-2xl font-bold text-slate-900">
-							Remote Administration Panel
-						</h2>
-						<p id="admin-panel-subtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">
-							Changes made here instantly update on the display screen.
-						</p>
+				<!-- Panel Top Header & 3-Tab Navigation Card -->
+				<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+					<div class="flex flex-wrap justify-between items-center gap-3">
+						<div>
+							<h2 id="admin-panel-title" class="text-xl sm:text-2xl font-bold text-slate-900">
+								Remote Administration Panel
+							</h2>
+							<p id="admin-panel-subtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">
+								Changes made here instantly update on the display screen.
+							</p>
+						</div>
+						<span
+							id="panel-role-pill"
+							class="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider"
+						>
+							ADMIN
+						</span>
 					</div>
-					<span
-						id="panel-role-pill"
-						class="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider"
-					>
-						ADMIN
-					</span>
+
+					<!-- 3-Tab Switcher Bar -->
+					<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200/80">
+						<button
+							type="button"
+							id="btn-admin-tab-daily"
+							onclick="switchAdminTab('daily')"
+							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200/80"
+						>
+							<span>📅</span> Daily Updates
+						</button>
+						<button
+							type="button"
+							id="btn-admin-tab-settings"
+							onclick="switchAdminTab('settings')"
+							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900"
+						>
+							<span>🤖</span> AI &amp; Board Settings
+						</button>
+						<button
+							type="button"
+							id="btn-admin-tab-people"
+							onclick="switchAdminTab('people')"
+							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900"
+						>
+							<span>👥</span> Contacts, Profile &amp; Users
+						</button>
+					</div>
 				</div>
 
-				<!-- 2-Column Responsive Layout -->
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-					<!-- COLUMN 1: Daily Messages & Calendar Events -->
-					<div class="space-y-5 sm:space-y-6">
-						<!-- Card: Today's Announcement -->
-						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-									<span>📣</span> Today's Important Message
-								</h3>
-								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
-									Admin & Editor
-								</span>
+				<!-- ==================== TAB 1: DAILY UPDATES (DEFAULT) ==================== -->
+				<div id="admin-tab-daily" class="space-y-5 sm:space-y-6">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
+						<!-- Left Column: Today's Message + Reminders & Medications -->
+						<div class="space-y-5 sm:space-y-6">
+							<!-- Card: Today's Announcement -->
+							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+										<span>📣</span> Today's Important Message
+									</h3>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+										Admin &amp; Editor
+									</span>
+								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1.5 text-slate-600">Announcement Text</label>
+									<textarea
+										id="input-announcement"
+										rows="3"
+										placeholder="Write an announcement or encouraging note..."
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+									></textarea>
+									<p class="text-xs text-slate-500 mt-1">
+										Featured in large font at the top of the main display.
+									</p>
+								</div>
 							</div>
-							<div>
-								<label class="block text-xs font-semibold mb-1.5 text-slate-600"
-									>Announcement Text</label
+
+							<!-- Card: Daily Reminders & Medications -->
+							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+										<span>⏰</span> Daily Reminders &amp; Medications
+									</h3>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+										Admin &amp; Editor
+									</span>
+								</div>
+
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Daily Reminders</label>
+										<textarea
+											id="input-reminders"
+											rows="4"
+											placeholder="e.g. Drink a full glass of water&#10;Call Sarah this afternoon"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										></textarea>
+									</div>
+
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Medications</label>
+										<textarea
+											id="input-medications"
+											rows="4"
+											placeholder="e.g. Morning vitamins with breakfast&#10;Blood pressure pill at 8:00 AM"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										></textarea>
+									</div>
+								</div>
+
+								<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+									<label class="flex items-center gap-3 cursor-pointer">
+										<input
+											type="checkbox"
+											id="input-meds-taken"
+											class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+										/>
+										<span class="text-slate-800 text-sm font-semibold">Medications Taken Today</span>
+									</label>
+									<p class="text-xs text-slate-500 mt-1 pl-8">
+										Uncheck this box and publish to reset the "Taken" status on the display.
+									</p>
+								</div>
+
+								<button
+									onclick="saveData()"
+									id="btn-publish-data"
+									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-xl text-base sm:text-lg shadow-sm transition"
 								>
-								<textarea
-									id="input-announcement"
-									rows="3"
-									placeholder="Write an announcement or encouraging note..."
-									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-								></textarea>
-								<p class="text-xs text-slate-500 mt-1">
-									Featured in large font at the top of the main display.
-								</p>
+									Publish Changes Instantly
+								</button>
 							</div>
 						</div>
 
-						<!-- Card: Calendar Events & Appointments -->
+						<!-- Right Column: Appointments & Events -->
 						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>📅</span> Appointments & Events
+										<span>📅</span> Appointments &amp; Events
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
-										Chronologically sorted with automatic past-event cleanup.
+										Supports single-day and multi-day events with automatic cleanup.
 									</p>
 								</div>
 								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
-									Admin & Editor
+									Admin &amp; Editor
 								</span>
 							</div>
 
@@ -540,23 +626,28 @@
 							<!-- Current Scheduled Appointments List in Panel -->
 							<div class="space-y-2">
 								<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Scheduled List</div>
-								<div id="admin-events-list" class="space-y-2 max-h-72 overflow-y-auto">
+								<div id="admin-events-list" class="space-y-2 max-h-80 overflow-y-auto">
 									<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
 										No upcoming appointments.
 									</div>
 								</div>
 							</div>
 						</div>
+					</div>
+				</div>
 
-						<!-- Card: AI Daily Action Plan & Care Rules (Admin & Editor) -->
+				<!-- ==================== TAB 2: AI & BOARD SETTINGS ==================== -->
+				<div id="admin-tab-settings" class="hidden space-y-5 sm:space-y-6">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
+						<!-- Left Column: AI Daily Action Plan & Care Rules -->
 						<div id="section-ai-summary" class="bg-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
 									<h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
-										<span>✨</span> AI Daily Action Plan &amp; Prep Rules
+										<span>✨</span> AI Daily Companion &amp; Prep Rules
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
-										Summarizes weather, appointments, birthdays, and multi-day medical prep (like extra hydration before an infusion).
+										Automatically generates concise daily suggestions from weather, appointments, event reminders, and the rules below.
 									</p>
 								</div>
 								<span class="text-[11px] font-semibold text-indigo-700 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 shrink-0">
@@ -571,297 +662,72 @@
 								</label>
 								<textarea
 									id="input-ai-rules"
-									rows="3"
+									rows="4"
 									placeholder="e.g. Infusion: Drink 2-3 extra glasses of water starting 3 days before a scheduled infusion."
 									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
 								></textarea>
 								<p class="text-xs text-slate-500 mt-1">
-									Tip: Write rules like <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">Infusion: Drink 2-3 extra glasses of water 3 days before</code> or general instructions for Gemini AI.
+									Write <code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700">Keyword: Instruction</code> rules (one per line) to trigger proactive multi-day prep tips automatically.
 								</p>
 							</div>
 
-							<!-- Optional Gemini API Key + Generate Button -->
+							<!-- Optional Gemini API Key + Refresh Button -->
 							<div class="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-3">
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-end">
-									<div>
-										<label class="block text-xs font-semibold mb-1 text-indigo-950">
-											Gemini API Key <span class="text-slate-500 font-normal">(Optional — saved on this device)</span>
-										</label>
-										<input
-											type="password"
-											id="input-gemini-api-key"
-											onchange="saveGeminiApiKeyLocal(this.value)"
-											placeholder="AIza... (Leave blank for built-in Smart Plan)"
-											class="w-full bg-white border border-indigo-200 rounded-xl p-2 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
-										/>
-									</div>
-									<button
-										type="button"
-										id="btn-generate-ai-plan"
-										onclick="generateAiActionPlan()"
-										class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
-									>
-										<span>✨</span>
-										<span id="btn-generate-ai-text">Generate Action Plan Now</span>
-									</button>
-								</div>
-								<label class="flex items-center gap-2.5 cursor-pointer pt-0.5">
-									<input
-										type="checkbox"
-										id="input-ai-auto-refresh"
-										checked
-										class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-									/>
-									<span class="text-xs font-semibold text-slate-700">
-										Automatically merge live weather, medication status &amp; upcoming appointment prep alerts each day
-									</span>
-								</label>
-							</div>
-
-							<!-- Editable AI Summary Output Fields -->
-							<div class="space-y-3 pt-1">
 								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										💬 Conversational Suggestions for Today (Natural sentences, one paragraph per line)
+									<label class="block text-xs font-semibold mb-1 text-indigo-950">
+										Optional Gemini API Key <span class="text-slate-500 font-normal">(Saved on this device only)</span>
 									</label>
-									<textarea
-										id="input-ai-today-plan"
-										rows="3"
-										placeholder="Click 'Generate Action Plan Now' for warm, conversational daily advice..."
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-									></textarea>
-								</div>
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										💧 Helpful Health &amp; Prep Tips (Conversational prep coaching for upcoming events)
-									</label>
-									<textarea
-										id="input-ai-prep-alerts"
-										rows="2"
-										placeholder="e.g. With your infusion coming up in a couple of days, try keeping a full glass of water next to your favorite chair today..."
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-									></textarea>
-								</div>
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">
-										🌿 Pacing the Next Few Days (Conversational look-ahead advice)
-									</label>
-									<textarea
-										id="input-ai-look-ahead"
-										rows="2"
-										placeholder="Friendly advice on how to pace the next few days..."
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-									></textarea>
-								</div>
-							</div>
-						</div>
-
-						<!-- Primary Publish Button -->
-						<button
-							onclick="saveData()"
-							id="btn-publish-data"
-							class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-xl text-base sm:text-lg shadow-sm transition"
-						>
-							Publish Changes Instantly
-						</button>
-					</div>
-
-					<!-- COLUMN 2: Profile & Maintenance Items -->
-					<div class="space-y-5 sm:space-y-6">
-						<!-- Card: User Profile -->
-						<div id="section-profile" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-									<span>👤</span> My Profile
-								</h3>
-								<span
-									id="profile-role-badge"
-									class="text-xs font-semibold text-slate-500 uppercase tracking-wider"
-								>
-									Role: ADMIN
-								</span>
-							</div>
-
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Display Name</label>
 									<input
-										type="text"
-										id="input-profile-name"
-										placeholder="e.g. Sarah"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										type="password"
+										id="input-gemini-api-key"
+										onchange="saveGeminiApiKeyLocal(this.value)"
+										placeholder="AIza... (Leave blank to use built-in Smart Care Companion)"
+										class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
 									/>
 								</div>
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Account Email</label>
-									<input
-										type="text"
-										id="input-profile-email"
-										disabled
-										class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-slate-500 text-sm cursor-not-allowed outline-none font-mono"
-									/>
-								</div>
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Phone Number (for Contacts List)</label>
-									<input
-										type="tel"
-										id="input-profile-phone"
-										placeholder="e.g. (555) 123-4567"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									/>
-								</div>
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Relationship / Label</label>
-									<input
-										type="text"
-										id="input-profile-relation"
-										placeholder="e.g. Daughter, Son, Caregiver"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									/>
-								</div>
-								<div class="sm:col-span-2">
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Birthday (Surfaces on Board &amp; Main Message Card)</label>
-									<input
-										type="date"
-										id="input-profile-birthday"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									/>
-								</div>
-							</div>
-
-							<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-								<label class="flex items-center gap-3 cursor-pointer">
-									<input
-										type="checkbox"
-										id="input-profile-notify-meds"
-										class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-									/>
-									<span class="text-slate-800 text-sm font-semibold">
-										Notify me when medications are taken
-									</span>
-								</label>
-								<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pl-8">
-									<span id="perm-status">Checking browser alerts...</span>
-									<button
-										type="button"
-										id="btn-request-perm"
-										onclick="requestBrowserNotificationPermission()"
-										class="px-2.5 py-1 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 rounded-lg border border-slate-300 transition"
-									>
-										Enable Browser Alerts
-									</button>
-								</div>
-							</div>
-
-							<div class="flex items-center gap-3">
 								<button
 									type="button"
-									onclick="saveUserProfile()"
-									class="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-sm shadow-sm transition"
+									id="btn-generate-ai-plan"
+									onclick="generateAiActionPlan()"
+									class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
 								>
-									Save Profile
+									<span>✨</span>
+									<span id="btn-generate-ai-text">Refresh AI Summary Now</span>
 								</button>
-								<span id="profile-save-status" class="text-xs text-emerald-600 font-bold hidden">
-									✓ Profile updated!
-								</span>
 							</div>
 						</div>
 
-						<!-- Section 2: Board Maintenance & Schedules (Admin & Editor) -->
+						<!-- Right Column: Board Title, Weather Zipcode & Card Order -->
 						<div id="section-maintenance" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-									<span>⚙️</span> Board Maintenance & Schedules
+									<span>⚙️</span> Board Title, Weather &amp; Layout
 								</h3>
 								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
-									Admin & Editor
+									Admin &amp; Editor
 								</span>
-							</div>
-
-							<div>
-								<label class="block text-xs font-semibold mb-1 text-slate-600"
-									>Board Title (Display Name)</label
-								>
-								<input
-									type="text"
-									id="input-board-title"
-									placeholder="e.g. Grandma's Daily Board"
-									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-								/>
 							</div>
 
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
 								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600"
-										>Daily Reminders</label
-									>
-									<textarea
-										id="input-reminders"
-										rows="3"
+									<label class="block text-xs font-semibold mb-1 text-slate-600">Board Title (Display Name)</label>
+									<input
+										type="text"
+										id="input-board-title"
+										placeholder="e.g. Grandma's Daily Board"
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									></textarea>
+									/>
 								</div>
 
 								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600"
-										>Medications</label
-									>
-									<textarea
-										id="input-medications"
-										rows="3"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									></textarea>
-								</div>
-							</div>
-
-							<div>
-								<label class="block text-xs font-semibold mb-1 text-slate-600"
-									>Zipcode (for Local Weather)</label
-								>
-								<input
-									type="text"
-									id="input-zipcode"
-									placeholder="e.g. 90210"
-									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-								/>
-							</div>
-
-							<div class="pt-2 border-t border-slate-100">
-								<h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5">Weather Activity Suggestions</h4>
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-									<div>
-										<label class="block text-xs font-medium mb-1 text-slate-500">☀️ If Sunny</label>
-										<input type="text" id="input-suggest-sunny" placeholder="e.g. Walk outside" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 text-base outline-none focus:bg-white focus:ring-2 focus:ring-blue-500" />
-									</div>
-									<div>
-										<label class="block text-xs font-medium mb-1 text-slate-500">⛅ If Cloudy</label>
-										<input type="text" id="input-suggest-cloudy" placeholder="e.g. Bird watching" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 text-base outline-none focus:bg-white focus:ring-2 focus:ring-blue-500" />
-									</div>
-									<div>
-										<label class="block text-xs font-medium mb-1 text-slate-500">🌧️ If Rainy</label>
-										<input type="text" id="input-suggest-rain" placeholder="e.g. Call a friend" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 text-base outline-none focus:bg-white focus:ring-2 focus:ring-blue-500" />
-									</div>
-									<div>
-										<label class="block text-xs font-medium mb-1 text-slate-500">❄️ If Snowy</label>
-										<input type="text" id="input-suggest-snow" placeholder="e.g. Hot tea" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 text-base outline-none focus:bg-white focus:ring-2 focus:ring-blue-500" />
-									</div>
-								</div>
-							</div>
-
-							<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-								<label class="flex items-center gap-3 cursor-pointer">
+									<label class="block text-xs font-semibold mb-1 text-slate-600">Zipcode (for Local Weather)</label>
 									<input
-										type="checkbox"
-										id="input-meds-taken"
-										class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+										type="text"
+										id="input-zipcode"
+										placeholder="e.g. 90210"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 									/>
-									<span class="text-slate-800 text-sm font-semibold"
-										>Medications Taken Today</span
-									>
-								</label>
-								<p class="text-xs text-slate-500 mt-1 pl-8">
-									Uncheck this box and save to reset the "Taken" status on the display.
-								</p>
+								</div>
 							</div>
 
 							<!-- Admin-Only Card Position Ordering -->
@@ -878,7 +744,7 @@
 									</span>
 								</div>
 								<p class="text-xs text-slate-500">
-									Choose the position (1 to 5) for each card in the Reminders, Medications, Appointments, Holidays &amp; Contacts section:
+									Choose the position (1 to 5) for each card in the Reminders section:
 								</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -970,12 +836,17 @@
 									onclick="saveData()"
 									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-xl text-sm shadow-sm transition"
 								>
-									Save Maintenance Changes
+									Save Board &amp; AI Settings
 								</button>
 							</div>
 						</div>
+					</div>
+				</div>
 
-						<!-- Section 3: Contacts Directory (Admin & Editor) -->
+				<!-- ==================== TAB 3: CONTACTS, PROFILE & USERS ==================== -->
+				<div id="admin-tab-people" class="hidden space-y-5 sm:space-y-6">
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
+						<!-- Left Column: Contacts & Birthdays -->
 						<div id="section-contacts" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
@@ -1072,7 +943,7 @@
 								<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
 									Contacts Directory (Active Users &amp; Additional Contacts)
 								</div>
-								<div id="admin-contacts-list" class="space-y-2 max-h-72 overflow-y-auto">
+								<div id="admin-contacts-list" class="space-y-2 max-h-80 overflow-y-auto">
 									<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
 										Loading contacts...
 									</div>
@@ -1080,82 +951,184 @@
 							</div>
 						</div>
 
-						<!-- Section 4: User Management & Roles (Admin Only) -->
-						<div id="section-admin-only" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-							<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
-								<div>
+						<!-- Right Column: My Profile & User Management -->
+						<div class="space-y-5 sm:space-y-6">
+							<!-- Card: User Profile -->
+							<div id="section-profile" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>👥</span> User Management
+										<span>👤</span> My Profile
 									</h3>
-									<p class="text-xs text-slate-500 mt-0.5">
-										Manage caregiver roles and account access.
+									<span
+										id="profile-role-badge"
+										class="text-xs font-semibold text-slate-500 uppercase tracking-wider"
+									>
+										Role: ADMIN
+									</span>
+								</div>
+
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Display Name</label>
+										<input
+											type="text"
+											id="input-profile-name"
+											placeholder="e.g. Sarah"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Account Email</label>
+										<input
+											type="text"
+											id="input-profile-email"
+											disabled
+											class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-slate-500 text-sm cursor-not-allowed outline-none font-mono"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Phone Number (for Contacts List)</label>
+										<input
+											type="tel"
+											id="input-profile-phone"
+											placeholder="e.g. (555) 123-4567"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Relationship / Label</label>
+										<input
+											type="text"
+											id="input-profile-relation"
+											placeholder="e.g. Daughter, Son, Caregiver"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-2">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Birthday (Surfaces on Board &amp; Main Message Card)</label>
+										<input
+											type="date"
+											id="input-profile-birthday"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+								</div>
+
+								<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+									<label class="flex items-center gap-3 cursor-pointer">
+										<input
+											type="checkbox"
+											id="input-profile-notify-meds"
+											class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+										/>
+										<span class="text-slate-800 text-sm font-semibold">
+											Notify me when medications are taken
+										</span>
+									</label>
+									<div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 pl-8">
+										<span id="perm-status">Checking browser alerts...</span>
+										<button
+											type="button"
+											id="btn-request-perm"
+											onclick="requestBrowserNotificationPermission()"
+											class="px-2.5 py-1 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 rounded-lg border border-slate-300 transition"
+										>
+											Enable Browser Alerts
+										</button>
+									</div>
+								</div>
+
+								<div class="flex items-center gap-3">
+									<button
+										type="button"
+										onclick="saveUserProfile()"
+										class="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-xl text-sm shadow-sm transition"
+									>
+										Save Profile
+									</button>
+									<span id="profile-save-status" class="text-xs text-emerald-600 font-bold hidden">
+										✓ Profile updated!
+									</span>
+								</div>
+							</div>
+
+							<!-- Section 4: User Management & Roles (Admin Only) -->
+							<div id="section-admin-only" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
+									<div>
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+											<span>👥</span> User Management
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Manage caregiver roles and account access.
+										</p>
+									</div>
+									<button
+										type="button"
+										onclick="toggleAddUserForm()"
+										class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 rounded-lg transition border border-slate-200"
+									>
+										+ Pre-assign User
+									</button>
+								</div>
+
+								<!-- Pre-assign User Form (Optional) -->
+								<div id="form-add-user" class="hidden p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+									<div class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pre-configure User by UID</div>
+									<p class="text-xs text-slate-500">
+										Enter the UID from Firebase Auth Console to assign a role before their first sign-in:
 									</p>
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+										<input
+											type="text"
+											id="input-new-uid"
+											placeholder="Firebase User UID"
+											class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+										/>
+										<input
+											type="email"
+											id="input-new-email"
+											placeholder="user@example.com"
+											class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+										/>
+										<input
+											type="date"
+											id="input-new-birthday"
+											title="User Birthday (Optional)"
+											class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+										/>
+										<select
+											id="select-new-role"
+											class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+										>
+											<option value="EDITOR">EDITOR</option>
+											<option value="ADMIN">ADMIN</option>
+											<option value="VIEWER">VIEWER</option>
+										</select>
+									</div>
+									<div class="flex justify-end gap-2">
+										<button
+											type="button"
+											onclick="toggleAddUserForm(false)"
+											class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 rounded-lg"
+										>
+											Cancel
+										</button>
+										<button
+											type="button"
+											onclick="savePreconfiguredUser()"
+											class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white rounded-lg"
+										>
+											Save User Role
+										</button>
+									</div>
 								</div>
-								<button
-									type="button"
-									onclick="toggleAddUserForm()"
-									class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 rounded-lg transition border border-slate-200"
-								>
-									+ Pre-assign User
-								</button>
-							</div>
 
-							<!-- Pre-assign User Form (Optional) -->
-							<div id="form-add-user" class="hidden p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-								<div class="text-xs font-bold text-slate-700 uppercase tracking-wider">Pre-configure User by UID</div>
-								<p class="text-xs text-slate-500">
-									Enter the UID from Firebase Auth Console to assign a role before their first sign-in:
-								</p>
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-									<input
-										type="text"
-										id="input-new-uid"
-										placeholder="Firebase User UID"
-										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-									/>
-									<input
-										type="email"
-										id="input-new-email"
-										placeholder="user@example.com"
-										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-									/>
-									<input
-										type="date"
-										id="input-new-birthday"
-										title="User Birthday (Optional)"
-										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-									/>
-									<select
-										id="select-new-role"
-										class="bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-									>
-										<option value="EDITOR">EDITOR</option>
-										<option value="ADMIN">ADMIN</option>
-										<option value="VIEWER">VIEWER</option>
-									</select>
-								</div>
-								<div class="flex justify-end gap-2">
-									<button
-										type="button"
-										onclick="toggleAddUserForm(false)"
-										class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 rounded-lg"
-									>
-										Cancel
-									</button>
-									<button
-										type="button"
-										onclick="savePreconfiguredUser()"
-										class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white rounded-lg"
-									>
-										Save User Role
-									</button>
-								</div>
-							</div>
-
-							<!-- Mobile-Friendly Users List -->
-							<div id="users-table-body" class="space-y-2.5">
-								<div class="py-4 text-center text-xs text-slate-400 italic">
-									Loading registered users...
+								<!-- Mobile-Friendly Users List -->
+								<div id="users-table-body" class="space-y-2.5">
+									<div class="py-4 text-center text-xs text-slate-400 italic">
+										Loading registered users...
+									</div>
 								</div>
 							</div>
 						</div>
@@ -1361,7 +1334,6 @@
 
 			// Clock & Weather Functionality
 			let currentZip = '';
-			let weatherSuggestions = { sunny: '', cloudy: '', rain: '', snow: '' };
 			let lastWeatherData = null;
 			let latestBoardData = {};
 
@@ -1456,16 +1428,12 @@
 			}
 
 			function getWeatherSuggestion(code) {
-				if (code === 0 || code === 1)
-					return weatherSuggestions.sunny || 'Great day for a short walk outside!';
-				if (code === 2 || code === 3)
-					return weatherSuggestions.cloudy || 'Perfect for some light bird watching.';
-				if (code >= 51 && code <= 65)
-					return weatherSuggestions.rain || 'Stay dry! Maybe call a friend today?';
-				if (code >= 71 && code <= 75)
-					return weatherSuggestions.snow || 'Stay warm! Time for a hot cup of tea.';
-				if (code === 95) return 'Stay safe! Good for board games.';
-				return 'A great day for indoor activities!';
+				if (code === 0 || code === 1) return 'a short walk or some sunshine outside';
+				if (code === 2 || code === 3) return 'some light bird watching or fresh air';
+				if (code >= 51 && code <= 65) return 'staying cozy indoors and calling a friend';
+				if (code >= 71 && code <= 75) return 'staying warm inside with a hot cup of tea';
+				if (code === 95) return 'staying safe indoors with a puzzle or board game';
+				return 'relaxing indoor activities';
 			}
 
 			function getWeatherDesc(code) {
@@ -1525,6 +1493,30 @@
 						} else {
 							btn.className =
 								'px-3.5 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs sm:text-sm font-semibold transition';
+						}
+					}
+				});
+			}
+
+			function switchAdminTab(tab) {
+				const tabs = ['daily', 'settings', 'people'];
+				tabs.forEach((t) => {
+					const panel = document.getElementById(`admin-tab-${t}`);
+					const btn = document.getElementById(`btn-admin-tab-${t}`);
+					if (panel) {
+						if (t === tab) {
+							panel.classList.remove('hidden');
+						} else {
+							panel.classList.add('hidden');
+						}
+					}
+					if (btn) {
+						if (t === tab) {
+							btn.className =
+								'py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200/80';
+						} else {
+							btn.className =
+								'py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900';
 						}
 					}
 				});
@@ -1747,12 +1739,6 @@
 					data.medications || 'No medications set.';
 
 				// Update Weather
-				weatherSuggestions = {
-					sunny: data.suggestSunny || '',
-					cloudy: data.suggestCloudy || '',
-					rain: data.suggestRain || '',
-					snow: data.suggestSnow || '',
-				};
 				if (data.zipcode) {
 					updateWeather(data.zipcode);
 				}
@@ -1817,14 +1803,6 @@
 					if (medTakenEl) medTakenEl.checked = data.medsTaken || false;
 					const zipEl = document.getElementById('input-zipcode');
 					if (zipEl && document.activeElement !== zipEl) zipEl.value = data.zipcode || '';
-					const sunnyEl = document.getElementById('input-suggest-sunny');
-					if (sunnyEl && document.activeElement !== sunnyEl) sunnyEl.value = data.suggestSunny || '';
-					const cloudyEl = document.getElementById('input-suggest-cloudy');
-					if (cloudyEl && document.activeElement !== cloudyEl) cloudyEl.value = data.suggestCloudy || '';
-					const rainEl = document.getElementById('input-suggest-rain');
-					if (rainEl && document.activeElement !== rainEl) rainEl.value = data.suggestRain || '';
-					const snowEl = document.getElementById('input-suggest-snow');
-					if (snowEl && document.activeElement !== snowEl) snowEl.value = data.suggestSnow || '';
 
 					const aiRulesEl = document.getElementById('input-ai-rules');
 					if (aiRulesEl && document.activeElement !== aiRulesEl) {
@@ -1833,27 +1811,6 @@
 					const apiKeyEl = document.getElementById('input-gemini-api-key');
 					if (apiKeyEl && document.activeElement !== apiKeyEl && !apiKeyEl.value) {
 						apiKeyEl.value = loadGeminiApiKeyLocal();
-					}
-					const autoRefreshEl = document.getElementById('input-ai-auto-refresh');
-					if (autoRefreshEl) {
-						autoRefreshEl.checked = data.aiAutoRefresh !== false;
-					}
-					const aiSaved = data.aiSummary || {};
-					const todayPlanEl = document.getElementById('input-ai-today-plan');
-					if (todayPlanEl && document.activeElement !== todayPlanEl) {
-						todayPlanEl.value = Array.isArray(aiSaved.todayPlan)
-							? aiSaved.todayPlan.join('\n')
-							: aiSaved.todayPlan || '';
-					}
-					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
-					if (prepAlertsEl && document.activeElement !== prepAlertsEl) {
-						prepAlertsEl.value = Array.isArray(aiSaved.prepAlerts)
-							? aiSaved.prepAlerts.join('\n')
-							: aiSaved.prepAlerts || '';
-					}
-					const lookAheadEl = document.getElementById('input-ai-look-ahead');
-					if (lookAheadEl && document.activeElement !== lookAheadEl) {
-						lookAheadEl.value = aiSaved.lookAhead || '';
 					}
 				}
 
@@ -1921,45 +1878,17 @@
 				const medications = document.getElementById('input-medications').value;
 				const medsTaken = document.getElementById('input-meds-taken').checked;
 				const zipcode = document.getElementById('input-zipcode').value;
-				const suggestSunny = document.getElementById('input-suggest-sunny').value;
-				const suggestCloudy = document.getElementById('input-suggest-cloudy').value;
-				const suggestRain = document.getElementById('input-suggest-rain').value;
-				const suggestSnow = document.getElementById('input-suggest-snow').value;
-
 				const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
-				const aiAutoRefresh = document.getElementById('input-ai-auto-refresh')
-					? document.getElementById('input-ai-auto-refresh').checked
-					: true;
 
-				// Recompute fresh Smart Plan from the newly edited form fields when Auto-Refresh is enabled
+				// Recompute fresh Smart Plan from the newly edited form fields
 				const freshSmartPlan = buildSmartRuleBasedPlan({
 					...latestBoardData,
 					announcement,
 					reminders,
 					medications,
 					medsTaken,
-					suggestSunny,
-					suggestCloudy,
-					suggestRain,
-					suggestSnow,
 					aiRules,
 				});
-
-				const todayPlanLines = aiAutoRefresh
-					? freshSmartPlan.todayPlan
-					: (document.getElementById('input-ai-today-plan')?.value || '')
-							.split('\n')
-							.map((s) => s.trim())
-							.filter(Boolean);
-				const prepAlertLines = aiAutoRefresh
-					? freshSmartPlan.prepAlerts
-					: (document.getElementById('input-ai-prep-alerts')?.value || '')
-							.split('\n')
-							.map((s) => s.trim())
-							.filter(Boolean);
-				const lookAheadText = aiAutoRefresh
-					? freshSmartPlan.lookAhead
-					: (document.getElementById('input-ai-look-ahead')?.value || '').trim();
 
 				const updatePayload = {
 					boardTitle: boardTitle,
@@ -1968,17 +1897,13 @@
 					medications: medications,
 					medsTaken: medsTaken,
 					zipcode: zipcode,
-					suggestSunny: suggestSunny,
-					suggestCloudy: suggestCloudy,
-					suggestRain: suggestRain,
-					suggestSnow: suggestSnow,
 					aiRules: aiRules,
-					aiAutoRefresh: aiAutoRefresh,
+					aiAutoRefresh: true,
 					aiSummary: {
-						todayPlan: todayPlanLines,
-						prepAlerts: prepAlertLines,
-						lookAhead: lookAheadText,
-						source: aiAutoRefresh ? 'smart' : 'manual',
+						todayPlan: freshSmartPlan.todayPlan,
+						prepAlerts: freshSmartPlan.prepAlerts,
+						lookAhead: freshSmartPlan.lookAhead,
+						source: 'smart',
 						generatedDate: getTodayDateString(),
 						updatedAt: Date.now(),
 					},
@@ -1997,7 +1922,7 @@
 							alert('Failed to save changes. ERROR: ' + error.message);
 						} else {
 							console.log('Board data saved successfully.');
-							if (aiAutoRefresh && loadGeminiApiKeyLocal()) {
+							if (loadGeminiApiKeyLocal()) {
 								generateAiActionPlan({ silent: true });
 							}
 							alert('Changes published successfully! Tablet will update instantly.');
@@ -2430,13 +2355,6 @@
 
 				if (!apiKey) {
 					// Instant Smart Care Companion generation without requiring an external key
-					const todayPlanEl = document.getElementById('input-ai-today-plan');
-					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
-					const lookAheadEl = document.getElementById('input-ai-look-ahead');
-					if (todayPlanEl) todayPlanEl.value = smartBaseline.todayPlan.join('\n');
-					if (prepAlertsEl) prepAlertsEl.value = smartBaseline.prepAlerts.join('\n');
-					if (lookAheadEl) lookAheadEl.value = smartBaseline.lookAhead;
-
 					if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 						await database.ref('board').update({
 							aiRules: rulesText,
@@ -2452,7 +2370,7 @@
 					}
 					renderAiSummaryCard();
 					if (!silent) {
-						showToast('✨ Conversational Action Plan generated and saved!');
+						showToast('✨ Conversational Action Plan refreshed!');
 					}
 					return;
 				}
@@ -2571,13 +2489,6 @@
 							: smartBaseline.prepAlerts;
 					const finalLookAhead = parsed.lookAhead || smartBaseline.lookAhead;
 
-					const todayPlanEl = document.getElementById('input-ai-today-plan');
-					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
-					const lookAheadEl = document.getElementById('input-ai-look-ahead');
-					if (todayPlanEl) todayPlanEl.value = finalTodayPlan.join('\n');
-					if (prepAlertsEl) prepAlertsEl.value = finalPrepAlerts.join('\n');
-					if (lookAheadEl) lookAheadEl.value = finalLookAhead;
-
 					if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 						await database.ref('board').update({
 							aiRules: rulesText,
@@ -2593,27 +2504,21 @@
 					}
 					renderAiSummaryCard();
 					if (!silent) {
-						showToast('✨ Gemini AI Action Plan generated and saved!');
+						showToast('✨ Gemini AI Action Plan refreshed!');
 					}
 				} catch (err) {
 					console.error('Gemini AI generation error, falling back to Smart Plan:', err);
-					const todayPlanEl = document.getElementById('input-ai-today-plan');
-					const prepAlertsEl = document.getElementById('input-ai-prep-alerts');
-					const lookAheadEl = document.getElementById('input-ai-look-ahead');
-					if (todayPlanEl) todayPlanEl.value = smartBaseline.todayPlan.join('\n');
-					if (prepAlertsEl) prepAlertsEl.value = smartBaseline.prepAlerts.join('\n');
-					if (lookAheadEl) lookAheadEl.value = smartBaseline.lookAhead;
 					renderAiSummaryCard();
 					if (!silent) {
 						alert(
 							'Used built-in Smart Plan (Gemini API returned an error: ' +
 								err.message +
-								'). Review the generated plan below!'
+								').'
 						);
 					}
 				} finally {
 					if (btn) btn.disabled = false;
-					if (btnText) btnText.innerText = 'Generate Action Plan Now';
+					if (btnText) btnText.innerText = 'Refresh AI Summary Now';
 				}
 			}
 
