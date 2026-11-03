@@ -142,38 +142,83 @@
 					</div>
 				</div>
 
-				<!-- Main Message Card (3-Column Layout on Tablet/Desktop, Stacked on Phone) -->
+				<!-- Main Message & AI Daily Companion Hub (Unified 3-Column Layout on Tablet/Desktop, Stacked on Phone) -->
 				<div
 					id="card-announcement"
 					class="bg-blue-50/80 p-5 sm:p-6 rounded-2xl border-2 border-blue-300 shadow-sm"
 				>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
-						<!-- Column 1: Today's Important Message -->
-						<div class="flex flex-col space-y-2 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
-							<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-								<span>📣</span> Today's Important Message
-							</h2>
-							<p
-								id="disp-announcement"
-								class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug flex-1 flex items-center"
-							>
-								Loading announcement...
-							</p>
+						<!-- Column 1: Today's Important Message + AI Suggestions for Today -->
+						<div class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
+							<div class="space-y-2">
+								<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
+									<span>📣</span> Today's Important Message
+								</h2>
+								<p
+									id="disp-announcement"
+									class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug"
+								>
+									Loading announcement...
+								</p>
+							</div>
+
+							<!-- Integrated AI Suggestions for Today -->
+							<div class="pt-3 border-t border-blue-200/70 space-y-1.5">
+								<h3 class="text-indigo-800 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+									<span>💬</span> Suggestions for Today
+								</h3>
+								<div
+									id="disp-ai-today-plan"
+									class="p-3 sm:p-3.5 bg-white/90 rounded-xl border border-indigo-200/80 space-y-1.5 text-sm sm:text-base text-slate-800 leading-relaxed font-medium"
+								>
+									<p class="text-sm text-slate-400 italic">Putting together friendly suggestions for your day...</p>
+								</div>
+							</div>
 						</div>
 
-						<!-- Column 2: Scheduled for Today (Always Visible for Consistent Layout) -->
+						<!-- Column 2: Scheduled for Today + AI Health & Prep Tips + Look-Ahead -->
 						<div
 							id="disp-today-events-section"
-							class="flex flex-col space-y-2.5 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5"
+							class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5"
 						>
-							<h2 class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-								<span>📅</span> Scheduled for Today
-							</h2>
-							<div id="disp-today-events-list" class="space-y-2.5 flex-1 flex flex-col justify-center">
-								<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-									<div class="text-xl">🌿</div>
-									<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
-									<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+							<div class="space-y-2">
+								<div class="flex items-center justify-between gap-2">
+									<h2 class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+										<span>📅</span> Scheduled for Today
+									</h2>
+									<span
+										id="today-events-count-badge"
+										class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300"
+									>
+										0 Entries
+									</span>
+								</div>
+								<div id="disp-today-events-list" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+									<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
+										<div class="text-lg">🌿</div>
+										<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
+										<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Integrated AI Prep Alerts & Pacing Look-Ahead -->
+							<div id="disp-ai-prep-section" class="pt-3 border-t border-blue-200/70 space-y-2">
+								<div class="space-y-1.5">
+									<h3 class="text-sky-800 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+										<span>💧</span> Helpful Health &amp; Prep Tips
+									</h3>
+									<div id="disp-ai-prep-alerts" class="space-y-1.5">
+										<div class="p-2.5 sm:p-3 bg-white/90 rounded-xl border border-sky-200 text-xs sm:text-sm text-sky-900 leading-snug font-medium">
+											No special preparation needed right now—just keep sipping water throughout the day.
+										</div>
+									</div>
+								</div>
+								<div class="p-2.5 sm:p-3 bg-white/80 rounded-xl border border-indigo-100 flex items-start gap-2">
+									<span class="text-sm shrink-0 mt-0.5">🌿</span>
+									<p id="disp-ai-look-ahead" class="text-xs sm:text-sm text-slate-700 leading-snug font-medium">
+										Looking ahead at your week...
+									</p>
 								</div>
 							</div>
 						</div>
@@ -217,68 +262,26 @@
 					</div>
 				</div>
 
-				<!-- AI Daily Companion & Action Plan Section (Full-Width 3-Column Layout Below Main Message) -->
-				<div
-					id="card-ai-summary"
-					class="bg-indigo-50/60 p-5 sm:p-6 rounded-2xl border-2 border-indigo-200 shadow-sm"
-				>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
-						<!-- Column 1: Conversational Guidance for Today -->
-						<div class="flex flex-col space-y-2 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-indigo-200/80 md:pr-5">
-							<h2 class="text-indigo-800 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-								<span>💬</span> Suggestions for Today
-							</h2>
-							<div
-								id="disp-ai-today-plan"
-								class="p-3.5 sm:p-4 bg-white/90 rounded-xl border border-indigo-100 space-y-2 text-base sm:text-lg text-slate-800 leading-relaxed font-medium flex-1 flex flex-col justify-center"
-							>
-								<p class="text-sm text-slate-400 italic">Putting together friendly suggestions for your day...</p>
-							</div>
-						</div>
-
-						<!-- Column 2: Smart Prep & Health Nudges (e.g. Drink extra water before infusion) -->
-						<div
-							id="disp-ai-prep-section"
-							class="flex flex-col space-y-2 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-indigo-200/80 md:pr-5"
-						>
-							<h2 class="text-sky-800 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-								<span>💧</span> Helpful Health &amp; Prep Tips
-							</h2>
-							<div id="disp-ai-prep-alerts" class="space-y-2 flex-1 flex flex-col justify-center">
-								<div class="p-3.5 bg-white/90 rounded-xl border border-sky-200 text-sm sm:text-base text-sky-900 leading-relaxed font-medium">
-									No special preparation needed right now—just keep sipping water throughout the day.
-								</div>
-							</div>
-						</div>
-
-						<!-- Column 3: Pacing the Next Few Days -->
-						<div class="flex flex-col space-y-2">
-							<h2 class="text-slate-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
-								<span>🌿</span> Pacing the Next Few Days
-							</h2>
-							<div class="p-3.5 sm:p-4 bg-white/90 rounded-xl border border-indigo-100 flex-1 flex items-center">
-								<p id="disp-ai-look-ahead" class="text-base sm:text-lg text-slate-800 leading-relaxed font-medium">
-									Looking ahead at your week...
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Responsive Grid: Stacked on Phones, 2 Columns on Tablet, 3 Columns on Bigger Screens (Positionable 1 to 5, Taller Scrollable Cards) -->
+				<!-- Responsive Grid: Stacked on Phones, 2 Columns on Tablet, 3 Columns on Bigger Screens (4 Cards, Positionable 1 to 4, Scrollable with Entry Count Badges) -->
 				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
 					<!-- Reminders -->
 					<div
 						id="card-reminders"
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
-						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<span>⏰</span> Daily Reminders
-						</h2>
-						<div class="overflow-y-auto flex-1 pr-1">
-							<p id="disp-reminders" class="text-lg sm:text-xl text-slate-700 whitespace-pre-line leading-relaxed">
-								Loading reminders...
-							</p>
+						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>⏰</span> Daily Reminders
+							</h2>
+							<span
+								id="reminders-count-badge"
+								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
+							>
+								0 Entries
+							</span>
+						</div>
+						<div id="disp-reminders" class="space-y-2 overflow-y-auto flex-1 pr-1 text-lg sm:text-xl text-slate-700 leading-relaxed">
+							Loading reminders...
 						</div>
 					</div>
 
@@ -287,20 +290,26 @@
 						id="card-medications"
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
-						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<span>💊</span> Medications
-						</h2>
-						<div class="overflow-y-auto flex-1 pr-1">
-							<p
-								id="disp-medications"
-								class="text-lg sm:text-xl text-slate-700 whitespace-pre-line leading-relaxed"
+						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
+							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+								<span>💊</span> Medications
+							</h2>
+							<span
+								id="medications-count-badge"
+								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200"
 							>
-								Loading medications...
-							</p>
+								0 Entries
+							</span>
+						</div>
+						<div
+							id="disp-medications"
+							class="space-y-2 overflow-y-auto flex-1 pr-1 text-lg sm:text-xl text-slate-700 leading-relaxed"
+						>
+							Loading medications...
 						</div>
 					</div>
 
-					<!-- Calendar Events & Appointments Card -->
+					<!-- Calendar Events, Appointments & Upcoming Holidays Card -->
 					<div
 						id="card-events"
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
@@ -309,39 +318,20 @@
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
 								<span>📅</span> Appointments &amp; Events
 							</h2>
-							<span id="events-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-								0 Scheduled
+							<span
+								id="events-count-badge"
+								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+							>
+								0 Entries
 							</span>
 						</div>
 
-						<!-- Dynamic Events List Container -->
+						<!-- Dynamic Events & Holidays List Container -->
 						<div id="disp-events-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
 							<div class="w-full p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-1">
 								<div class="text-xl">🌿</div>
 								<div class="text-base font-semibold text-slate-700">No appointments scheduled</div>
 								<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Upcoming Major US Holidays Card -->
-					<div
-						id="card-holidays"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
-					>
-						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
-								<span>🎉</span> Upcoming Holidays
-							</h2>
-							<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-								US Holidays
-							</span>
-						</div>
-
-						<!-- Dynamic Holidays List Container -->
-						<div id="disp-holidays-list" class="space-y-2 overflow-y-auto flex-1 pr-1">
-							<div class="py-4 text-center text-sm text-slate-400 italic">
-								Loading upcoming holidays...
 							</div>
 						</div>
 					</div>
@@ -357,9 +347,9 @@
 							</h2>
 							<span
 								id="contacts-count-badge"
-								class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
 							>
-								0 Contacts
+								0 Entries
 							</span>
 						</div>
 
@@ -744,7 +734,7 @@
 									</span>
 								</div>
 								<p class="text-xs text-slate-500">
-									Choose the position (1 to 5) for each card in the Reminders section:
+									Choose the position (1 to 4) for each card in the Reminders section:
 								</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -760,7 +750,6 @@
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
-											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
@@ -776,12 +765,11 @@
 											<option value="2" selected>Position 2</option>
 											<option value="3">Position 3</option>
 											<option value="4">Position 4</option>
-											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-events" class="block text-xs font-semibold text-slate-700">
-											📅 Scheduled Events
+											📅 Appointments &amp; Events
 										</label>
 										<select
 											id="select-pos-events"
@@ -792,26 +780,9 @@
 											<option value="2">Position 2</option>
 											<option value="3" selected>Position 3</option>
 											<option value="4">Position 4</option>
-											<option value="5">Position 5</option>
 										</select>
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-holidays" class="block text-xs font-semibold text-slate-700">
-											🎉 Upcoming Holidays
-										</label>
-										<select
-											id="select-pos-holidays"
-											onchange="handleCardPositionChange('holidays', this.value)"
-											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-										>
-											<option value="1">Position 1</option>
-											<option value="2">Position 2</option>
-											<option value="3">Position 3</option>
-											<option value="4" selected>Position 4</option>
-											<option value="5">Position 5</option>
-										</select>
-									</div>
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1 sm:col-span-2">
 										<label for="select-pos-contacts" class="block text-xs font-semibold text-slate-700">
 											📇 Contacts List
 										</label>
@@ -823,8 +794,7 @@
 											<option value="1">Position 1</option>
 											<option value="2">Position 2</option>
 											<option value="3">Position 3</option>
-											<option value="4">Position 4</option>
-											<option value="5" selected>Position 5</option>
+											<option value="4" selected>Position 4</option>
 										</select>
 									</div>
 								</div>
@@ -1561,8 +1531,7 @@
 				reminders: 1,
 				medications: 2,
 				events: 3,
-				holidays: 4,
-				contacts: 5,
+				contacts: 4,
 			};
 			let currentBoardUserContacts = {};
 			let currentAdditionalContacts = {};
@@ -1570,44 +1539,19 @@
 
 			function normalizeCardPositions(posData) {
 				const raw = posData || {};
-				let r = parseInt(raw.reminders, 10);
-				let m = parseInt(raw.medications, 10);
-				let e = parseInt(raw.events, 10);
-				let h = parseInt(raw.holidays, 10);
-				let c = parseInt(raw.contacts, 10);
+				const keys = ['reminders', 'medications', 'events', 'contacts'];
+				// Rank cards by their saved numeric order (gracefully compressing 5-card legacy layouts into 1..4)
+				const entries = keys.map((k, idx) => {
+					const val = parseInt(raw[k], 10);
+					return { key: k, order: isNaN(val) ? idx + 100 : val, tie: idx };
+				});
+				entries.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.tie - b.tie));
 
-				// Upgrade legacy 3-card or 4-card position objects
-				if ([1, 2, 3].includes(r) && [1, 2, 3].includes(m) && [1, 2, 3].includes(e) && isNaN(h)) {
-					const set3 = new Set([r, m, e]);
-					if (set3.size === 3) {
-						return { reminders: r, medications: m, events: e, holidays: 4, contacts: 5 };
-					}
-				}
-				if (
-					[1, 2, 3, 4].includes(r) &&
-					[1, 2, 3, 4].includes(m) &&
-					[1, 2, 3, 4].includes(e) &&
-					[1, 2, 3, 4].includes(h) &&
-					isNaN(c)
-				) {
-					const set4 = new Set([r, m, e, h]);
-					if (set4.size === 4) {
-						return { reminders: r, medications: m, events: e, holidays: h, contacts: 5 };
-					}
-				}
-
-				const validSet = new Set([r, m, e, h, c]);
-				if (
-					![1, 2, 3, 4, 5].includes(r) ||
-					![1, 2, 3, 4, 5].includes(m) ||
-					![1, 2, 3, 4, 5].includes(e) ||
-					![1, 2, 3, 4, 5].includes(h) ||
-					![1, 2, 3, 4, 5].includes(c) ||
-					validSet.size !== 5
-				) {
-					return { reminders: 1, medications: 2, events: 3, holidays: 4, contacts: 5 };
-				}
-				return { reminders: r, medications: m, events: e, holidays: h, contacts: c };
+				const result = {};
+				entries.forEach((item, index) => {
+					result[item.key] = index + 1;
+				});
+				return result;
 			}
 
 			function applyCardPositions(posData) {
@@ -1618,7 +1562,6 @@
 					reminders: document.getElementById('card-reminders'),
 					medications: document.getElementById('card-medications'),
 					events: document.getElementById('card-events'),
-					holidays: document.getElementById('card-holidays'),
 					contacts: document.getElementById('card-contacts'),
 				};
 
@@ -1627,7 +1570,6 @@
 					cardMap.reminders &&
 					cardMap.medications &&
 					cardMap.events &&
-					cardMap.holidays &&
 					cardMap.contacts
 				) {
 					const sortedKeys = Object.keys(currentCardPositions).sort(
@@ -1645,12 +1587,10 @@
 				const selRem = document.getElementById('select-pos-reminders');
 				const selMed = document.getElementById('select-pos-medications');
 				const selEvt = document.getElementById('select-pos-events');
-				const selHol = document.getElementById('select-pos-holidays');
 				const selCon = document.getElementById('select-pos-contacts');
 				if (selRem) selRem.value = String(currentCardPositions.reminders);
 				if (selMed) selMed.value = String(currentCardPositions.medications);
 				if (selEvt) selEvt.value = String(currentCardPositions.events);
-				if (selHol) selHol.value = String(currentCardPositions.holidays);
 				if (selCon) selCon.value = String(currentCardPositions.contacts);
 			}
 
@@ -1662,7 +1602,7 @@
 				}
 
 				const targetPos = parseInt(newPosValue, 10);
-				if (![1, 2, 3, 4, 5].includes(targetPos)) return;
+				if (![1, 2, 3, 4].includes(targetPos)) return;
 
 				const oldPos = currentCardPositions[changedCard];
 				if (oldPos === targetPos) return;
@@ -1685,6 +1625,50 @@
 					console.error('Failed to update card positions:', err);
 					alert('Error saving card positions: ' + err.message);
 				}
+			}
+
+			function updateEntryCountBadge(badgeEl, count) {
+				if (!badgeEl) return;
+				if (count > 0) {
+					badgeEl.innerText = `${count} ${count === 1 ? 'Entry' : 'Entries'}`;
+					badgeEl.classList.remove('hidden');
+				} else {
+					badgeEl.classList.add('hidden');
+				}
+			}
+
+			function renderTextLinesCard(containerId, badgeId, rawText, emptyTitle, emptySubtitle, emoji) {
+				const container = document.getElementById(containerId);
+				const badgeEl = document.getElementById(badgeId);
+				const lines = String(rawText || '')
+					.split(/\r?\n/)
+					.map((l) => l.trim())
+					.filter(Boolean);
+
+				updateEntryCountBadge(badgeEl, lines.length);
+
+				if (!container) return;
+				if (lines.length === 0) {
+					container.innerHTML = `
+						<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
+							<div class="text-2xl">${emoji}</div>
+							<div class="text-base font-bold text-slate-700">${escapeHtml(emptyTitle)}</div>
+							<div class="text-xs text-slate-500">${escapeHtml(emptySubtitle)}</div>
+						</div>
+					`;
+					return;
+				}
+
+				container.innerHTML = lines
+					.map((line) => {
+						const cleaned = line.replace(/^[-•*]\s*/, '');
+						return `
+							<div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-lg sm:text-xl text-slate-800 font-medium leading-snug">
+								${escapeHtml(cleaned)}
+							</div>
+						`;
+					})
+					.join('');
 			}
 
 			const DEFAULT_AI_RULES =
@@ -1725,7 +1709,7 @@
 				document.getElementById('disp-announcement').innerText =
 					announcement || 'No announcements for today.';
 
-				// Apply display card ordering (Position 1 to 6)
+				// Apply display card ordering (Position 1 to 4)
 				applyCardPositions(data.cardPositions);
 
 				// Update Contacts state from board
@@ -1733,10 +1717,22 @@
 				currentAdditionalContacts = data.contacts || {};
 				renderContacts();
 
-				document.getElementById('disp-reminders').innerText =
-					data.reminders || 'No reminders set.';
-				document.getElementById('disp-medications').innerText =
-					data.medications || 'No medications set.';
+				renderTextLinesCard(
+					'disp-reminders',
+					'reminders-count-badge',
+					data.reminders,
+					'No daily reminders set',
+					'Add reminders in the caregiver panel.',
+					'⏰'
+				);
+				renderTextLinesCard(
+					'disp-medications',
+					'medications-count-badge',
+					data.medications,
+					'No medications listed',
+					'Add medication instructions in the caregiver panel.',
+					'💊'
+				);
 
 				// Update Weather
 				if (data.zipcode) {
@@ -2295,7 +2291,7 @@
 
 				if (todayPlan.length === 0) {
 					todayPlanEl.innerHTML = `
-						<p class="text-slate-700 leading-relaxed">
+						<p class="text-slate-700 leading-snug">
 							Take your day at a gentle, comfortable pace, keep a glass of water nearby, and enjoy a relaxing afternoon at home.
 						</p>
 					`;
@@ -2303,7 +2299,7 @@
 					todayPlanEl.innerHTML = todayPlan
 						.map(
 							(paragraph) => `
-							<p class="text-slate-900 leading-relaxed">
+							<p class="text-slate-900 leading-snug">
 								${escapeHtml(paragraph)}
 							</p>
 						`
@@ -2313,7 +2309,7 @@
 
 				if (prepAlerts.length === 0) {
 					prepAlertsEl.innerHTML = `
-						<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm sm:text-base text-slate-600 leading-snug font-medium">
+						<div class="p-2.5 sm:p-3 bg-white/90 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-600 leading-snug font-medium">
 							✨ No special appointment prep needed right now—just keep sipping water throughout the day.
 						</div>
 					`;
@@ -2321,7 +2317,7 @@
 					prepAlertsEl.innerHTML = prepAlerts
 						.map(
 							(alertText) => `
-							<div class="p-3.5 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-semibold leading-snug shadow-sm">
+							<div class="p-2.5 sm:p-3 bg-sky-50 rounded-xl border border-sky-300 text-sky-950 text-xs sm:text-sm font-semibold leading-snug shadow-sm">
 								${escapeHtml(alertText)}
 							</div>
 						`
@@ -2960,11 +2956,7 @@
 
 				const { allContacts } = getCombinedContactsList();
 
-				if (countBadge) {
-					countBadge.innerText = `${allContacts.length} ${
-						allContacts.length === 1 ? 'Contact' : 'Contacts'
-					}`;
-				}
+				updateEntryCountBadge(countBadge, allContacts.length);
 
 				// 1. Render Display View Contacts Card
 				if (dispContainer) {
@@ -3450,9 +3442,7 @@
 					a.date.localeCompare(b.date)
 				);
 
-				renderHolidaysCard();
-				renderTodayColumn();
-				renderAiSummaryCard();
+				renderEvents(latestBoardData?.events || currentEventsMap || {});
 			}
 
 			function formatHolidayCountdown(dateStr) {
@@ -3491,48 +3481,9 @@
 				};
 			}
 
-			function renderHolidaysCard() {
-				const container = document.getElementById('disp-holidays-list');
-				if (!container) return;
-
-				const nextHolidays = upcomingHolidays.slice(0, 5);
-				if (nextHolidays.length === 0) {
-					container.innerHTML = `
-						<div class="p-4 text-center text-sm text-slate-400 italic">
-							No upcoming holidays found.
-						</div>
-					`;
-					return;
-				}
-
-				let html = '';
-				nextHolidays.forEach((h) => {
-					const emoji = getHolidayEmoji(h.name);
-					const { formattedDate, countdown, badgeClass } = formatHolidayCountdown(h.date);
-					html += `
-						<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
-							<div class="flex items-center gap-3 min-w-0">
-								<span class="text-2xl shrink-0">${emoji}</span>
-								<div class="min-w-0">
-									<div class="text-base sm:text-lg font-bold text-slate-900 truncate">
-										${escapeHtml(h.name)}
-									</div>
-									<div class="text-xs sm:text-sm font-medium text-slate-500">
-										${formattedDate}
-									</div>
-								</div>
-							</div>
-							<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${badgeClass}">
-								${countdown}
-							</span>
-						</div>
-					`;
-				});
-				container.innerHTML = html;
-			}
-
 			function renderTodayColumn() {
 				const todayList = document.getElementById('disp-today-events-list');
+				const todayCountBadge = document.getElementById('today-events-count-badge');
 				if (!todayList) return;
 
 				const todayStr = getTodayDateString();
@@ -3546,11 +3497,14 @@
 					.filter((evt) => isEventOnToday(evt, todayStr))
 					.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
-				if (todaysHolidays.length === 0 && todaysBirthdays.length === 0 && todayEvents.length === 0) {
+				const todayTotal = todaysHolidays.length + todaysBirthdays.length + todayEvents.length;
+				updateEntryCountBadge(todayCountBadge, todayTotal);
+
+				if (todayTotal === 0) {
 					todayList.innerHTML = `
-						<div class="w-full p-4 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-							<div class="text-xl">🌿</div>
-							<div class="text-base font-bold text-slate-700">No events scheduled for today</div>
+						<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
+							<div class="text-lg">🌿</div>
+							<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
 							<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
 						</div>
 					`;
@@ -3563,13 +3517,13 @@
 				todaysHolidays.forEach((h) => {
 					const emoji = getHolidayEmoji(h.name);
 					todayHtml += `
-						<div class="w-full bg-amber-50 p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
-							<span class="text-2xl sm:text-3xl shrink-0">${emoji}</span>
+						<div class="w-full bg-amber-50 p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+							<span class="text-2xl shrink-0">${emoji}</span>
 							<div>
 								<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
 									Holiday Today
 								</div>
-								<div class="text-lg sm:text-xl font-bold text-slate-900">
+								<div class="text-base sm:text-lg font-bold text-slate-900">
 									${escapeHtml(h.name)}
 								</div>
 							</div>
@@ -3580,13 +3534,13 @@
 				// 2. Render any User or Contact Birthday falling on today
 				todaysBirthdays.forEach((c) => {
 					todayHtml += `
-						<div class="w-full bg-amber-50 p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
-							<span class="text-2xl sm:text-3xl shrink-0">🎂</span>
+						<div class="w-full bg-amber-50 p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+							<span class="text-2xl shrink-0">🎂</span>
 							<div>
 								<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
 									Birthday Today!
 								</div>
-								<div class="text-lg sm:text-xl font-bold text-slate-900">
+								<div class="text-base sm:text-lg font-bold text-slate-900">
 									Happy Birthday, ${escapeHtml(c.name)}!
 								</div>
 								${
@@ -3603,7 +3557,7 @@
 				todayEvents.forEach((evt) => {
 					const { time, isMultiDay, rangeLabel } = formatEventDate(evt.date, evt.time, evt.endDate);
 					todayHtml += `
-						<div class="w-full bg-white p-3.5 sm:p-4 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
+						<div class="w-full bg-white p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
 							<div class="flex items-center gap-2 flex-wrap">
 								<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
 									TODAY
@@ -3621,12 +3575,12 @@
 										: ''
 								}
 							</div>
-							<div class="text-lg sm:text-xl font-bold text-slate-900 pt-0.5">
+							<div class="text-base sm:text-lg font-bold text-slate-900 pt-0.5">
 								${escapeHtml(evt.title)}
 							</div>
 							${
 								evt.notes
-									? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-base">🚗</span> ${escapeHtml(
+									? `<div class="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-sm">🚗</span> ${escapeHtml(
 											evt.notes
 									  )}</div>`
 									: ''
@@ -3680,18 +3634,41 @@
 					return (a.time || '').localeCompare(b.time || '');
 				});
 
-				// Update header count badge
-				if (countBadge) {
-					countBadge.innerText = `${upcoming.length} Scheduled`;
-				}
+				// Merge next 4 upcoming major US holidays chronologically with upcoming appointments
+				const mergedHolidays = upcomingHolidays.slice(0, 4).map((h) => ({
+					itemType: 'holiday',
+					sortDate: h.date,
+					sortActive: h.date === todayStr ? 0 : 1,
+					sortTime: '00:00',
+					holiday: h,
+				}));
+
+				const mergedEvents = upcoming.map((evt) => ({
+					itemType: 'event',
+					sortDate: isEventOnToday(evt, todayStr) ? todayStr : evt.date || '',
+					sortActive: isEventOnToday(evt, todayStr) ? 0 : 1,
+					sortTime: evt.time || '23:59',
+					evt,
+				}));
+
+				const combinedDisplayItems = [...mergedEvents, ...mergedHolidays].sort((a, b) => {
+					if (a.sortActive !== b.sortActive) return a.sortActive - b.sortActive;
+					const dCmp = (a.sortDate || '').localeCompare(b.sortDate || '');
+					if (dCmp !== 0) return dCmp;
+					if (a.itemType !== b.itemType) return a.itemType === 'event' ? -1 : 1;
+					return (a.sortTime || '').localeCompare(b.sortTime || '');
+				});
+
+				// Update header entry count badge (total items in scrollable card)
+				updateEntryCountBadge(countBadge, combinedDisplayItems.length);
 
 				// 0. Automatically Render Today's Holidays & Scheduled Events inside Main Message Section Column 2
 				renderTodayColumn();
 				renderAiSummaryCard();
 
-				// 1. Render Display View Scheduled Events Card
+				// 1. Render Display View Scheduled Events & Upcoming Holidays Card
 				if (dispContainer) {
-					if (upcoming.length === 0) {
+					if (combinedDisplayItems.length === 0) {
 						dispContainer.innerHTML = `
 							<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
 								<div class="text-2xl">🌿</div>
@@ -3701,41 +3678,69 @@
 						`;
 					} else {
 						let html = '';
-						upcoming.forEach((evt) => {
-							const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time, evt.endDate);
-							html += `
-								<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
-									<div class="space-y-1">
-										<div class="flex items-center gap-2 flex-wrap">
-											<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${badgeColor}">
-												${badge}
-											</span>
+						combinedDisplayItems.forEach((item) => {
+							if (item.itemType === 'holiday') {
+								const h = item.holiday;
+								const emoji = getHolidayEmoji(h.name);
+								const { formattedDate, countdown, badgeClass } = formatHolidayCountdown(h.date);
+								html += `
+									<div class="w-full bg-amber-50/50 p-3.5 sm:p-4 rounded-xl border border-amber-200 flex items-center justify-between gap-3">
+										<div class="flex items-center gap-3 min-w-0">
+											<span class="text-2xl shrink-0">${emoji}</span>
+											<div class="min-w-0">
+												<div class="flex items-center gap-1.5 flex-wrap">
+													<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+														US Holiday
+													</span>
+													<span class="text-xs font-semibold text-slate-600">${formattedDate}</span>
+												</div>
+												<div class="text-lg sm:text-xl font-bold text-slate-900 truncate pt-0.5">
+													${escapeHtml(h.name)}
+												</div>
+											</div>
+										</div>
+										<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${badgeClass}">
+											${countdown}
+										</span>
+									</div>
+								`;
+							} else {
+								const evt = item.evt;
+								const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time, evt.endDate);
+								html += `
+									<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
+										<div class="space-y-1">
+											<div class="flex items-center gap-2 flex-wrap">
+												<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${badgeColor}">
+													${badge}
+												</span>
+												${
+													time
+														? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+														: ''
+												}
+											</div>
+											<div class="text-xl sm:text-2xl font-bold text-slate-900 pt-1">
+												${escapeHtml(evt.title)}
+											</div>
 											${
-												time
-													? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+												evt.notes
+													? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5 pt-0.5"><span class="text-base">🚗</span> ${escapeHtml(
+															evt.notes
+													  )}</div>`
+													: ''
+											}
+											${
+												evt.reminder
+													? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
+															evt.reminder
+													  )}</div>`
 													: ''
 											}
 										</div>
-										<div class="text-xl sm:text-2xl font-bold text-slate-900 pt-1">
-											${escapeHtml(evt.title)}
-										</div>
-										${
-											evt.notes
-												? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5 pt-0.5"><span class="text-base">🚗</span> ${escapeHtml(
-														evt.notes
-												  )}</div>`
-												: ''
-										}
-										${
-											evt.reminder
-												? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
-														evt.reminder
-												  )}</div>`
-												: ''
-										}
 									</div>
-								</div>
-							`;
+								`;
+							}
 						});
 						dispContainer.innerHTML = html;
 					}
