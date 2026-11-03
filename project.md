@@ -94,6 +94,7 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
            "date": "2026-11-05",
            "time": "14:30",
            "notes": "Sarah is driving",
+           "reminder": "Bring sunglasses and your current glasses",
            "createdAt": 1700000001000,
            "createdBy": "Sarah"
          }
@@ -173,7 +174,7 @@ Example rules:
 - **Two-Column Admin & Editor Panel Layout (Mobile-Responsive Light UI)**:
   - **Column 1 (Daily Board Content, AI Action Plan & Actions)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
-    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, and driver/notes. Edit existing appointments inline or delete canceled events.
+    2. **Calendar Events & Appointments**: Schedule doctor visits, therapy, and family events with title, date, time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
     3. **AI Daily Action Plan & Prep Rules (Admin & Editor)**: Configure caregiver preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine, and review/edit Today's Game Plan, Smart Prep & Health Nudges, and Next Few Days Look-Ahead.
     4. **Publish Changes**: Large action button to instantly push updates to the tablet.
   - **Column 2 (Profile, Maintenance, Contacts & Access Control)**:
@@ -189,11 +190,11 @@ Example rules:
      - **Column 1**: Today's Important Message.
      - **Column 2**: Scheduled for Today — automatically lists any major US holiday and any active user or contact birthday falling on the current day along with today's appointments, or displays `"No events scheduled for today"` when empty so content positions never shift for the senior.
      - **Column 3**: Medication Check-In status banner and **"I TOOK MY MEDS"** action button.
-  4. **AI Daily Companion & Action Plan Section (3-Column Section Below Main Message)**: Full-width 3-column banner directly below the Main Message section (stacking on phones):
-     - **Column 1 (`💬 Suggestions for Today`)**: Conversational natural-language suggestions for pacing the day, pairing medications with meals, and enjoying the weather.
-     - **Column 2 (`💧 Helpful Health & Prep Tips`)**: Proactive multi-day preparation advice (e.g., reminding the senior to drink 2–3 extra glasses of water starting 3 days before a scheduled infusion).
-     - **Column 3 (`🌿 Pacing the Next Few Days`)**: Warm, conversational look-ahead on how to pace energy over the next few days.
-  5. **Positionable 3-Column Reminders Section (Compact Cards with Internal Scrolling)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events**, **Upcoming Holidays** (major US holidays with countdown badges), and **Contacts List** (automatically listing active users plus additional contacts with phone numbers and birthdays) in a 3-column grid (`max-h-60 sm:max-h-64` with internal scrolling to view additional items), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 5).
+  4. **AI Daily Companion & Action Plan Section (3-Column Section Below Main Message)**: Full-width 3-column banner directly below the Main Message section (stacking on phones) providing concise, easy-to-scan conversational guidance:
+     - **Column 1 (`💬 Suggestions for Today`)**: Concise 1–2 sentence suggestions for today, incorporating medication check-in, the weather activity suggestion (`suggestSunny`/`suggestCloudy`/`suggestRain`/`suggestSnow`), and today's schedule pacing.
+     - **Column 2 (`💧 Helpful Health & Prep Tips`)**: Concise proactive multi-day preparation advice incorporating each appointment's `reminder` field and health rules (e.g., drinking 2–3 extra glasses of water starting 3 days before a scheduled infusion).
+     - **Column 3 (`🌿 Pacing the Next Few Days`)**: Short, warm look-ahead on how to pace energy over the next few days.
+  5. **Positionable Reminders Section (1 Column on Phones, 2 Columns on Tablets, 3 Columns on Larger Screens)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events**, **Upcoming Holidays** (major US holidays with countdown badges), and **Contacts List** (automatically listing active users plus additional contacts with phone numbers and birthdays) in a responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`, with card height `max-h-[22.5rem] sm:max-h-96` and internal scrolling to view additional items), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 5).
   6. Senior taps **"I TOOK MY MEDS"** in the Main Message section to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---

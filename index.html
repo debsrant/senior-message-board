@@ -138,7 +138,6 @@
 							<div id="weather-range" class="text-xs font-medium text-slate-500">
 								High: --° | Low: --°
 							</div>
-							<div id="weather-suggestion" class="text-xs sm:text-sm text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg font-medium mt-1.5 inline-block"></div>
 						</div>
 					</div>
 				</div>
@@ -266,12 +265,12 @@
 					</div>
 				</div>
 
-				<!-- Three Column Layout: Reminders, Medications, Scheduled Events, Holidays & Contacts (Positionable 1 to 5, Reduced Height with Internal Scrolling) -->
-				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+				<!-- Responsive Grid: Stacked on Phones, 2 Columns on Tablet, 3 Columns on Bigger Screens (Positionable 1 to 5, Taller Scrollable Cards) -->
+				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
 					<!-- Reminders -->
 					<div
 						id="card-reminders"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-60 sm:max-h-64"
+						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<span>⏰</span> Daily Reminders
@@ -286,7 +285,7 @@
 					<!-- Medications (Simplified Information Panel) -->
 					<div
 						id="card-medications"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-60 sm:max-h-64"
+						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<span>💊</span> Medications
@@ -304,7 +303,7 @@
 					<!-- Calendar Events & Appointments Card -->
 					<div
 						id="card-events"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-60 sm:max-h-64"
+						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -328,7 +327,7 @@
 					<!-- Upcoming Major US Holidays Card -->
 					<div
 						id="card-holidays"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-60 sm:max-h-64"
+						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -350,7 +349,7 @@
 					<!-- Contacts List Card (Active Users + Additional Contacts) -->
 					<div
 						id="card-contacts"
-						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-60 sm:max-h-64"
+						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -494,6 +493,17 @@
 											type="text"
 											id="input-event-notes"
 											placeholder="e.g. Sarah is driving, bring reading glasses"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-2">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">
+											Event Reminders / Prep Advice (Used for AI Summary &amp; Display)
+										</label>
+										<input
+											type="text"
+											id="input-event-reminder"
+											placeholder="e.g. Drink extra water 2 days before, fast after midnight, wear loose sleeves"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
@@ -1417,7 +1427,6 @@
 						document.getElementById('weather-range').innerText = `High: ${high}° | Low: ${low}°`;
 						document.getElementById('weather-icon').innerText = weatherIcons[code] || '🌤️';
 						document.getElementById('weather-desc').innerText = desc;
-						document.getElementById('weather-suggestion').innerText = `✨ ${suggestion}`;
 						document.getElementById('weather-widget').classList.remove('hidden');
 
 						lastWeatherData = {
@@ -1999,53 +2008,34 @@
 				const todayPlan = [];
 				const prepAlerts = [];
 
-				// 1. Morning Routine, Medication & Weather Coaching (Conversational, Actionable Sentences)
-				let routineAndWeatherSentence = '';
-				if (data.medsTaken) {
-					routineAndWeatherSentence =
-						"You're off to a wonderful start today with your medicine already taken and logged! ";
-				} else {
-					const hasBreakfastMed = (data.medications || '').toLowerCase().includes('breakfast') ||
-						(data.medications || '').toLowerCase().includes('food') ||
-						(data.medications || '').toLowerCase().includes('meal');
-					if (hasBreakfastMed) {
-						routineAndWeatherSentence =
-							'Start your morning at an easy pace by taking your medicine alongside a nourishing bite to eat and a full glass of water, then tap the red button above so your family knows you are all set. ';
-					} else {
-						routineAndWeatherSentence =
-							'When you are ready this morning, take your daily medicine with a full glass of water and tap the red button above so everyone knows you are taken care of. ';
-					}
-				}
+				// 1. Concise Medication & Weather Suggestion (incorporating getWeatherSuggestion)
+				const medSentence = data.medsTaken
+					? 'Great job taking your daily medicine already!'
+					: 'Start your morning by taking your medicine with a full glass of water and tapping the red button above.';
 
+				let weatherSentence = 'Keep a glass of water nearby and take a few gentle stretches today.';
 				if (lastWeatherData) {
-					const code = lastWeatherData.code;
-					const temp = lastWeatherData.temp;
-					if (code >= 51 && code <= 65) {
-						routineAndWeatherSentence +=
-							"Since it's rainy outside, today is a wonderful day to stay cozy indoors—perhaps put on a favorite playlist, work on a puzzle, or enjoy a warm drink by the window.";
-					} else if (code >= 71 && code <= 75) {
-						routineAndWeatherSentence +=
-							"With snowy weather out there, keep warm in your favorite sweater or blanket and enjoy a relaxing indoor day with a hot cup of tea.";
-					} else if (temp >= 82) {
-						routineAndWeatherSentence +=
-							"It's warming up quite a bit outside today, so if you'd like to sit on the porch or get some fresh air, the cooler morning hours are your best bet—and keep a cool glass of water within reach this afternoon.";
-					} else if (temp < 52) {
-						routineAndWeatherSentence +=
-							"There's a crisp chill in the air today, so dress in warm, comfortable layers if you step out for fresh air or sit near the window.";
-					} else if (code === 0 || code === 1) {
-						routineAndWeatherSentence +=
-							"The weather is lovely and mild right now, making it a great day to step outside for a few minutes of sunshine or take a gentle, unhurried stroll.";
+					const rawSug = (lastWeatherData.suggestion || '')
+						.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, '')
+						.trim();
+					const cleanSug = rawSug
+						? rawSug.charAt(0).toLowerCase() + rawSug.slice(1).replace(/[.!]+$/, '')
+						: '';
+					if (cleanSug) {
+						weatherSentence = `At ${lastWeatherData.temp}°F (${lastWeatherData.desc.toLowerCase()}), it's a lovely time for ${cleanSug}.`;
+					} else if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
+						weatherSentence = "Since it's rainy outside, stay cozy indoors with a warm drink or puzzle.";
+					} else if (lastWeatherData.temp >= 82) {
+						weatherSentence = "It's warm today, so enjoy the cooler morning air and sip extra water.";
+					} else if (lastWeatherData.temp < 52) {
+						weatherSentence = "It's chilly out, so dress in warm layers if you step outside.";
 					} else {
-						routineAndWeatherSentence +=
-							"Conditions outside are calm and comfortable—a nice day to open the blinds for natural light or step out for a breath of fresh air whenever you feel like stretching your legs.";
+						weatherSentence = 'The weather is pleasant for some fresh air or a short stroll.';
 					}
-				} else {
-					routineAndWeatherSentence +=
-						'Take a few gentle stretches as you settle into the day and keep a glass of water nearby to stay refreshed.';
 				}
-				todayPlan.push(routineAndWeatherSentence.trim());
+				todayPlan.push(`${medSentence} ${weatherSentence}`);
 
-				// 2. Today's Pacing, Outings, Birthdays & Social Connection Advice
+				// 2. Concise Today's Pacing, Outings (with Event Reminders), Birthdays & Social Connection
 				const allEvents = Object.entries(currentEventsMap || {})
 					.map(([id, evt]) => ({
 						id,
@@ -2066,51 +2056,34 @@
 				if (todayEvents.length > 0) {
 					const firstEvt = todayEvents[0];
 					const hour = firstEvt.time ? parseInt(firstEvt.time.split(':')[0], 10) : null;
-					const hasDriverNote = firstEvt.notes && firstEvt.notes.trim().length > 0;
-					let outingAdvice = '';
-					if (hour !== null && hour < 12) {
-						outingAdvice =
-							'Since you have a morning outing on the schedule today, give yourself plenty of unhurried time to get dressed and have a light breakfast beforehand. ';
-					} else if (hour !== null && hour >= 12) {
-						outingAdvice =
-							'Because your appointment is later today, you can enjoy a relaxed morning at home—aim to have a light lunch a little early so you feel comfortable and unhurried when it is time to get ready. ';
-					} else {
-						outingAdvice =
-							'With an outing on your schedule today, pace your energy this morning so you feel rested and ready to go. ';
-					}
-					if (hasDriverNote) {
-						outingAdvice +=
-							'Set your eyeglasses, ID, and a sweater near the front door ahead of time so everything is in one spot when your ride arrives.';
-					} else {
-						outingAdvice +=
-							'Set your eyeglasses, ID, and any questions you want to ask near the front door ahead of time so leaving the house feels effortless.';
+					const reminderNote = (firstEvt.reminder || '').trim();
+					let outingAdvice =
+						hour !== null && hour < 12
+							? 'Have an easy breakfast and set your ID and glasses by the door so you feel unhurried for your morning outing.'
+							: 'Enjoy a relaxed morning and eat a light meal early so you are ready when it is time to head out.';
+					if (reminderNote) {
+						outingAdvice += ` Also remember: ${reminderNote.replace(/[.!]+$/, '')}.`;
 					}
 					todayPlan.push(outingAdvice);
-				}
-
-				if (todaysBirthdays.length > 0) {
+				} else if (todaysBirthdays.length > 0) {
 					const names = todaysBirthdays.map((c) => c.name).join(' and ');
 					todayPlan.push(
-						`Today is a special day to celebrate ${names}—late morning or early afternoon would be a wonderful time to give them a quick phone call and share your warm birthday wishes!`
+						`Give ${names} a quick call this afternoon to wish them a very happy birthday!`
 					);
 				} else if (todaysHolidays.length > 0) {
 					todayPlan.push(
-						`In the spirit of ${todaysHolidays[0].name} today, treat yourself to something you enjoy and keep your phone handy in case family members call to check in and say hello.`
+						`Happy ${todaysHolidays[0].name}—treat yourself today and keep your phone handy for family calls.`
 					);
-				} else if (todayEvents.length === 0) {
+				} else {
 					const hasCallReminder = (data.reminders || '').toLowerCase().includes('call');
-					if (hasCallReminder) {
-						todayPlan.push(
-							'With no outside appointments on the calendar today, you can move completely at your own rhythm—the afternoon is a lovely time to sit back in your favorite chair and catch up with family or a friend over the phone.'
-						);
-					} else {
-						todayPlan.push(
-							'Since you have a wide-open schedule with no appointments away from home today, enjoy moving at your own comfortable pace and take a short walk around the house every hour or two to keep your energy up.'
-						);
-					}
+					todayPlan.push(
+						hasCallReminder
+							? 'With no appointments today, enjoy a relaxed afternoon and catch up with family by phone.'
+							: 'With an open schedule today, move at your own pace and take a short walk around the house every couple of hours.'
+					);
 				}
 
-				// 3. Conversational Multi-Day Prep & Health Coaching (e.g. Hydration days before an infusion)
+				// 3. Concise Multi-Day Prep & Health Coaching (Event Reminders + Infusion/Health Rules)
 				const rulesText = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
 				const customRules = [];
 				(rulesText || '')
@@ -2130,13 +2103,20 @@
 
 				allEvents.forEach((evt) => {
 					if (evt.diffDays > 4) return;
-					const combinedText = `${evt.title || ''} ${evt.notes || ''}`.toLowerCase();
+					const combinedText = `${evt.title || ''} ${evt.notes || ''} ${evt.reminder || ''}`.toLowerCase();
 					const whenPhrase =
 						evt.diffDays === 0
 							? 'today'
 							: evt.diffDays === 1
 							? 'tomorrow'
 							: `in ${evt.diffDays} days`;
+
+					// Event-specific Reminder field (always surface concisely if provided)
+					if (evt.reminder && evt.reminder.trim()) {
+						prepAlerts.push(
+							`💡 For ${evt.title} (${whenPhrase}): ${evt.reminder.trim()}`
+						);
+					}
 
 					// Built-in Infusion / IV Hydration Coaching (0 to 3 days before)
 					if (
@@ -2148,15 +2128,11 @@
 					) {
 						if (evt.diffDays === 0) {
 							prepAlerts.push(
-								'💧 Since your infusion is today, keep sipping water or decaf herbal tea this morning and wear a comfortable, loose-sleeved top with a cozy sweater or cardigan you can easily drape over your shoulders.'
-							);
-						} else if (evt.diffDays === 1) {
-							prepAlerts.push(
-								'💧 With your infusion coming up tomorrow, make it a gentle goal to drink two or three extra glasses of water throughout the day today. Hydrating well the day before makes the visit much smoother and helps you feel your best!'
+								'💧 Sip water this morning and wear a loose-sleeved top with a warm layer for your infusion today.'
 							);
 						} else {
 							prepAlerts.push(
-								`💧 Because you have an infusion scheduled ${whenPhrase}, now is the ideal time to start giving your body extra fluids. Try keeping a full glass of water or decaf tea right next to your favorite chair today and tomorrow so sipping extra water feels effortless.`
+								`💧 Drink 2–3 extra glasses of water today so you are well-hydrated for your infusion ${whenPhrase}.`
 							);
 						}
 						return;
@@ -2170,7 +2146,7 @@
 							combinedText.includes('fasting'))
 					) {
 						prepAlerts.push(
-							`💧 To make your lab visit ${whenPhrase} as quick and comfortable as possible, drink a few extra glasses of water today so you are well-hydrated, and check if you should hold off on breakfast before the appointment.`
+							`💧 Drink extra water today for your lab visit ${whenPhrase}, and check if you need to fast before going.`
 						);
 						return;
 					}
@@ -2185,12 +2161,12 @@
 							combinedText.includes('rehab'))
 					) {
 						prepAlerts.push(
-							`👟 To help you feel steady and comfortable for therapy ${whenPhrase}, take it easy on your legs beforehand and lay out your most supportive walking shoes and loose-fitting clothes.`
+							`👟 Rest your legs and set out supportive walking shoes for therapy ${whenPhrase}.`
 						);
 						return;
 					}
 
-					// Built-in Eye Exam / Dentist / Doctor Coaching (0 to 2 days before)
+					// Built-in Eye Exam Coaching (0 to 2 days before)
 					if (
 						evt.diffDays <= 2 &&
 						(combinedText.includes('eye') ||
@@ -2198,7 +2174,7 @@
 							combinedText.includes('ophthalm'))
 					) {
 						prepAlerts.push(
-							`👓 For your eye visit ${whenPhrase}, set out both your everyday glasses and a pair of sunglasses just in case your eyes are sensitive to the bright light afterward.`
+							`👓 Bring your everyday glasses and sunglasses for your eye visit ${whenPhrase}.`
 						);
 						return;
 					}
@@ -2210,9 +2186,7 @@
 								!['infusion', 'blood draw', 'physical therapy'].includes(rule.keyword) &&
 								combinedText.includes(rule.keyword)
 							) {
-								prepAlerts.push(
-									`📌 Looking ahead to ${whenPhrase}, here is a helpful way to get ready: ${rule.instruction}`
-								);
+								prepAlerts.push(`📌 Prep for ${whenPhrase}: ${rule.instruction}`);
 							}
 						});
 					}
@@ -2222,16 +2196,16 @@
 				if (todayEvents.length > 0 && lastWeatherData) {
 					if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
 						prepAlerts.push(
-							'☔ Since you are heading out today and rain is in the forecast, wear non-slip shoes and keep an umbrella or hooded rain jacket by the door.'
+							'☔ Wear non-slip shoes and bring an umbrella for your trip out today.'
 						);
 					} else if (lastWeatherData.temp < 48 || (lastWeatherData.code >= 71 && lastWeatherData.code <= 75)) {
 						prepAlerts.push(
-							'🧥 Because it is chilly outside for your trip today, bundle up with a warm coat and gloves before you head out the door.'
+							'🧥 Bundle up with a warm coat and gloves before heading out today.'
 						);
 					}
 				}
 
-				// 4. Conversational Advice for Pacing the Next Few Days (1 to 5 days out)
+				// 4. Concise Advice for Pacing the Next Few Days (1 to 5 days out)
 				const upcomingSoonEvents = allEvents.filter((e) => e.diffDays >= 1 && e.diffDays <= 5);
 				const upcomingSoonHolidays = (upcomingHolidays || []).filter((h) => {
 					const d = getDaysFromToday(h.date);
@@ -2245,18 +2219,18 @@
 				const lookAheadParts = [];
 				if (upcomingSoonEvents.length === 0) {
 					lookAheadParts.push(
-						'Your calendar for the next few days is delightfully clear of appointments, so you can enjoy a restful, unhurried week at home and focus on things that bring you joy.'
+						'Your next few days are clear of appointments—enjoy a restful, unhurried week at home.'
 					);
 				} else {
 					const tomorrowEvents = upcomingSoonEvents.filter((e) => e.diffDays === 1);
 					if (tomorrowEvents.length > 0) {
 						lookAheadParts.push(
-							'Since you have an outing on the calendar for tomorrow, plan on a relaxing evening tonight, lay out your clothes before bed, and get a good night of rest so tomorrow morning feels easy.'
+							'Lay out your clothes tonight and get a good night of sleep so tomorrow morning feels easy.'
 						);
 					} else {
 						const nextEvt = upcomingSoonEvents[0];
 						lookAheadParts.push(
-							`You have a quiet stretch before your next outing in ${nextEvt.diffDays} days, making the next day or two a great time to rest up, stay well-hydrated, and enjoy home routines without any rush.`
+							`Enjoy a quiet stretch at home before your next outing in ${nextEvt.diffDays} days.`
 						);
 					}
 				}
@@ -2265,15 +2239,13 @@
 					const b = upcomingSoonBirthdays[0];
 					const whenStr = b.diffDays === 1 ? 'tomorrow' : `in ${b.diffDays} days`;
 					lookAheadParts.push(
-						`With ${b.name}'s birthday coming up ${whenStr}, you might also enjoy picking out a card or thinking of a favorite memory to share when you call.`
+						`${b.name}'s birthday is ${whenStr}—a great time to plan a quick phone call.`
 					);
 				} else if (upcomingSoonHolidays.length > 0) {
 					const h = upcomingSoonHolidays[0];
 					const d = getDaysFromToday(h.date);
 					const whenStr = d === 1 ? 'tomorrow' : `in ${d} days`;
-					lookAheadParts.push(
-						`With ${h.name} arriving ${whenStr}, it's a lovely week to look forward to festive conversations with family.`
-					);
+					lookAheadParts.push(`${h.name} arrives ${whenStr}—look forward to catching up with family.`);
 				}
 
 				return {
@@ -2352,15 +2324,15 @@
 
 				if (prepAlerts.length === 0) {
 					prepAlertsEl.innerHTML = `
-						<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-sm sm:text-base text-slate-600 leading-relaxed font-medium">
-							✨ You don't have any upcoming appointments that need special preparation right now—just keep sipping water throughout the day to stay feeling great.
+						<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm sm:text-base text-slate-600 leading-snug font-medium">
+							✨ No special appointment prep needed right now—just keep sipping water throughout the day.
 						</div>
 					`;
 				} else {
 					prepAlertsEl.innerHTML = prepAlerts
 						.map(
 							(alertText) => `
-							<div class="p-4 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-semibold leading-relaxed shadow-sm">
+							<div class="p-3.5 bg-sky-50 rounded-xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-semibold leading-snug shadow-sm">
 								${escapeHtml(alertText)}
 							</div>
 						`
@@ -2370,7 +2342,7 @@
 
 				lookAheadEl.innerText =
 					lookAhead ||
-					'Your calendar for the next few days is open and unhurried, giving you plenty of time to rest and enjoy your week.';
+					'Your next few days are open and unhurried—enjoy a restful week at home.';
 			}
 
 			async function generateAiActionPlan() {
@@ -2458,12 +2430,13 @@
 							model: 'gemini-3.8-flash',
 							store: false,
 							system_instruction:
-								'You are a warm, caring, conversational daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
-								'CRITICAL RULE: Do NOT simply repeat, list, or parrot the schedule items, appointment titles, raw weather numbers, or reminder text that are already displayed on the board. ' +
-								'Instead, synthesize the board context into natural, flowing conversational sentences that give practical, actionable advice and thoughtful suggestions (for example: how to pace their morning or meal times around an afternoon appointment, what to set by the door before their ride arrives, when to enjoy the weather or how to dress comfortably, or how to prepare days in advance such as keeping a glass of water by their chair to drink extra fluids for 2-3 days before a scheduled infusion). ' +
-								'Always honor all caregiverPrepRules in a warm, conversational coaching tone.',
+								'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
+								'CRITICAL RULES: (1) Keep every item VERY CONCISE—1 to 2 short, easy-to-scan sentences max. ' +
+								'(2) Do NOT simply repeat or parrot the schedule items. Instead, give actionable advice in natural conversational sentences. ' +
+								'(3) Naturally incorporate the weather activity suggestion (`weather.suggestion`) into `todayPlan`. ' +
+								'(4) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`.',
 							input:
-								'Write a conversational, actionable Daily Companion & Action Plan JSON from this live board context (give practical advice rather than repeating items):\n' +
+								'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
 								JSON.stringify(boardSnapshot, null, 2),
 							response_format: {
 								type: 'text',
@@ -2475,18 +2448,18 @@
 											type: 'array',
 											items: { type: 'string' },
 											description:
-												'1 to 2 natural, conversational paragraphs offering practical, actionable advice for enjoying and pacing today (combining medication habits, weather advice, and how to prepare smoothly for today plans without just listing them).',
+												'1 to 2 short, concise conversational sentences offering actionable advice for today (incorporating medication check-in, the weather activity suggestion, and today pacing).',
 										},
 										prepAlerts: {
 											type: 'array',
 											items: { type: 'string' },
 											description:
-												'1 to 2 conversational coaching sentences giving proactive multi-day health or appointment preparation advice (e.g., keeping a water glass nearby to drink 2-3 extra glasses of water in the days before a scheduled infusion).',
+												'1 to 2 short, concise coaching sentences giving proactive multi-day health or appointment preparation advice (incorporating each appointment reminder field and rules like drinking extra water days before an infusion).',
 										},
 										lookAhead: {
 											type: 'string',
 											description:
-												'A warm, conversational 1-2 sentence suggestion on how to pace energy and prepare gently for the next 3 to 5 days.',
+												'1 short, warm sentence on how to pace energy over the next 3 to 5 days.',
 										},
 									},
 									required: ['todayPlan', 'prepAlerts', 'lookAhead'],
@@ -3633,6 +3606,13 @@
 									  )}</div>`
 									: ''
 							}
+							${
+								evt.reminder
+									? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
+											evt.reminder
+									  )}</div>`
+									: ''
+							}
 						</div>
 					`;
 				});
@@ -3678,6 +3658,7 @@
 
 				// 0. Automatically Render Today's Holidays & Scheduled Events inside Main Message Section Column 2
 				renderTodayColumn();
+				renderAiSummaryCard();
 
 				// 1. Render Display View Scheduled Events Card
 				if (dispContainer) {
@@ -3713,6 +3694,13 @@
 											evt.notes
 												? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5 pt-0.5"><span class="text-base">🚗</span> ${escapeHtml(
 														evt.notes
+												  )}</div>`
+												: ''
+										}
+										${
+											evt.reminder
+												? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
+														evt.reminder
 												  )}</div>`
 												: ''
 										}
@@ -3760,6 +3748,11 @@
 												? `<div class="text-xs text-slate-500 truncate pl-0.5">Note: ${escapeHtml(evt.notes)}</div>`
 												: ''
 										}
+										${
+											evt.reminder
+												? `<div class="text-xs text-indigo-600 font-medium truncate pl-0.5">💡 Reminder: ${escapeHtml(evt.reminder)}</div>`
+												: ''
+										}
 									</div>
 									<div class="flex items-center gap-1 shrink-0">
 										<button
@@ -3795,11 +3788,13 @@
 				const dateInput = document.getElementById('input-event-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
+				const reminderInput = document.getElementById('input-event-reminder');
 
 				if (titleInput) titleInput.value = evt.title || '';
 				if (dateInput) dateInput.value = evt.date || '';
 				if (timeInput) timeInput.value = evt.time || '';
 				if (notesInput) notesInput.value = evt.notes || '';
+				if (reminderInput) reminderInput.value = evt.reminder || '';
 
 				const formContainer = document.getElementById('event-form-container');
 				const formHeading = document.getElementById('event-form-heading');
@@ -3831,11 +3826,13 @@
 				const dateInput = document.getElementById('input-event-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
+				const reminderInput = document.getElementById('input-event-reminder');
 
 				if (titleInput) titleInput.value = '';
 				if (dateInput) dateInput.value = getTodayDateString();
 				if (timeInput) timeInput.value = '';
 				if (notesInput) notesInput.value = '';
+				if (reminderInput) reminderInput.value = '';
 
 				const formContainer = document.getElementById('event-form-container');
 				const formHeading = document.getElementById('event-form-heading');
@@ -3863,11 +3860,13 @@
 				const dateInput = document.getElementById('input-event-date');
 				const timeInput = document.getElementById('input-event-time');
 				const notesInput = document.getElementById('input-event-notes');
+				const reminderInput = document.getElementById('input-event-reminder');
 
 				const title = titleInput.value.trim();
 				const date = dateInput.value;
 				const time = timeInput.value;
 				const notes = notesInput.value.trim();
+				const reminder = reminderInput ? reminderInput.value.trim() : '';
 
 				if (!title) {
 					alert('Please enter an appointment title (e.g. "Dr. Miller - Eye Exam").');
@@ -3888,6 +3887,7 @@
 							date,
 							time: time || '',
 							notes: notes || '',
+							reminder: reminder || '',
 							updatedAt: Date.now(),
 							updatedBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
 						});
@@ -3906,6 +3906,7 @@
 					date,
 					time: time || '',
 					notes: notes || '',
+					reminder: reminder || '',
 					createdAt: Date.now(),
 					createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
 				};
@@ -3915,6 +3916,7 @@
 					titleInput.value = '';
 					timeInput.value = '';
 					notesInput.value = '';
+					if (reminderInput) reminderInput.value = '';
 					showToast(`Appointment "${title}" added to calendar!`);
 				} catch (err) {
 					console.error('Failed to add calendar event:', err);
