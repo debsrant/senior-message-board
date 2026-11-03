@@ -269,9 +269,9 @@ The `apiKey` in `firebaseConfig` is a client identifier used by the Firebase Jav
 2. **Credential Safety**:
     - Never embed Firebase Service Account private keys or admin SDK credentials in client-side HTML or push them to GitHub. The client SDK only requires the public web config.
 
-### B. Weather & Geocoding Services
+### B. Weather, Geocoding & US Holidays Services
 
-The board displays local weather and daily activity suggestions using two public, keyless APIs:
+The board displays local weather and upcoming major US holidays using public, keyless APIs:
 
 1. **OpenStreetMap Nominatim API**:
     - Converts the caregiver-entered US ZIP code into latitude and longitude coordinates.
@@ -281,10 +281,43 @@ The board displays local weather and daily activity suggestions using two public
     - Fetches current temperatures, daily highs/lows, and weather condition codes.
     - Endpoint: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
     - Open-source, free for non-commercial use, and requires no API key.
+3. **Nager.Date Public Holidays API**:
+    - Fetches upcoming US public holidays (`https://date.nager.at/api/v3/NextPublicHolidays/US`) and merges them with the built-in US cultural holiday calendar. Requires no API key.
 
-### C. Future Third-Party Integrations
+### C. Gemini AI API Key (Optional — Admin & Editor Devices Only)
 
-If adding fee-based or sensitive third-party services in the future (e.g., Twilio for SMS alerts to family when medications are taken, OpenAI for generating dynamic reminders, or paid weather APIs):
+The **AI Daily Companion & Action Plan** section (`#card-ai-summary`) includes a built-in **Smart Care Companion** engine that works out-of-the-box with **zero API keys required**. If you want to use Google's **Gemini 3.8 Flash (`gemini-3.8-flash`)** model to write custom generative summaries, follow these guidelines:
+
+1. **Should I add the Gemini API key on the Kiosk Tablet?**
+    - **No.** You do **not** need to enter the Gemini API key on the senior's kiosk tablet, for two reasons:
+      1. The kiosk tablet is signed in as a `VIEWER` user, which does not display the Admin/Editor panel.
+      2. When an `ADMIN` or `EDITOR` generates an AI Action Plan (or publishes edits with a Gemini key saved on their phone or computer), the generated summary is saved directly to Firebase Realtime Database (`board/aiSummary`) and pushed to the kiosk tablet in real time.
+      3. For live day-to-day changes on the tablet (such as when the senior taps **"I TOOK MY MEDS"**, when the day rolls over at midnight, or when live weather updates), the built-in Smart Care Companion engine on the tablet updates the summary automatically without needing a Gemini key.
+2. **Do I use a different API key than the Firebase `apiKey`?**
+    - **Yes — always use a separate API key.**
+      - **Firebase `apiKey` (in `firebaseConfig`)**: This key is embedded in `index.html` and restricted in Google Cloud Console strictly to Firebase services (*Identity Toolkit API*, *Firebase Realtime Database API*, and *Token Service API*). It should **not** have the Generative Language API enabled on it because `index.html` is public on GitHub Pages.
+      - **Gemini API Key**: Create a separate key in **Google AI Studio** (or in a separate Google Cloud project) specifically for calling the Gemini API (`generativelanguage.googleapis.com`).
+3. **Step-by-Step Process to Set Up the Gemini API Key**:
+    1. **Generate a Key in Google AI Studio**:
+        - Sign in to [Google AI Studio](https://aistudio.google.com/apikey) with your Google account.
+        - Click **Create API key** (Google AI Studio offers a generous free tier for `gemini-3.8-flash`, which is more than enough for daily family board updates).
+        - Copy the generated key (starts with `AIza...`).
+    2. **(Optional) Restrict the Key in Google Cloud Console**:
+        - In [Google Cloud Console - Credentials](https://console.cloud.google.com/apis/credentials), locate your new Gemini API key.
+        - Under **Application restrictions**, select **Websites** and add `https://debsrant.github.io/*` and `http://localhost:*`.
+        - Under **API restrictions**, select **Restrict key** and enable **Generative Language API** only.
+    3. **Enter the Key on Your Admin/Editor Phone or Computer**:
+        - Log in to the Senior Message Board as an `ADMIN` or `EDITOR` user and open the **Admin / Post Message** panel.
+        - Scroll to **AI Daily Action Plan & Prep Rules** in Column 1.
+        - Paste your Gemini API key into the **Optional Gemini API Key (Saved on This Device Only)** field (`#input-gemini-api-key`).
+        - Click **Generate Action Plan Now** (or **Publish All Changes to Board**).
+    4. **How the Key is Stored Securely**:
+        - The key is saved **only in your browser's `localStorage`** (`smb_gemini_api_key`) on that Admin/Editor device.
+        - It is **never** written to `index.html`, **never** committed to GitHub, and **never** stored in the Firebase database.
+
+### D. Future Third-Party Integrations
+
+If adding other fee-based or server-side third-party services in the future (e.g., Twilio for SMS alerts to family when medications are taken, or paid weather APIs):
 
 - **Do not** put secret API keys directly into `index.html`.
-- Use a serverless backend such as **Firebase Cloud Functions** to securely hold secret keys in environment secrets and handle server-to-server calls.
+- Use browser-local storage on caregiver devices or a serverless backend such as **Firebase Cloud Functions** to hold secret keys and handle server-to-server calls.
