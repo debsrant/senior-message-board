@@ -105,7 +105,18 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
            "createdBy": "Sarah"
          }
        },
-       "reminders": "10:30 AM - Doctor appointment\n2:00 PM - Call Sarah",
+       "messages": {
+         "msg_1700000001": {
+           "id": "msg_1700000001",
+           "text": "Good morning Grandma! Sarah and I are stopping by at 3:00 PM.",
+           "author": "Sarah",
+           "authorUid": "user_sarah_uid",
+           "createdAt": 1700000001000,
+           "updatedAt": 1700000001000,
+           "expirationDate": "2026-11-10"
+         }
+       },
+       "reminders": "Good morning Grandma! Sarah and I are stopping by at 3:00 PM.",
        "medicationNotes": "Morning pills are in the blue organizer on the kitchen counter.",
        "medicationList": {
          "med_1": {
@@ -199,15 +210,18 @@ Example rules:
 - **3-Tab Admin & Editor Panel Layout (Eliminating Scroll Fatigue)**:
   - **Tab 1: `📅 Daily Updates` (Default Tab)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
-    2. **Daily Reminders, Structured Medications Manager & Senior Daily Check-In**:
-       - **Daily Reminders**: Post daily reminders and tasks.
+    2. **Family Messages Manager**:
+       - Post, edit, and delete messages for the senior.
+       - Each message displays the author/user name (prefilled by default with the logged-in user's profile name) and post date/time.
+       - Caregivers can specify an optional expiration date; messages past their expiration date are automatically hidden from the kiosk display while remaining visible in the admin list with an "Expired" indicator.
+    3. **Medications & Senior Daily Check-In**:
        - **General Medication Instructions & Notes**: Provide a general note/instruction (e.g., pillbox location or organizer details) displayed prominently at the top of the senior's medication card.
        - **Individual Medications Manager**: Add, edit, and delete individual medications with specific name/dosage, schedule/timing badge (e.g. "Morning (8:00 AM)", "With Breakfast"), and a dedicated instructions/notes textarea shown clearly to the senior.
        - **Senior Daily Check-In**: View the senior's latest check-in response and recent feedback history (with a button to clear/reset it), configure custom check-in questions or allow the AI to generate dynamic context-aware questions learning from the senior's recent feedback, and reset the "Medications Taken Today" check-off status, with a prominent **Publish Changes Instantly** button right below.
-    3. **Appointments & Events**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
+    4. **Appointments & Events**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
   - **Tab 2: `🤖 AI & Board Settings`**:
     1. **AI Daily Companion, Prep Rules & Caregiver Tone/Feedback (Admin & Editor)**: Configure caregiver `Keyword: Instruction` preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), provide direct feedback on AI tone, senior likes/dislikes (e.g. prefers decaf coffee, likes jigsaw puzzles, dislikes frequent walking tips), and optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine. Summaries update automatically whenever the board changes.
-    2. **Board Title, Weather & Layout**: Update the board title, weather ZIP code, and **Display Card Order (Admin Only)** so `ADMIN` users can position **Daily Reminders**, **Medications**, **Appointments & Events**, and **Contacts List** into Position 1 through Position 4.
+    2. **Board Title, Weather & Layout**: Update the board title, weather ZIP code, and **Display Card Order (Admin Only)** so `ADMIN` users can position **Messages**, **Medications**, **Appointments & Events**, and **Contacts List** into Position 1 through Position 4.
   - **Tab 3: `👥 Contacts, Profile & Users`**:
     1. **Contacts & Birthdays (Admin & Editor)**: Add, edit, or delete additional contacts who are not registered users (with name, relationship/role, phone number, and birthday). Active registered users are automatically included on the Contacts List card.
     2. **My Profile (Admin & Editor)**: Display name, phone number, relationship/label, birthday, Firebase email, assigned role badge, and toggle for medication alerts.
@@ -222,8 +236,8 @@ Example rules:
   4. **Main Message & Daily Companion Hub (`#card-announcement`) (Spacious 2-Column Layout)**:
      - **Column 1 (`📣 Today's Message & Suggestions`)**: Displays the caregiver's personalized daily announcement in large, comforting typography when present—and **automatically hides completely when empty** so no placeholder takes up screen space. Directly underneath, displays conversational AI daily suggestions (`#disp-ai-today-plan`) formatted into 2 concise paragraphs written in a natural family voice, followed by an interactive **Daily Check-In** (`#disp-senior-checkin-section`) with AI-generated or custom questions (zero icons/emojis). Responses sync to Firebase for family to see, and are remembered by the AI to continuously adapt and personalize future plans.
      - **Column 2 (`📅 Scheduled for Today & Health Prep`)**: Displays today's appointments, major US holidays, and birthdays (with `#today-events-count-badge`), followed by proactive multi-day prep advice (`#disp-ai-prep-alerts`) and the pacing look-ahead (`#disp-ai-look-ahead`).
-  5. **Positionable 4-Card Reminders Section (1 Column on Phones, 2 Columns on Tablets, 3 Columns on Larger Screens)**: Displays **Daily Reminders**, **Medications** (structured medication cards displaying general caregiver instructions at the top, individual medication cards with names, schedule badges, and specific instructions/notes to show the senior), **Appointments & Events** (which automatically weaves upcoming major US holidays chronologically into the upcoming appointments list with holiday emojis and countdown badges), and **Contacts List** in a responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`, with card height `max-h-[22.5rem] sm:max-h-96` and internal scrolling), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 4).
-  6. **Entry Count Badges on All Scrollable Cards**: Every scrollable card (**Scheduled for Today**, **Daily Reminders**, **Medications**, **Appointments & Events**, and **Contacts List**) automatically displays a badge indicating the number of entries (`1 Entry` or `N Entries`) when entries exist—and hides the badge when empty—so the senior knows at a glance how many items are inside each scrollable card.
+  5. **Positionable 4-Card Reminders & Messages Section (1 Column on Phones, 2 Columns on Tablets, 3 Columns on Larger Screens)**: Displays **Messages** (family messages displaying message text, author name, and formatted post date, with automatic expiration filtering), **Medications** (structured medication cards displaying general caregiver instructions at the top, individual medication cards with names, schedule badges, and specific instructions/notes to show the senior), **Appointments & Events** (which automatically weaves upcoming major US holidays chronologically into the upcoming appointments list with holiday emojis and countdown badges), and **Contacts List** in a responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`, with card height `max-h-[22.5rem] sm:max-h-96` and internal scrolling), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 4).
+  6. **Entry Count Badges on All Scrollable Cards**: Every scrollable card (**Scheduled for Today**, **Messages**, **Medications**, **Appointments & Events**, and **Contacts List**) automatically displays a badge indicating the number of entries (`1 Message` / `N Messages`, `1 Med` / `N Meds`, etc.) when entries exist—and hides the badge when empty—so the senior knows at a glance how many items are inside each scrollable card.
   7. Senior taps **"💊 I TOOK MY MEDS"** in the top header to log their medication, updating Firebase and notifying subscribed caregivers.
 
 ---

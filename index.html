@@ -288,24 +288,24 @@
 				</div>
 				<!-- Responsive Grid: Stacked on Phones, 2 Columns on Tablet, 3 Columns on Bigger Screens (4 Cards, Positionable 1 to 4, Scrollable with Entry Count Badges) -->
 				<div id="display-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-					<!-- Reminders -->
+					<!-- Messages (Replaced Reminders Card) -->
 					<div
-						id="card-reminders"
+						id="card-messages"
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[22.5rem] sm:max-h-96"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
 							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
-								<span>⏰</span> Daily Reminders
+								<span>💬</span> Messages
 							</h2>
 							<span
-								id="reminders-count-badge"
-								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"
+								id="messages-count-badge"
+								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
 							>
-								0 Entries
+								0 Messages
 							</span>
 						</div>
-						<div id="disp-reminders" class="space-y-2 overflow-y-auto flex-1 pr-1 text-lg sm:text-xl text-slate-700 leading-relaxed">
-							Loading reminders...
+						<div id="disp-messages" class="space-y-2.5 overflow-y-auto flex-1 pr-1 text-slate-700">
+							Loading messages...
 						</div>
 					</div>
 
@@ -474,25 +474,107 @@
 								</div>
 							</div>
 
-							<!-- Card: Daily Reminders & Medications -->
+							<!-- Card: Family Messages Manager -->
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>⏰</span> Daily Reminders &amp; Medications
-									</h3>
-									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+									<div>
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+											<span>💬</span> Family Messages
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Post notes for the senior with sender name, post date, and optional expiration.
+										</p>
+									</div>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
 										Admin &amp; Editor
 									</span>
 								</div>
 
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-700">Daily Reminders</label>
-									<textarea
-										id="input-reminders"
-										rows="3"
-										placeholder="e.g. Drink a full glass of water&#10;Call Sarah this afternoon"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									></textarea>
+								<!-- Hidden input for backward compatibility -->
+								<input type="hidden" id="input-reminders" />
+
+								<!-- Add / Edit Message Form -->
+								<div id="message-form-container" class="p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors">
+									<div class="flex items-center justify-between">
+										<span id="message-form-heading" class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+											Post a New Message
+										</span>
+										<span id="message-editing-badge" class="hidden text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-full">
+											Editing Mode
+										</span>
+									</div>
+
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Message Text</label>
+										<textarea
+											id="input-message-text"
+											rows="2"
+											placeholder="e.g. Good morning Mom! Stopping by after lunch to bring you some fresh fruit."
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+										></textarea>
+									</div>
+
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+										<div>
+											<label class="block text-xs font-semibold mb-1 text-slate-600">From / Your Name</label>
+											<input
+												type="text"
+												id="input-message-author"
+												placeholder="e.g. Sarah"
+												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+											/>
+										</div>
+										<div>
+											<label class="block text-xs font-semibold mb-1 text-slate-600">
+												Expiration Date <span class="text-slate-400 font-normal">(Optional)</span>
+											</label>
+											<input
+												type="date"
+												id="input-message-expiration"
+												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
+											/>
+											<p class="text-[10px] text-slate-400 mt-0.5">Leaves display automatically after this date.</p>
+										</div>
+									</div>
+
+									<div class="flex items-center gap-2 pt-1">
+										<button
+											type="button"
+											id="btn-save-message"
+											onclick="saveMessageItem()"
+											class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+										>
+											<span id="btn-save-message-text">Post Message</span>
+										</button>
+										<button
+											type="button"
+											id="btn-cancel-edit-message"
+											onclick="cancelEditMessage()"
+											class="hidden px-3.5 py-2 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl text-xs sm:text-sm transition cursor-pointer"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+
+								<!-- Current Messages List in Admin -->
+								<div class="space-y-1.5">
+									<label class="block text-xs font-semibold text-slate-700">Current Messages</label>
+									<div id="admin-messages-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+										<div class="text-center py-4 text-xs text-slate-400 italic">No messages posted yet.</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Card: Medications & Health -->
+							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+										<span>💊</span> Medications &amp; Daily Check-In
+									</h3>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+										Admin &amp; Editor
+									</span>
 								</div>
 
 								<!-- Hidden input to maintain backward compatibility -->
@@ -960,12 +1042,12 @@
 								</p>
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-reminders" class="block text-xs font-semibold text-slate-700">
-											⏰ Daily Reminders
+										<label for="select-pos-messages" class="block text-xs font-semibold text-slate-700">
+											💬 Messages
 										</label>
 										<select
-											id="select-pos-reminders"
-											onchange="handleCardPositionChange('reminders', this.value)"
+											id="select-pos-messages"
+											onchange="handleCardPositionChange('messages', this.value)"
 											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
 										>
 											<option value="1" selected>Position 1</option>

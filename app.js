@@ -105,6 +105,10 @@ auth.onAuthStateChanged(async (user) => {
 		if (panelRolePill) panelRolePill.innerText = userProfile.role || 'VIEWER';
 		const notifyBox = document.getElementById('input-profile-notify-meds');
 		if (notifyBox) notifyBox.checked = !!userProfile.notifyOnMeds;
+		const authMsgAuthorInput = document.getElementById('input-message-author');
+		if (authMsgAuthorInput && !authMsgAuthorInput.value && !editingMessageId) {
+			authMsgAuthorInput.value = getDefaultAuthorName();
+		}
 
 		// Sync active Admin/Editor user contact entry to board/userContacts so tablet display can render active users
 		if (
@@ -479,7 +483,7 @@ function initBoard() {
 }
 
 let currentCardPositions = {
-	reminders: 1,
+	messages: 1,
 	medications: 2,
 	events: 3,
 	contacts: 4,
@@ -490,10 +494,17 @@ let liveUsersData = {};
 
 function normalizeCardPositions(posData) {
 	const raw = posData || {};
-	const keys = ['reminders', 'medications', 'events', 'contacts'];
+	const msgPos = raw.messages !== undefined ? raw.messages : raw.reminders;
+	const normalizedRaw = {
+		messages: msgPos,
+		medications: raw.medications,
+		events: raw.events,
+		contacts: raw.contacts,
+	};
+	const keys = ['messages', 'medications', 'events', 'contacts'];
 	// Rank cards by their saved numeric order (gracefully compressing 5-card legacy layouts into 1..4)
 	const entries = keys.map((k, idx) => {
-		const val = parseInt(raw[k], 10);
+		const val = parseInt(normalizedRaw[k], 10);
 		return { key: k, order: isNaN(val) ? idx + 100 : val, tie: idx };
 	});
 	entries.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.tie - b.tie));
@@ -510,7 +521,7 @@ function applyCardPositions(posData) {
 
 	const grid = document.getElementById('display-cards-grid');
 	const cardMap = {
-		reminders: document.getElementById('card-reminders'),
+		messages: document.getElementById('card-messages') || document.getElementById('card-reminders'),
 		medications: document.getElementById('card-medications'),
 		events: document.getElementById('card-events'),
 		contacts: document.getElementById('card-contacts'),
@@ -518,7 +529,7 @@ function applyCardPositions(posData) {
 
 	if (
 		grid &&
-		cardMap.reminders &&
+		cardMap.messages &&
 		cardMap.medications &&
 		cardMap.events &&
 		cardMap.contacts
@@ -535,11 +546,11 @@ function applyCardPositions(posData) {
 		});
 	}
 
-	const selRem = document.getElementById('select-pos-reminders');
+	const selMsg = document.getElementById('select-pos-messages') || document.getElementById('select-pos-reminders');
 	const selMed = document.getElementById('select-pos-medications');
 	const selEvt = document.getElementById('select-pos-events');
 	const selCon = document.getElementById('select-pos-contacts');
-	if (selRem) selRem.value = String(currentCardPositions.reminders);
+	if (selMsg) selMsg.value = String(currentCardPositions.messages);
 	if (selMed) selMed.value = String(currentCardPositions.medications);
 	if (selEvt) selEvt.value = String(currentCardPositions.events);
 	if (selCon) selCon.value = String(currentCardPositions.contacts);
@@ -552,25 +563,30 @@ async function handleCardPositionChange(changedCard, newPosValue) {
 		return;
 	}
 
+	const targetCard = changedCard === 'reminders' ? 'messages' : changedCard;
 	const targetPos = parseInt(newPosValue, 10);
 	if (![1, 2, 3, 4].includes(targetPos)) return;
 
-	const oldPos = currentCardPositions[changedCard];
+	const oldPos = currentCardPositions[targetCard];
 	if (oldPos === targetPos) return;
 
 	const updatedPositions = { ...currentCardPositions };
 	// Swap with the card currently holding targetPos
 	Object.keys(updatedPositions).forEach((key) => {
-		if (key !== changedCard && updatedPositions[key] === targetPos) {
+		if (key !== targetCard && updatedPositions[key] === targetPos) {
 			updatedPositions[key] = oldPos;
 		}
 	});
-	updatedPositions[changedCard] = targetPos;
+	updatedPositions[targetCard] = targetPos;
 
 	applyCardPositions(updatedPositions);
 
 	try {
-		await database.ref('board/cardPositions').set(updatedPositions);
+		const savePayload = {
+			...updatedPositions,
+			reminders: updatedPositions.messages,
+		};
+		await database.ref('board/cardPositions').set(savePayload);
 		showToast('Display card order updated!');
 	} catch (err) {
 		console.error('Failed to update card positions:', err);
@@ -987,6 +1003,353 @@ async function adminClearSeniorResponse() {
 	}
 }
 
+// ================= STRUCTURED FAMILY MESSAGES MANAGEMENT =================
+
+let editingMessageId = null;
+
+function getTodayDateString() {
+	const d = new Date();
+	const y = d.getFullYear();
+	const m = String(d.getMonth() + 1).padStart(2, '0');
+	const day = String(d.getDate()).padStart(2, '0');
+	return `${y}-${m}-${day}`;
+}
+
+function isMessageExpired(message, todayStr) {
+	if (!message || !message.expirationDate) return false;
+	const refToday = todayStr || getTodayDateString();
+	return message.expirationDate < refToday;
+}
+
+function formatMessageDisplayDate(ts) {
+	if (!ts) return '';
+	const d = new Date(ts);
+	if (isNaN(d.getTime())) return '';
+	const now = new Date();
+	const isToday =
+		d.getDate() === now.getDate() &&
+		d.getMonth() === now.getMonth() &&
+		d.getFullYear() === now.getFullYear();
+	const timePart = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+	if (isToday) {
+		return `Today \u2022 ${timePart}`;
+	}
+	const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+	return `${datePart} \u2022 ${timePart}`;
+}
+
+function getDefaultAuthorName() {
+	return (
+		userProfile?.displayName ||
+		userProfile?.relationship ||
+		currentUser?.displayName ||
+		(currentUser?.email ? currentUser.email.split('@')[0] : 'Family')
+	);
+}
+
+function getStructuredMessagesList(boardData) {
+	const data = boardData || latestBoardData || {};
+	if (data.messages && typeof data.messages === 'object') {
+		return Object.entries(data.messages).map(([id, m]) => ({
+			id,
+			text: m.text || '',
+			author: m.author || 'Family',
+			authorUid: m.authorUid || '',
+			createdAt: m.createdAt || m.updatedAt || 0,
+			updatedAt: m.updatedAt || m.createdAt || 0,
+			expirationDate: m.expirationDate || '',
+		}));
+	}
+	if (data.reminders && typeof data.reminders === 'string') {
+		return data.reminders
+			.split('\n')
+			.map((l) => l.trim())
+			.filter(Boolean)
+			.map((line, idx) => ({
+				id: `legacy_${idx}`,
+				text: line,
+				author: 'Family',
+				authorUid: '',
+				createdAt: data.updatedAt || Date.now(),
+				updatedAt: data.updatedAt || Date.now(),
+				expirationDate: '',
+				isLegacy: true,
+			}));
+	}
+	return [];
+}
+
+function renderMessagesCard(boardData) {
+	const data = boardData || latestBoardData || {};
+	const container = document.getElementById('disp-messages') || document.getElementById('disp-reminders');
+	const countBadge = document.getElementById('messages-count-badge') || document.getElementById('reminders-count-badge');
+	if (!container) return;
+
+	const allMessages = getStructuredMessagesList(data);
+	const todayStr = getTodayDateString();
+	// Filter out expired messages on the senior display
+	const activeMessages = allMessages.filter((m) => !isMessageExpired(m, todayStr));
+	// Newest first
+	activeMessages.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+	if (countBadge) {
+		if (activeMessages.length > 0) {
+			countBadge.innerText = `${activeMessages.length} ${activeMessages.length === 1 ? 'Message' : 'Messages'}`;
+			countBadge.classList.remove('hidden');
+		} else {
+			countBadge.classList.add('hidden');
+		}
+	}
+
+	if (activeMessages.length === 0) {
+		container.innerHTML = `
+			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
+				<div class="text-3xl text-slate-300">💬</div>
+				<div class="text-sm sm:text-base font-bold text-slate-600">No messages yet</div>
+				<div class="text-xs text-slate-400">Family can post messages from their phones or computers.</div>
+			</div>
+		`;
+		return;
+	}
+
+	container.innerHTML = activeMessages
+		.map((msg) => {
+			const formattedDate = formatMessageDisplayDate(msg.createdAt);
+			return `
+				<div class="p-3 sm:p-3.5 bg-slate-50/90 rounded-xl border border-slate-200/90 space-y-2 shadow-2xs">
+					<p class="text-base sm:text-lg font-medium text-slate-900 leading-snug whitespace-pre-line">${escapeHtml(msg.text)}</p>
+					<div class="flex items-center justify-between text-xs text-slate-500 pt-1.5 border-t border-slate-200/60">
+						<span class="font-bold text-blue-700 flex items-center gap-1">
+							<span class="text-slate-400 font-normal">From</span> ${escapeHtml(msg.author || 'Family')}
+						</span>
+						<span class="text-[11px] font-medium text-slate-400">${escapeHtml(formattedDate)}</span>
+					</div>
+				</div>
+			`;
+		})
+		.join('');
+}
+
+function renderAdminMessagesList() {
+	const adminContainer = document.getElementById('admin-messages-list');
+	if (!adminContainer) return;
+
+	const allMessages = getStructuredMessagesList(latestBoardData);
+	allMessages.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+	if (allMessages.length === 0) {
+		adminContainer.innerHTML = '<div class="text-center py-4 text-xs text-slate-400 italic">No messages posted yet.</div>';
+		return;
+	}
+
+	const todayStr = getTodayDateString();
+
+	adminContainer.innerHTML = allMessages
+		.map((msg) => {
+			const expired = isMessageExpired(msg, todayStr);
+			const formattedDate = formatMessageDisplayDate(msg.createdAt);
+			let expirationBadge = '';
+			if (msg.expirationDate) {
+				if (expired) {
+					expirationBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">Expired (${escapeHtml(msg.expirationDate)})</span>`;
+				} else {
+					expirationBadge = `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Expires: ${escapeHtml(msg.expirationDate)}</span>`;
+				}
+			}
+
+			return `
+				<div class="p-3 bg-white rounded-xl border ${expired ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200'} flex items-start justify-between gap-2.5 shadow-2xs">
+					<div class="space-y-1 min-w-0 flex-1">
+						<p class="text-xs sm:text-sm text-slate-900 font-medium leading-snug line-clamp-3">${escapeHtml(msg.text)}</p>
+						<div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
+							<span class="font-bold text-blue-700">From ${escapeHtml(msg.author || 'Family')}</span>
+							<span>•</span>
+							<span>${escapeHtml(formattedDate)}</span>
+							${expirationBadge}
+						</div>
+					</div>
+					<div class="flex items-center gap-1 shrink-0 pt-0.5">
+						<button
+							type="button"
+							onclick="startEditMessage('${escapeHtml(msg.id).replace(/'/g, "\\'")}')"
+							class="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 rounded-md hover:bg-blue-50 transition cursor-pointer"
+						>
+							Edit
+						</button>
+						<button
+							type="button"
+							onclick="deleteMessageItem('${escapeHtml(msg.id).replace(/'/g, "\\'")}')"
+							class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+			`;
+		})
+		.join('');
+}
+
+function startEditMessage(messageId) {
+	const messagesList = getStructuredMessagesList(latestBoardData);
+	const msg = messagesList.find((m) => m.id === messageId);
+	if (!msg) return;
+
+	editingMessageId = messageId;
+
+	const textInput = document.getElementById('input-message-text');
+	const authorInput = document.getElementById('input-message-author');
+	const expInput = document.getElementById('input-message-expiration');
+	const formContainer = document.getElementById('message-form-container');
+	const formHeading = document.getElementById('message-form-heading');
+	const editingBadge = document.getElementById('message-editing-badge');
+	const cancelBtn = document.getElementById('btn-cancel-edit-message');
+	const saveBtnText = document.getElementById('btn-save-message-text');
+
+	if (textInput) textInput.value = msg.text || '';
+	if (authorInput) authorInput.value = msg.author || '';
+	if (expInput) expInput.value = msg.expirationDate || '';
+
+	if (formHeading) formHeading.innerText = 'Edit Message';
+	if (editingBadge) editingBadge.classList.remove('hidden');
+	if (cancelBtn) cancelBtn.classList.remove('hidden');
+	if (saveBtnText) saveBtnText.innerText = 'Save Message Changes';
+	if (formContainer) {
+		formContainer.className = 'p-3 bg-blue-50/50 rounded-xl border-2 border-blue-400 space-y-3 transition-colors';
+		formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	}
+
+	if (textInput) textInput.focus();
+}
+
+function cancelEditMessage() {
+	editingMessageId = null;
+
+	const textInput = document.getElementById('input-message-text');
+	const authorInput = document.getElementById('input-message-author');
+	const expInput = document.getElementById('input-message-expiration');
+	const formContainer = document.getElementById('message-form-container');
+	const formHeading = document.getElementById('message-form-heading');
+	const editingBadge = document.getElementById('message-editing-badge');
+	const cancelBtn = document.getElementById('btn-cancel-edit-message');
+	const saveBtnText = document.getElementById('btn-save-message-text');
+
+	if (textInput) textInput.value = '';
+	if (authorInput) authorInput.value = getDefaultAuthorName();
+	if (expInput) expInput.value = '';
+
+	if (formHeading) formHeading.innerText = 'Post a New Message';
+	if (editingBadge) editingBadge.classList.add('hidden');
+	if (cancelBtn) cancelBtn.classList.add('hidden');
+	if (saveBtnText) saveBtnText.innerText = 'Post Message';
+	if (formContainer) {
+		formContainer.className = 'p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors';
+	}
+}
+
+async function syncLegacyRemindersString() {
+	try {
+		const snap = await database.ref('board/messages').once('value');
+		const msgs = snap.val() || {};
+		const todayStr = getTodayDateString();
+		const lines = Object.values(msgs)
+			.filter((m) => !isMessageExpired(m, todayStr))
+			.map((m) => m.text)
+			.filter(Boolean);
+		await database.ref('board/reminders').set(lines.join('\n'));
+	} catch (e) {
+		console.warn('Could not sync legacy reminders string:', e);
+	}
+}
+
+async function saveMessageItem() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: Only ADMIN and EDITOR users can post or edit messages.');
+		return;
+	}
+
+	const textInput = document.getElementById('input-message-text');
+	const authorInput = document.getElementById('input-message-author');
+	const expInput = document.getElementById('input-message-expiration');
+
+	const text = textInput ? textInput.value.trim() : '';
+	const author = authorInput ? authorInput.value.trim() || getDefaultAuthorName() : getDefaultAuthorName();
+	const expirationDate = expInput ? expInput.value.trim() : '';
+
+	if (!text) {
+		alert('Please enter a message.');
+		if (textInput) textInput.focus();
+		return;
+	}
+
+	const isEditing = !!editingMessageId;
+	const messageId = editingMessageId || `msg_${Date.now()}`;
+
+	try {
+		if (isEditing) {
+			await database.ref(`board/messages/${messageId}`).update({
+				text,
+				author,
+				expirationDate,
+				updatedAt: Date.now(),
+				updatedBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
+			});
+			showToast('Message updated successfully!');
+		} else {
+			await database.ref(`board/messages/${messageId}`).set({
+				id: messageId,
+				text,
+				author,
+				authorUid: currentUser?.uid || '',
+				expirationDate,
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
+			});
+			showToast('Message posted successfully!');
+		}
+
+		await syncLegacyRemindersString();
+		cancelEditMessage();
+
+		if (latestBoardData?.aiAutoRefresh !== false) {
+			generateAiActionPlan({ silent: true });
+		}
+	} catch (err) {
+		console.error('Failed to save message:', err);
+		alert('Error saving message: ' + err.message);
+	}
+}
+
+async function deleteMessageItem(messageId) {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: Only ADMIN and EDITOR users can delete messages.');
+		return;
+	}
+
+	const messagesList = getStructuredMessagesList(latestBoardData);
+	const msg = messagesList.find((m) => m.id === messageId);
+	const preview = msg ? (msg.text.length > 30 ? msg.text.slice(0, 30) + '...' : msg.text) : 'this message';
+
+	if (!confirm(`Delete message "${preview}"?`)) return;
+
+	try {
+		await database.ref(`board/messages/${messageId}`).remove();
+		if (editingMessageId === messageId) {
+			cancelEditMessage();
+		}
+		await syncLegacyRemindersString();
+		showToast('Message deleted.');
+
+		if (latestBoardData?.aiAutoRefresh !== false) {
+			generateAiActionPlan({ silent: true });
+		}
+	} catch (err) {
+		console.error('Failed to delete message:', err);
+		alert('Error deleting message: ' + err.message);
+	}
+}
+
 // ================= STRUCTURED MEDICATIONS MANAGEMENT =================
 
 let editingMedicationId = null;
@@ -1307,14 +1670,12 @@ function renderBoard(data) {
 	currentAdditionalContacts = data.contacts || {};
 	renderContacts();
 
-	renderTextLinesCard(
-		'disp-reminders',
-		'reminders-count-badge',
-		data.reminders,
-		'No daily reminders set',
-		'Add reminders in the caregiver panel.',
-		'⏰'
-	);
+	renderMessagesCard(data);
+	renderAdminMessagesList();
+	const msgAuthorInput = document.getElementById('input-message-author');
+	if (msgAuthorInput && !msgAuthorInput.value && !editingMessageId) {
+		msgAuthorInput.value = getDefaultAuthorName();
+	}
 	renderMedicationsCard(data);
 	renderAdminMedicationsList();
 
@@ -1521,7 +1882,10 @@ function saveData() {
 	};
 
 	if (userProfile.role === 'ADMIN') {
-		updatePayload.cardPositions = currentCardPositions;
+		updatePayload.cardPositions = {
+			...currentCardPositions,
+			reminders: currentCardPositions.messages,
+		};
 	}
 
 	database.ref('board').update(
@@ -1777,7 +2141,10 @@ function buildSmartRuleBasedPlan(boardData) {
 			`Happy ${todaysHolidays[0].name} \u2014 treat yourself today and keep your phone handy for family calls.`
 		);
 	} else {
-		const hasCallReminder = (data.reminders || '').toLowerCase().includes('call');
+		const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
+		const hasCallReminder =
+			(data.reminders || '').toLowerCase().includes('call') ||
+			activeMsgs.some((m) => (m.text || '').toLowerCase().includes('call'));
 		let openDaySentence = hasCallReminder
 			? 'With no appointments today, enjoy a relaxed afternoon and catch up with family by phone.'
 			: (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')
@@ -2172,6 +2539,13 @@ async function generateAiActionPlan(options = {}) {
 			todayDate: todayStr,
 			announcement: document.getElementById('input-announcement')?.value || latestBoardData.announcement || '',
 			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
+			familyMessages: (() => {
+				const msgs = getStructuredMessagesList(latestBoardData);
+				const todayStr = getTodayDateString();
+				return msgs
+					.filter((m) => !isMessageExpired(m, todayStr))
+					.map((m) => `${m.text} (from ${m.author}, posted ${formatMessageDisplayDate(m.createdAt)})`);
+			})(),
 			medications: (() => {
 				const list = getStructuredMedicationsList(latestBoardData);
 				return list.length > 0
