@@ -1,4 +1,4 @@
-# Project Instructions
+﻿# Project Instructions
 
 This document provides setup and operational instructions for each product and service used in the **Senior Message Board** project.
 
@@ -94,6 +94,8 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
        "events": {
          "evt_1700000001": {
            "title": "Dr. Miller - Eye Exam",
+           "category": "medical",
+           "location": "outing",
            "date": "2026-11-05",
            "endDate": "",
            "time": "14:30",

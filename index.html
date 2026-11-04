@@ -528,58 +528,81 @@
 										Editing Mode
 									</span>
 								</div>
-								<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-									<div class="sm:col-span-3">
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Appointment / Event Title</label>
+								<div class="grid grid-cols-1 sm:grid-cols-6 gap-3">
+									<div class="sm:col-span-6">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Event Title</label>
 										<input
 											type="text"
 											id="input-event-title"
-											placeholder="e.g. Dr. Miller - Eye Exam, or Family Visit"
+											placeholder="e.g. Dr. Miller - Eye Exam, or Sarah Visiting"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div>
+									<div class="sm:col-span-3">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Event Type (Used for AI Context)</label>
+										<select
+											id="input-event-category"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-medium"
+										>
+											<option value="medical">&#129658; Doctor / Medical</option>
+											<option value="family">&#127969; Family &amp; Friends Visit</option>
+											<option value="errand">&#128663; Errand / Outing</option>
+											<option value="service">&#128295; Home Service / Delivery</option>
+											<option value="other">&#11088; Other Activity</option>
+										</select>
+									</div>
+									<div class="sm:col-span-3">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Location Context</label>
+										<select
+											id="input-event-location"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-medium"
+										>
+											<option value="outing">&#128663; Leaving Home (Outing)</option>
+											<option value="home">&#127969; At Home (Guests / Service visiting)</option>
+										</select>
+									</div>
+									<div class="sm:col-span-2">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">Start Date</label>
 										<input
 											type="date"
 											id="input-event-date"
-											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div>
+									<div class="sm:col-span-2">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">End Date (Optional)</label>
 										<input
 											type="date"
 											id="input-event-end-date"
 											title="Leave blank for a single-day event"
-											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div>
+									<div class="sm:col-span-2">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">Time (Optional)</label>
 										<input
 											type="time"
 											id="input-event-time"
-											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div class="sm:col-span-3">
+									<div class="sm:col-span-6">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">Notes / Driver (Optional)</label>
 										<input
 											type="text"
 											id="input-event-notes"
-											placeholder="e.g. Sarah is driving, bring reading glasses"
+											placeholder="e.g. Sarah is driving, or staying for dinner"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>
-									<div class="sm:col-span-3">
+									<div class="sm:col-span-6">
 										<label class="block text-xs font-semibold mb-1 text-slate-600">
 											Event Reminders / Prep Advice (Used for AI Summary &amp; Display)
 										</label>
 										<input
 											type="text"
 											id="input-event-reminder"
-											placeholder="e.g. Drink extra water 2 days before, fast after midnight, wear loose sleeves"
+											placeholder="e.g. Drink extra water 2 days before, bring sunglasses, or bake cookies"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 										/>
 									</div>

@@ -372,6 +372,7 @@ function switchAdminTab(tab) {
 
 function initBoard() {
 	console.log('Initializing Board...');
+	setupEventFormAutoDetect();
 	// Connection Monitor
 	const statusEl = document.getElementById('connection-status');
 	database.ref('.info/connected').on('value', (snap) => {
@@ -855,6 +856,70 @@ function getEventDaysFromToday(evt) {
 	return getDaysFromToday(evt.date);
 }
 
+function detectEventCategory(title) {
+	const t = (title || '').toLowerCase();
+	if (/family|visit|lunch|dinner|friend|grandkid|grandchild|son|daughter|party|coffee|tea|hangout|sister|brother|nephew|niece/i.test(t)) {
+		return 'family';
+	}
+	if (/plumber|electrician|repair|pest|delivery|cleaner|contractor|technician|cable|roof|hvac|maintenance/i.test(t)) {
+		return 'service';
+	}
+	if (/haircut|salon|barber|grocery|groceries|shopping|store|church|bank|pharmacy|post office|library|errand/i.test(t)) {
+		return 'errand';
+	}
+	if (/dr|doctor|exam|eye|pt|therapy|dental|dentist|infusion|blood|lab|clinic|hospital|cardio|podiatrist|nurse|checkup|specialist|ortho/i.test(t)) {
+		return 'medical';
+	}
+	return 'other';
+}
+
+function detectEventLocation(title, category) {
+	const cat = category || detectEventCategory(title);
+	const t = (title || '').toLowerCase();
+	if (cat === 'family' || cat === 'service') {
+		if (/out|restaurant|cafe|dinner at|lunch at|at /i.test(t)) {
+			return 'outing';
+		}
+		return 'home';
+	}
+	if (cat === 'errand' || cat === 'medical') {
+		if (/home visit|home nurse|telehealth|phone appt|virtual|at home/i.test(t)) {
+			return 'home';
+		}
+		return 'outing';
+	}
+	return 'outing';
+}
+
+function getEventContext(evt) {
+	if (!evt) return { category: 'medical', location: 'outing' };
+	let category = evt.category;
+	let location = evt.location;
+	if (!category) {
+		category = detectEventCategory(evt.title || '');
+	}
+	if (!location) {
+		location = detectEventLocation(evt.title || '', category);
+	}
+	return { category, location };
+}
+
+function setupEventFormAutoDetect() {
+	const titleInput = document.getElementById('input-event-title');
+	if (titleInput && !titleInput.dataset.listenerAttached) {
+		titleInput.dataset.listenerAttached = 'true';
+		titleInput.addEventListener('input', () => {
+			if (editingEventId) return; // Do not overwrite when editing an existing event
+			const detectedCat = detectEventCategory(titleInput.value);
+			const detectedLoc = detectEventLocation(titleInput.value, detectedCat);
+			const catSelect = document.getElementById('input-event-category');
+			const locSelect = document.getElementById('input-event-location');
+			if (catSelect && detectedCat) catSelect.value = detectedCat;
+			if (locSelect && detectedLoc) locSelect.value = detectedLoc;
+		});
+	}
+}
+
 function getUpcomingBirthdayDiffDays(bdayStr) {
 	if (!bdayStr) return null;
 	const parts = bdayStr.split('-').map(Number);
@@ -924,12 +989,41 @@ function buildSmartRuleBasedPlan(boardData) {
 
 	if (todayEvents.length > 0) {
 		const firstEvt = todayEvents[0];
+		const { category, location } = getEventContext(firstEvt);
 		const hour = firstEvt.time ? parseInt(firstEvt.time.split(':')[0], 10) : null;
 		const reminderNote = (firstEvt.reminder || '').trim();
-		let outingAdvice =
-			hour !== null && hour < 12
-				? 'Have an easy breakfast and set your ID and glasses by the door so you feel unhurried for your morning outing.'
-				: 'Enjoy a relaxed morning and eat a light meal early so you are ready when it is time to head out.';
+		const driverNote = (firstEvt.notes || '').trim();
+
+		let outingAdvice = '';
+		if (category === 'family') {
+			if (location === 'home') {
+				outingAdvice = hour !== null && hour < 13
+					? `Enjoy an easy morning at home and put on a fresh kettle of teaâ€”${firstEvt.title} is coming up soon!`
+					: `Pace your morning at a relaxing rhythm so you feel energized and refreshed when company arrives for ${firstEvt.title}.`;
+			} else {
+				outingAdvice = `Enjoy getting together with family for ${firstEvt.title}! Have an unhurried morning and eat a light meal beforehand.`;
+			}
+		} else if (category === 'service') {
+			outingAdvice = `A home service visit is scheduled today for ${firstEvt.title}. Keep your phone nearby and a clear walkway to the door.`;
+		} else if (category === 'errand') {
+			outingAdvice = `You have an errand planned today for ${firstEvt.title}. Check the weather, wear comfortable walking shoes, and take your time.`;
+		} else {
+			// Medical or General Outing
+			if (location === 'home') {
+				outingAdvice = `A home healthcare visit is scheduled today (${firstEvt.title}). Keep comfortable and have your daily medication list handy.`;
+			} else {
+				outingAdvice = hour !== null && hour < 12
+					? `Have an easy breakfast and set your ID and glasses by the door so you feel unhurried for ${firstEvt.title}.`
+					: `Enjoy a relaxed morning and eat a light meal early so you are ready when it is time to head out for ${firstEvt.title}.`;
+			}
+		}
+
+		if (driverNote && !driverNote.toLowerCase().includes('driving')) {
+			outingAdvice += ` Note: ${driverNote.replace(/[.!]+$/, '')}.`;
+		} else if (driverNote) {
+			outingAdvice += ` (${driverNote.replace(/[.!]+$/, '')})`;
+		}
+
 		if (reminderNote) {
 			outingAdvice += ` Also remember: ${reminderNote.replace(/[.!]+$/, '')}.`;
 		}
@@ -1048,6 +1142,15 @@ function buildSmartRuleBasedPlan(boardData) {
 			return;
 		}
 
+				// Family & Friend Visit coaching (1 to 2 days before)
+		const evtCtx = getEventContext(evt);
+		if (evtCtx.category === 'family' && evt.diffDays >= 1 && evt.diffDays <= 2 && (!evt.reminder || !evt.reminder.trim())) {
+			prepAlerts.push(
+				`Looking forward to ${evt.title} ${whenPhrase}â€”take time to rest up today so you have plenty of energy for company.`
+			);
+			return;
+		}
+
 		// Check Caregiver Custom "Keyword: Instruction" Rules (0 to 3 days before)
 		if (evt.diffDays <= 3) {
 			customRules.forEach((rule) => {
@@ -1093,14 +1196,29 @@ function buildSmartRuleBasedPlan(boardData) {
 	} else {
 		const tomorrowEvents = upcomingSoonEvents.filter((e) => e.diffDays === 1);
 		if (tomorrowEvents.length > 0) {
-			lookAheadParts.push(
-				'Lay out your clothes tonight and get a good night of sleep so tomorrow morning feels easy.'
-			);
+			const tomEvt = tomorrowEvents[0];
+			const tomCtx = getEventContext(tomEvt);
+			if (tomCtx.category === 'family') {
+				lookAheadParts.push(
+					`Look forward to seeing family tomorrow (${tomEvt.title})â€”enjoy a restful, relaxing evening tonight.`
+				);
+			} else {
+				lookAheadParts.push(
+					'Lay out your clothes tonight and get a good night of sleep so tomorrow morning feels easy.'
+				);
+			}
 		} else {
 			const nextEvt = upcomingSoonEvents[0];
-			lookAheadParts.push(
-				`Enjoy a quiet stretch at home before your next outing in ${nextEvt.diffDays} days.`
-			);
+			const nextCtx = getEventContext(nextEvt);
+			if (nextCtx.category === 'family') {
+				lookAheadParts.push(
+					`You have family visiting in ${nextEvt.diffDays} days (${nextEvt.title})â€”look forward to a wonderful time together.`
+				);
+			} else {
+				lookAheadParts.push(
+					`Enjoy a quiet stretch at home before your next outing in ${nextEvt.diffDays} days.`
+				);
+			}
 		}
 	}
 
@@ -1269,6 +1387,19 @@ async function generateAiActionPlan(options = {}) {
 		const { allContacts } = getCombinedContactsList();
 		const upcomingEventsList = Object.values(currentEventsMap || {})
 			.filter((e) => isEventUpcomingOrActive(e, todayStr))
+			.map((e) => {
+				const ctx = getEventContext(e);
+				return {
+					title: e.title,
+					category: ctx.category,
+					location: ctx.location,
+					date: e.date,
+					endDate: e.endDate || undefined,
+					time: e.time || undefined,
+					notes: e.notes || undefined,
+					reminder: e.reminder || undefined,
+				};
+			})
 			.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
 		const boardSnapshot = {
@@ -1302,42 +1433,16 @@ async function generateAiActionPlan(options = {}) {
 				store: false,
 				system_instruction:
 					'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
-					'CRITICAL RULES: (1) Keep every item VERY CONCISE—1 to 2 short, easy-to-scan sentences max. ' +
-					'(2) Do NOT simply repeat or parrot the schedule items. Instead, give actionable advice in natural conversational sentences. ' +
-					'(3) Naturally incorporate the weather activity suggestion (`weather.suggestion`) into `todayPlan`. ' +
-					'(4) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`.',
-				input:
-					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
-					JSON.stringify(boardSnapshot, null, 2),
-				response_format: {
-					type: 'text',
-					mime_type: 'application/json',
-					schema: {
-						type: 'object',
-						properties: {
-							todayPlan: {
-								type: 'array',
-								items: { type: 'string' },
-								description:
-									'1 to 2 short, concise conversational sentences offering actionable advice for today (incorporating medication check-in, the weather activity suggestion, and today pacing).',
-							},
-							prepAlerts: {
-								type: 'array',
-								items: { type: 'string' },
-								description:
-									'1 to 2 short, concise coaching sentences giving proactive multi-day health or appointment preparation advice (incorporating each appointment reminder field and rules like drinking extra water days before an infusion).',
-							},
-							lookAhead: {
-								type: 'string',
-								description:
-									'1 short, warm sentence on how to pace energy over the next 3 to 5 days.',
-							},
-						},
-						required: ['todayPlan', 'prepAlerts', 'lookAhead'],
-					},
-				},
-			}),
-		});
+					'CRITICAL RULES: (1) Keep every item VERY CONCISEâ€”1 to 2 short, easy-to-scan sentences max. ' +
+					'(2) Tailor advice specifically to the event context (`category` and `location`): ' +
+					'- For family/friend visits (category: family): focus on hospitality, connection, and energy pacing. If location is "home", suggest putting on a kettle of tea or coffee and resting beforehand so they have energy for visitors; if location is "outing", encourage having a lovely meal with loved ones. ' +
+					'- For doctor or medical visits (category: medical): focus on timely breakfast, Medicare card/glasses, driver notes, and questions for the doctor. ' +
+					'- For errands (category: errand): focus on weather-appropriate outerwear, comfortable shoes, and pacing. ' +
+					'- For home services (category: service): focus on keeping phone nearby and clear pathways. ' +
+					'(3) Do NOT simply repeat or parrot the schedule items. Give actionable, empathetic advice in natural conversational sentences. ' +
+					'(4) Naturally incorporate the weather activity suggestion (`weather.suggestion`) into `todayPlan`. ' +
+					'(5) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`. ';
+
 
 		if (!response.ok) {
 			const errText = await response.text();
@@ -2657,7 +2762,11 @@ function renderEvents(eventsObj) {
 							<div class="flex items-center gap-2 flex-wrap">
 								<span class="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">${badge} ${
 					time ? '• ' + time : ''
-				}</span>
+				} • ${(() => {
+					const c = getEventContext(evt);
+					const map = { medical: '🩺 Medical', family: '🏡 Visit', errand: '🚗 Errand', service: '🔧 Service', other: '⭐ Other' };
+					return map[c.category] || 'Event';
+				})()}</span>
 								<span class="font-bold text-slate-800 text-sm truncate">${escapeHtml(evt.title)}</span>
 								${
 									isEditingThis
@@ -2707,13 +2816,18 @@ function startEditCalendarEvent(eventId) {
 	editingEventId = eventId;
 
 	const titleInput = document.getElementById('input-event-title');
+	const categoryInput = document.getElementById('input-event-category');
+	const locationInput = document.getElementById('input-event-location');
 	const dateInput = document.getElementById('input-event-date');
 	const endDateInput = document.getElementById('input-event-end-date');
 	const timeInput = document.getElementById('input-event-time');
 	const notesInput = document.getElementById('input-event-notes');
 	const reminderInput = document.getElementById('input-event-reminder');
 
+	const ctx = getEventContext(evt);
 	if (titleInput) titleInput.value = evt.title || '';
+	if (categoryInput) categoryInput.value = evt.category || ctx.category || 'medical';
+	if (locationInput) locationInput.value = evt.location || ctx.location || 'outing';
 	if (dateInput) dateInput.value = evt.date || '';
 	if (endDateInput) endDateInput.value = evt.endDate || '';
 	if (timeInput) timeInput.value = evt.time || '';
@@ -2732,12 +2846,12 @@ function startEditCalendarEvent(eventId) {
 		formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	}
 	if (formHeading) {
-		formHeading.innerText = 'Edit Scheduled Appointment';
+		formHeading.innerText = 'Edit Scheduled Event';
 		formHeading.className = 'text-xs font-bold text-blue-700 uppercase tracking-wider';
 	}
 	if (editingBadge) editingBadge.classList.remove('hidden');
 	if (cancelBtn) cancelBtn.classList.remove('hidden');
-	if (submitBtnText) submitBtnText.innerText = 'Save Appointment Changes';
+	if (submitBtnText) submitBtnText.innerText = 'Save Event Changes';
 
 	renderEvents(currentEventsMap);
 	if (titleInput) titleInput.focus();
@@ -2747,6 +2861,8 @@ function cancelEditCalendarEvent() {
 	editingEventId = null;
 
 	const titleInput = document.getElementById('input-event-title');
+	const categoryInput = document.getElementById('input-event-category');
+	const locationInput = document.getElementById('input-event-location');
 	const dateInput = document.getElementById('input-event-date');
 	const endDateInput = document.getElementById('input-event-end-date');
 	const timeInput = document.getElementById('input-event-time');
@@ -2754,6 +2870,8 @@ function cancelEditCalendarEvent() {
 	const reminderInput = document.getElementById('input-event-reminder');
 
 	if (titleInput) titleInput.value = '';
+	if (categoryInput) categoryInput.value = 'medical';
+	if (locationInput) locationInput.value = 'outing';
 	if (dateInput) dateInput.value = getTodayDateString();
 	if (endDateInput) endDateInput.value = '';
 	if (timeInput) timeInput.value = '';
@@ -2771,18 +2889,20 @@ function cancelEditCalendarEvent() {
 			'p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 transition-colors';
 	}
 	if (formHeading) {
-		formHeading.innerText = 'Add New Appointment';
+		formHeading.innerText = 'Add New Event';
 		formHeading.className = 'text-xs font-bold text-slate-700 uppercase tracking-wider';
 	}
 	if (editingBadge) editingBadge.classList.add('hidden');
 	if (cancelBtn) cancelBtn.classList.add('hidden');
-	if (submitBtnText) submitBtnText.innerText = '+ Add Appointment';
+	if (submitBtnText) submitBtnText.innerText = '+ Add Event';
 
 	renderEvents(currentEventsMap);
 }
 
 async function addCalendarEvent() {
 	const titleInput = document.getElementById('input-event-title');
+	const categoryInput = document.getElementById('input-event-category');
+	const locationInput = document.getElementById('input-event-location');
 	const dateInput = document.getElementById('input-event-date');
 	const endDateInput = document.getElementById('input-event-end-date');
 	const timeInput = document.getElementById('input-event-time');
@@ -2790,6 +2910,8 @@ async function addCalendarEvent() {
 	const reminderInput = document.getElementById('input-event-reminder');
 
 	const title = titleInput.value.trim();
+	const category = categoryInput ? categoryInput.value : 'medical';
+	const location = locationInput ? locationInput.value : 'outing';
 	const date = dateInput.value;
 	const rawEndDate = endDateInput ? endDateInput.value : '';
 	const time = timeInput.value;
@@ -2797,7 +2919,7 @@ async function addCalendarEvent() {
 	const reminder = reminderInput ? reminderInput.value.trim() : '';
 
 	if (!title) {
-		alert('Please enter an appointment or event title (e.g. "Dr. Miller - Eye Exam").');
+		alert('Please enter an event or appointment title (e.g. "Dr. Miller - Eye Exam" or "Sarah Visiting").');
 		titleInput.focus();
 		return;
 	}
@@ -2818,6 +2940,8 @@ async function addCalendarEvent() {
 		try {
 			await database.ref(`board/events/${targetId}`).update({
 				title,
+				category,
+				location,
 				date,
 				endDate,
 				time: time || '',
@@ -2830,10 +2954,10 @@ async function addCalendarEvent() {
 			if (latestBoardData?.aiAutoRefresh !== false) {
 				generateAiActionPlan({ silent: true });
 			}
-			showToast(`Appointment "${title}" updated!`);
+			showToast(`Event "${title}" updated!`);
 		} catch (err) {
 			console.error('Failed to update calendar event:', err);
-			alert('Error updating appointment: ' + err.message);
+			alert('Error updating event: ' + err.message);
 		}
 		return;
 	}
@@ -2841,6 +2965,8 @@ async function addCalendarEvent() {
 	const eventId = 'evt_' + Date.now();
 	const newEvent = {
 		title,
+		category,
+		location,
 		date,
 		endDate,
 		time: time || '',
@@ -2853,6 +2979,8 @@ async function addCalendarEvent() {
 	try {
 		await database.ref(`board/events/${eventId}`).set(newEvent);
 		titleInput.value = '';
+		if (categoryInput) categoryInput.value = 'medical';
+		if (locationInput) locationInput.value = 'outing';
 		if (endDateInput) endDateInput.value = '';
 		timeInput.value = '';
 		notesInput.value = '';
@@ -2860,10 +2988,10 @@ async function addCalendarEvent() {
 		if (latestBoardData?.aiAutoRefresh !== false) {
 			generateAiActionPlan({ silent: true });
 		}
-		showToast(`Appointment "${title}" added to calendar!`);
+		showToast(`Event "${title}" added to calendar!`);
 	} catch (err) {
 		console.error('Failed to add calendar event:', err);
-		alert('Error adding appointment: ' + err.message);
+		alert('Error adding event: ' + err.message);
 	}
 }
 
