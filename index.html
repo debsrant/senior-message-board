@@ -325,9 +325,14 @@
 								0 Entries
 							</span>
 						</div>
+						<!-- General Notes for Senior (shown if present) -->
+						<div
+							id="disp-medications-general-notes"
+							class="hidden mb-2.5 p-2.5 bg-purple-50/80 rounded-xl border border-purple-200 text-xs sm:text-sm text-purple-950 font-medium shrink-0"
+						></div>
 						<div
 							id="disp-medications"
-							class="space-y-2 overflow-y-auto flex-1 pr-1 text-lg sm:text-xl text-slate-700 leading-relaxed"
+							class="space-y-2 overflow-y-auto flex-1 pr-1 text-slate-700 leading-relaxed"
 						>
 							Loading medications...
 						</div>
@@ -480,25 +485,119 @@
 									</span>
 								</div>
 
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-									<div>
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Daily Reminders</label>
-										<textarea
-											id="input-reminders"
-											rows="4"
-											placeholder="e.g. Drink a full glass of water&#10;Call Sarah this afternoon"
-											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-										></textarea>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-700">Daily Reminders</label>
+									<textarea
+										id="input-reminders"
+										rows="3"
+										placeholder="e.g. Drink a full glass of water&#10;Call Sarah this afternoon"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+									></textarea>
+								</div>
+
+								<!-- Hidden input to maintain backward compatibility -->
+								<input type="hidden" id="input-medications" />
+
+								<!-- Medications Manager (Structured Add / Edit / Delete + Senior Notes) -->
+								<div class="p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3.5">
+									<div class="flex items-center justify-between border-b border-slate-200 pb-2">
+										<div>
+											<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+												<span>ðŸ’Š</span> Medications List &amp; Instructions
+											</h4>
+											<p class="text-xs text-slate-500 mt-0.5">
+												Manage individual medications and notes shown to the senior.
+											</p>
+										</div>
+										<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
+											Individual Meds
+										</span>
 									</div>
 
+									<!-- General Medication Instructions / Notes for Senior -->
 									<div>
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Medications</label>
+										<label class="block text-xs font-semibold mb-1 text-slate-700">
+											General Medication Instructions &amp; Notes (Shown to Senior)
+										</label>
 										<textarea
-											id="input-medications"
-											rows="4"
-											placeholder="e.g. Morning vitamins with breakfast&#10;Blood pressure pill at 8:00 AM"
-											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+											id="input-medication-notes"
+											rows="2"
+											placeholder="e.g. Morning pills are in the blue organizer box by the kettle; evening pills in the yellow box."
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-purple-500 outline-none transition"
 										></textarea>
+										<p class="text-[11px] text-slate-500 mt-0.5">
+											Displayed at the top of the senior's medication card.
+										</p>
+									</div>
+
+									<!-- Add / Edit Medication Form -->
+									<div id="med-form-container" class="p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors">
+										<div class="flex items-center justify-between">
+											<span id="med-form-heading" class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+												Add New Medication
+											</span>
+											<span id="med-editing-badge" class="hidden text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded-full">
+												Editing Mode
+											</span>
+										</div>
+
+										<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+											<div>
+												<label class="block text-xs font-semibold mb-1 text-slate-600">Medication Name &amp; Dosage</label>
+												<input
+													type="text"
+													id="input-med-name"
+													placeholder="e.g. Lisinopril 10mg"
+													class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+												/>
+											</div>
+											<div>
+												<label class="block text-xs font-semibold mb-1 text-slate-600">Timing / Schedule</label>
+												<input
+													type="text"
+													id="input-med-time"
+													placeholder="e.g. Morning (8:00 AM), With Breakfast, Bedtime"
+													class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+												/>
+											</div>
+										</div>
+
+										<div>
+											<label class="block text-xs font-semibold mb-1 text-slate-600">Instructions / Notes to Show Senior</label>
+											<textarea
+												id="input-med-notes"
+												rows="2"
+												placeholder="e.g. Take 1 tablet with a full glass of water. Don't take on an empty stomach."
+												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition"
+											></textarea>
+										</div>
+
+										<div class="flex items-center gap-2">
+											<button
+												type="button"
+												id="btn-save-med"
+												onclick="saveMedicationItem()"
+												class="px-4 py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+											>
+												<span id="btn-save-med-text">Add Medication</span>
+											</button>
+											<button
+												type="button"
+												id="btn-cancel-edit-med"
+												onclick="cancelEditMedication()"
+												class="hidden px-3.5 py-2 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl text-xs sm:text-sm transition cursor-pointer"
+											>
+												Cancel
+											</button>
+										</div>
+									</div>
+
+									<!-- Current Medications List in Admin -->
+									<div class="space-y-1.5">
+										<label class="block text-xs font-semibold text-slate-700">Current Medications List</label>
+										<div id="admin-medications-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+											<div class="text-center py-4 text-xs text-slate-400 italic">No medications added yet.</div>
+										</div>
 									</div>
 								</div>
 

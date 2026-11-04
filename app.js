@@ -987,6 +987,295 @@ async function adminClearSeniorResponse() {
 	}
 }
 
+// ================= STRUCTURED MEDICATIONS MANAGEMENT =================
+
+let editingMedicationId = null;
+
+function getStructuredMedicationsList(boardData) {
+	const data = boardData || latestBoardData || {};
+	if (data.medicationList && typeof data.medicationList === 'object') {
+		return Object.entries(data.medicationList).map(([id, m]) => ({
+			id,
+			name: m.name || '',
+			time: m.time || '',
+			notes: m.notes || '',
+			createdAt: m.createdAt || m.updatedAt || 0,
+		}));
+	}
+	if (data.medications && typeof data.medications === 'string') {
+		return data.medications
+			.split('\n')
+			.map((l) => l.trim())
+			.filter(Boolean)
+			.map((line, idx) => ({
+				id: `legacy_${idx}`,
+				name: line,
+				time: '',
+				notes: '',
+				isLegacy: true,
+			}));
+	}
+	return [];
+}
+
+function renderMedicationsCard(boardData) {
+	const data = boardData || latestBoardData || {};
+	const container = document.getElementById('disp-medications');
+	const countBadge = document.getElementById('medications-count-badge');
+	const generalNotesEl = document.getElementById('disp-medications-general-notes');
+	if (!container) return;
+
+	const generalNotes = (data.medicationNotes || '').trim();
+	if (generalNotesEl) {
+		if (generalNotes) {
+			generalNotesEl.innerHTML = `
+				<div class="flex items-start gap-1.5">
+					<span class="text-xs font-bold uppercase tracking-wider text-purple-900 shrink-0">Note:</span>
+					<span class="text-xs sm:text-sm text-purple-950 font-medium">${escapeHtml(generalNotes)}</span>
+				</div>
+			`;
+			generalNotesEl.classList.remove('hidden');
+		} else {
+			generalNotesEl.classList.add('hidden');
+			generalNotesEl.innerHTML = '';
+		}
+	}
+
+	const medsList = getStructuredMedicationsList(data);
+
+	if (countBadge) {
+		if (medsList.length > 0) {
+			countBadge.innerText = `${medsList.length} ${medsList.length === 1 ? 'Med' : 'Meds'}`;
+			countBadge.classList.remove('hidden');
+		} else {
+			countBadge.classList.add('hidden');
+		}
+	}
+
+	if (medsList.length === 0) {
+		container.innerHTML = `
+			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
+				<div class="text-3xl text-slate-300">ðŸ’Š</div>
+				<div class="text-sm sm:text-base font-bold text-slate-600">No medications listed</div>
+				<div class="text-xs text-slate-400">Add medications in the caregiver panel.</div>
+			</div>
+		`;
+		return;
+	}
+
+	container.innerHTML = medsList
+		.map(
+			(med) => `
+			<div class="p-3 bg-slate-50/90 rounded-xl border border-slate-200/90 space-y-1">
+				<div class="flex items-center justify-between gap-2">
+					<span class="font-bold text-base sm:text-lg text-slate-900">${escapeHtml(med.name)}</span>
+					${
+						med.time
+							? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shrink-0">${escapeHtml(med.time)}</span>`
+							: ''
+					}
+				</div>
+				${
+					med.notes
+						? `<p class="text-xs sm:text-sm text-slate-600 leading-snug font-medium pl-0.5">${escapeHtml(med.notes)}</p>`
+						: ''
+				}
+			</div>
+		`
+		)
+		.join('');
+}
+
+function renderAdminMedicationsList() {
+	const adminContainer = document.getElementById('admin-medications-list');
+	if (!adminContainer) return;
+
+	const medsList = getStructuredMedicationsList(latestBoardData);
+
+	if (medsList.length === 0) {
+		adminContainer.innerHTML = '<div class="text-center py-4 text-xs text-slate-400 italic">No medications added yet.</div>';
+		return;
+	}
+
+	adminContainer.innerHTML = medsList
+		.map(
+			(med) => `
+			<div class="p-2.5 bg-white rounded-xl border border-slate-200 flex items-start justify-between gap-2 shadow-2xs">
+				<div class="space-y-0.5 min-w-0 flex-1">
+					<div class="flex items-center gap-2 flex-wrap">
+						<span class="font-bold text-sm text-slate-900 truncate">${escapeHtml(med.name)}</span>
+						${
+							med.time
+								? `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">${escapeHtml(med.time)}</span>`
+								: ''
+						}
+					</div>
+					${
+						med.notes
+							? `<p class="text-xs text-slate-500 leading-snug truncate">${escapeHtml(med.notes)}</p>`
+							: ''
+					}
+				</div>
+				<div class="flex items-center gap-1 shrink-0 pt-0.5">
+					<button
+						type="button"
+						onclick="startEditMedication('${escapeHtml(med.id).replace(/'/g, "\\'")}')"
+						class="text-blue-600 hover:text-blue-800 text-xs font-semibold px-2 py-1 rounded-md hover:bg-blue-50 transition cursor-pointer"
+					>
+						Edit
+					</button>
+					<button
+						type="button"
+						onclick="deleteMedicationItem('${escapeHtml(med.id).replace(/'/g, "\\'")}')"
+						class="text-rose-600 hover:text-rose-800 text-xs font-semibold px-2 py-1 rounded-md hover:bg-rose-50 transition cursor-pointer"
+					>
+						Delete
+					</button>
+				</div>
+			</div>
+		`
+		)
+		.join('');
+}
+
+function startEditMedication(medId) {
+	const medsList = getStructuredMedicationsList(latestBoardData);
+	const med = medsList.find((m) => m.id === medId);
+	if (!med) return;
+
+	editingMedicationId = medId;
+
+	const nameInput = document.getElementById('input-med-name');
+	const timeInput = document.getElementById('input-med-time');
+	const notesInput = document.getElementById('input-med-notes');
+	const formContainer = document.getElementById('med-form-container');
+	const formHeading = document.getElementById('med-form-heading');
+	const editingBadge = document.getElementById('med-editing-badge');
+	const cancelBtn = document.getElementById('btn-cancel-edit-med');
+	const saveBtnText = document.getElementById('btn-save-med-text');
+
+	if (nameInput) nameInput.value = med.name || '';
+	if (timeInput) timeInput.value = med.time || '';
+	if (notesInput) notesInput.value = med.notes || '';
+
+	if (formHeading) formHeading.innerText = 'Edit Medication';
+	if (editingBadge) editingBadge.classList.remove('hidden');
+	if (cancelBtn) cancelBtn.classList.remove('hidden');
+	if (saveBtnText) saveBtnText.innerText = 'Save Medication Changes';
+	if (formContainer) {
+		formContainer.className = 'p-3 bg-purple-50/50 rounded-xl border-2 border-purple-400 space-y-3 transition-colors';
+		formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	}
+
+	if (nameInput) nameInput.focus();
+}
+
+function cancelEditMedication() {
+	editingMedicationId = null;
+
+	const nameInput = document.getElementById('input-med-name');
+	const timeInput = document.getElementById('input-med-time');
+	const notesInput = document.getElementById('input-med-notes');
+	const formContainer = document.getElementById('med-form-container');
+	const formHeading = document.getElementById('med-form-heading');
+	const editingBadge = document.getElementById('med-editing-badge');
+	const cancelBtn = document.getElementById('btn-cancel-edit-med');
+	const saveBtnText = document.getElementById('btn-save-med-text');
+
+	if (nameInput) nameInput.value = '';
+	if (timeInput) timeInput.value = '';
+	if (notesInput) notesInput.value = '';
+
+	if (formHeading) formHeading.innerText = 'Add New Medication';
+	if (editingBadge) editingBadge.classList.add('hidden');
+	if (cancelBtn) cancelBtn.classList.add('hidden');
+	if (saveBtnText) saveBtnText.innerText = 'Add Medication';
+	if (formContainer) {
+		formContainer.className = 'p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors';
+	}
+}
+
+async function saveMedicationItem() {
+	const nameInput = document.getElementById('input-med-name');
+	const timeInput = document.getElementById('input-med-time');
+	const notesInput = document.getElementById('input-med-notes');
+
+	const name = (nameInput?.value || '').trim();
+	const time = (timeInput?.value || '').trim();
+	const notes = (notesInput?.value || '').trim();
+
+	if (!name) {
+		alert('Please enter a medication name.');
+		if (nameInput) nameInput.focus();
+		return;
+	}
+
+	const medId = editingMedicationId && !editingMedicationId.startsWith('legacy_')
+		? editingMedicationId
+		: `med_${Date.now()}`;
+
+	const medItem = {
+		id: medId,
+		name,
+		time,
+		notes,
+		updatedAt: Date.now(),
+	};
+
+	if (!latestBoardData) latestBoardData = {};
+	if (!latestBoardData.medicationList) latestBoardData.medicationList = {};
+	latestBoardData.medicationList[medId] = medItem;
+
+	const allMeds = Object.values(latestBoardData.medicationList);
+	const textSummary = allMeds.map((m) => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - ' + m.notes : ''}`).join('\n');
+	latestBoardData.medications = textSummary;
+
+	try {
+		await database.ref(`board/medicationList/${medId}`).set(medItem);
+		await database.ref('board/medications').set(textSummary);
+		showToast(`Medication "${name}" saved!`);
+	} catch (err) {
+		console.warn('Firebase medication save error:', err);
+		showToast(`Saved locally: "${name}"`);
+	}
+
+	cancelEditMedication();
+	renderMedicationsCard(latestBoardData);
+	renderAdminMedicationsList();
+}
+
+async function deleteMedicationItem(medId) {
+	const medsList = getStructuredMedicationsList(latestBoardData);
+	const med = medsList.find((m) => m.id === medId);
+	const name = med ? med.name : 'this medication';
+
+	if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+
+	if (latestBoardData?.medicationList && latestBoardData.medicationList[medId]) {
+		delete latestBoardData.medicationList[medId];
+	}
+
+	const allMeds = Object.values(latestBoardData?.medicationList || {});
+	const textSummary = allMeds.map((m) => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - ' + m.notes : ''}`).join('\n');
+	latestBoardData.medications = textSummary;
+
+	try {
+		await database.ref(`board/medicationList/${medId}`).remove();
+		await database.ref('board/medications').set(textSummary);
+		showToast(`Medication "${name}" deleted.`);
+	} catch (err) {
+		console.warn('Firebase medication delete error:', err);
+		showToast(`Deleted: "${name}"`);
+	}
+
+	if (editingMedicationId === medId) {
+		cancelEditMedication();
+	}
+
+	renderMedicationsCard(latestBoardData);
+	renderAdminMedicationsList();
+}
+
 function renderBoard(data) {
 	latestBoardData = data || {};
 
@@ -1026,14 +1315,8 @@ function renderBoard(data) {
 		'Add reminders in the caregiver panel.',
 		'⏰'
 	);
-	renderTextLinesCard(
-		'disp-medications',
-		'medications-count-badge',
-		data.medications,
-		'No medications listed',
-		'Add medication instructions in the caregiver panel.',
-		'💊'
-	);
+	renderMedicationsCard(data);
+	renderAdminMedicationsList();
 
 	// Update Weather
 	if (data.zipcode) {
@@ -1096,6 +1379,10 @@ function renderBoard(data) {
 		if (remEl && document.activeElement !== remEl) remEl.value = data.reminders || '';
 		const medEl = document.getElementById('input-medications');
 		if (medEl && document.activeElement !== medEl) medEl.value = data.medications || '';
+		const medNotesEl = document.getElementById('input-medication-notes');
+		if (medNotesEl && document.activeElement !== medNotesEl) {
+			medNotesEl.value = data.medicationNotes || '';
+		}
 		const medTakenEl = document.getElementById('input-meds-taken');
 		if (medTakenEl) medTakenEl.checked = data.medsTaken || false;
 		const zipEl = document.getElementById('input-zipcode');
@@ -1187,7 +1474,8 @@ function saveData() {
 	const announcement = document.getElementById('input-announcement').value;
 	const boardTitle = document.getElementById('input-board-title').value;
 	const reminders = document.getElementById('input-reminders').value;
-	const medications = document.getElementById('input-medications').value;
+	const medicationNotes = (document.getElementById('input-medication-notes')?.value || '').trim();
+	const medications = latestBoardData.medications || document.getElementById('input-medications')?.value || '';
 	const medsTaken = document.getElementById('input-meds-taken').checked;
 	const zipcode = document.getElementById('input-zipcode').value;
 	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
@@ -1213,6 +1501,7 @@ function saveData() {
 		announcement: announcement,
 		reminders: reminders,
 		medications: medications,
+		medicationNotes: medicationNotes,
 		medsTaken: medsTaken,
 		zipcode: zipcode,
 		aiRules: aiRules,
@@ -1883,7 +2172,13 @@ async function generateAiActionPlan(options = {}) {
 			todayDate: todayStr,
 			announcement: document.getElementById('input-announcement')?.value || latestBoardData.announcement || '',
 			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
-			medications: document.getElementById('input-medications')?.value || latestBoardData.medications || '',
+			medications: (() => {
+				const list = getStructuredMedicationsList(latestBoardData);
+				return list.length > 0
+					? list.map(m => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - Note: ' + m.notes : ''}`).join('\n')
+					: (latestBoardData.medications || '');
+			})(),
+			medicationInstructions: latestBoardData?.medicationNotes || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
 			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
 				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
