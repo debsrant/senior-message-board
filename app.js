@@ -1433,7 +1433,7 @@ async function generateAiActionPlan(options = {}) {
 				store: false,
 				system_instruction:
 					'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
-					'CRITICAL RULES: (1) Keep every item VERY CONCISEâ€”1 to 2 short, easy-to-scan sentences max. ' +
+					'CRITICAL RULES: (1) Keep every item VERY CONCISE - 1 to 2 short, easy-to-scan sentences max. ' +
 					'(2) Tailor advice specifically to the event context (`category` and `location`): ' +
 					'- For family/friend visits (category: family): focus on hospitality, connection, and energy pacing. If location is "home", suggest putting on a kettle of tea or coffee and resting beforehand so they have energy for visitors; if location is "outing", encourage having a lovely meal with loved ones. ' +
 					'- For doctor or medical visits (category: medical): focus on timely breakfast, Medicare card/glasses, driver notes, and questions for the doctor. ' +
@@ -1441,8 +1441,39 @@ async function generateAiActionPlan(options = {}) {
 					'- For home services (category: service): focus on keeping phone nearby and clear pathways. ' +
 					'(3) Do NOT simply repeat or parrot the schedule items. Give actionable, empathetic advice in natural conversational sentences. ' +
 					'(4) Naturally incorporate the weather activity suggestion (`weather.suggestion`) into `todayPlan`. ' +
-					'(5) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`. ';
-
+					'(5) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`.',
+				input:
+					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
+					JSON.stringify(boardSnapshot, null, 2),
+				response_format: {
+					type: 'text',
+					mime_type: 'application/json',
+					schema: {
+						type: 'object',
+						properties: {
+							todayPlan: {
+								type: 'array',
+								items: { type: 'string' },
+								description:
+									'1 to 2 short, concise conversational sentences offering actionable advice for today (tailored to event context, medication check-in, and weather suggestion).',
+							},
+							prepAlerts: {
+								type: 'array',
+								items: { type: 'string' },
+								description:
+									'1 to 2 short, concise coaching sentences giving proactive multi-day preparation advice tailored to upcoming event context (resting up before family visits, hydrating before medical appointments, and reminder notes).',
+							},
+							lookAhead: {
+								type: 'string',
+								description:
+									'1 short, warm sentence on how to pace energy over the next 3 to 5 days.',
+							},
+						},
+						required: ['todayPlan', 'prepAlerts', 'lookAhead'],
+					},
+				},
+			}),
+		});
 
 		if (!response.ok) {
 			const errText = await response.text();
