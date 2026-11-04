@@ -648,6 +648,203 @@ function loadGeminiApiKeyLocal() {
 	}
 }
 
+// ================= SENIOR DAILY CHECK-IN (INTERACTIVE, NO EMOJIS) =================
+
+const DEFAULT_ROTATING_CHECKIN_QUESTIONS = [
+	{
+		id: 'morning_energy',
+		startHour: 0,
+		endHour: 12,
+		question: 'How is your energy feeling this morning?',
+		choices: [
+			'Well-rested and energized',
+			'Peaceful and taking it easy',
+			'A bit slow or tired today',
+		],
+	},
+	{
+		id: 'afternoon_agenda',
+		startHour: 12,
+		endHour: 17,
+		question: 'What is on your agenda this afternoon?',
+		choices: [
+			'Reading, puzzles, or crafts',
+			'Enjoying fresh air or the porch',
+			'Watching a favorite show or movie',
+			'Taking a restful afternoon nap',
+		],
+	},
+	{
+		id: 'evening_dinner',
+		startHour: 17,
+		endHour: 24,
+		question: 'What sounds good for dinner tonight?',
+		choices: [
+			'Warm soup or stew',
+			'Pasta or comfort food',
+			'A sandwich or light meal',
+			'Whatever family brings',
+		],
+	},
+];
+
+function getActiveCheckinQuestion(boardData) {
+	const data = boardData || latestBoardData || {};
+	if (data.customCheckinQuestion && data.customCheckinQuestion.trim()) {
+		const qText = data.customCheckinQuestion.trim();
+		let choices = ['Yes', 'No', 'Not sure'];
+		if (data.customCheckinChoices && data.customCheckinChoices.trim()) {
+			const parsed = data.customCheckinChoices
+				.split(',')
+				.map((c) => c.trim())
+				.filter(Boolean);
+			if (parsed.length > 0) choices = parsed;
+		}
+		return { question: qText, choices };
+	}
+
+	const curHour = new Date().getHours();
+	const active =
+		DEFAULT_ROTATING_CHECKIN_QUESTIONS.find(
+			(q) => curHour >= q.startHour && curHour < q.endHour
+		) || DEFAULT_ROTATING_CHECKIN_QUESTIONS[0];
+
+	return { question: active.question, choices: active.choices };
+}
+
+function renderSeniorCheckin(boardData) {
+	const data = boardData || latestBoardData || {};
+	const sectionEl = document.getElementById('disp-senior-checkin-section');
+	const qEl = document.getElementById('disp-checkin-question');
+	const optionsEl = document.getElementById('disp-checkin-options');
+	const confirmEl = document.getElementById('disp-checkin-confirmation');
+	const answerTextEl = document.getElementById('disp-checkin-answer-text');
+	const timeTextEl = document.getElementById('disp-checkin-time-text');
+	const badgeEl = document.getElementById('disp-checkin-status-badge');
+
+	if (!sectionEl || !qEl || !optionsEl || !confirmEl) return;
+
+	const { question, choices } = getActiveCheckinQuestion(data);
+	qEl.innerText = question;
+
+	const todayStr = getTodayDateString();
+	let resp = data.seniorResponse;
+
+	if (!resp) {
+		try {
+			const localRaw = localStorage.getItem('smb_local_senior_response');
+			if (localRaw) {
+				const parsed = JSON.parse(localRaw);
+				if (parsed && parsed.dateStr === todayStr) {
+					resp = parsed;
+				}
+			}
+		} catch (e) {}
+	}
+
+	const hasAnsweredToday = resp && resp.dateStr === todayStr && resp.answer;
+
+	if (hasAnsweredToday) {
+		optionsEl.classList.add('hidden');
+		confirmEl.classList.remove('hidden');
+		if (badgeEl) badgeEl.classList.remove('hidden');
+		if (answerTextEl) answerTextEl.innerText = resp.answer;
+		if (timeTextEl) {
+			const timeStr = resp.timestamp
+				? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+				: '';
+			timeTextEl.innerText = timeStr ? `Logged today at ${timeStr}` : 'Logged for today';
+		}
+	} else {
+		confirmEl.classList.add('hidden');
+		optionsEl.classList.remove('hidden');
+		if (badgeEl) badgeEl.classList.add('hidden');
+
+		optionsEl.innerHTML = choices
+			.map(
+				(choice) => `
+				<button
+					type="button"
+					onclick="submitSeniorCheckin('${escapeHtml(choice).replace(/'/g, "\\'")}')"
+					class="w-full text-left px-4 py-3 bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white rounded-xl border-2 border-blue-200 hover:border-blue-400 text-slate-800 font-semibold text-sm sm:text-base transition shadow-none cursor-pointer"
+				>
+					${escapeHtml(choice)}
+				</button>
+			`
+			)
+			.join('');
+	}
+
+	renderAdminCheckinResponse(resp, todayStr);
+}
+
+async function submitSeniorCheckin(choice) {
+	const todayStr = getTodayDateString();
+	const { question } = getActiveCheckinQuestion(latestBoardData);
+	const responsePayload = {
+		question: question,
+		answer: choice,
+		timestamp: Date.now(),
+		dateStr: todayStr,
+	};
+
+	try {
+		localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
+	} catch (e) {}
+
+	if (!latestBoardData) latestBoardData = {};
+	latestBoardData.seniorResponse = responsePayload;
+	renderSeniorCheckin(latestBoardData);
+
+	try {
+		await database.ref('board/seniorResponse').set(responsePayload);
+		console.log('Senior check-in response synced to Firebase');
+	} catch (err) {
+		console.warn('Firebase sync of senior check-in failed (check database rules):', err);
+	}
+
+	renderAiSummaryCard();
+}
+
+function resetSeniorCheckinChoice() {
+	const optionsEl = document.getElementById('disp-checkin-options');
+	const confirmEl = document.getElementById('disp-checkin-confirmation');
+	if (optionsEl) optionsEl.classList.remove('hidden');
+	if (confirmEl) confirmEl.classList.add('hidden');
+}
+
+function renderAdminCheckinResponse(resp, todayStr) {
+	const respTextEl = document.getElementById('admin-checkin-response-text');
+	const clearBtn = document.getElementById('btn-admin-clear-checkin');
+	if (!respTextEl) return;
+
+	if (resp && resp.dateStr === todayStr && resp.answer) {
+		const timeStr = resp.timestamp
+			? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+			: '';
+		respTextEl.innerHTML = `<strong>${escapeHtml(resp.answer)}</strong> (for <em>"${escapeHtml(resp.question || 'Daily Check-In')}"</em>${timeStr ? ' at ' + timeStr : ''})`;
+		if (clearBtn) clearBtn.classList.remove('hidden');
+	} else {
+		respTextEl.innerText = 'No response logged yet today.';
+		if (clearBtn) clearBtn.classList.add('hidden');
+	}
+}
+
+async function adminClearSeniorResponse() {
+	if (!confirm('Clear the senior response so they can answer again today?')) return;
+	try {
+		await database.ref('board/seniorResponse').remove();
+		try {
+			localStorage.removeItem('smb_local_senior_response');
+		} catch (e) {}
+		if (latestBoardData) latestBoardData.seniorResponse = null;
+		renderSeniorCheckin(latestBoardData);
+		showToast('Senior response cleared.');
+	} catch (err) {
+		alert('Failed to clear response: ' + err.message);
+	}
+}
+
 function renderBoard(data) {
 	latestBoardData = data || {};
 
@@ -766,6 +963,18 @@ function renderBoard(data) {
 		if (aiRulesEl && document.activeElement !== aiRulesEl) {
 			aiRulesEl.value = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
 		}
+		const aiFeedbackEl = document.getElementById('input-ai-feedback');
+		if (aiFeedbackEl && document.activeElement !== aiFeedbackEl) {
+			aiFeedbackEl.value = data.aiFeedback || '';
+		}
+		const customQEl = document.getElementById('input-checkin-custom-question');
+		if (customQEl && document.activeElement !== customQEl) {
+			customQEl.value = data.customCheckinQuestion || '';
+		}
+		const customChoicesEl = document.getElementById('input-checkin-custom-choices');
+		if (customChoicesEl && document.activeElement !== customChoicesEl) {
+			customChoicesEl.value = data.customCheckinChoices || '';
+		}
 		const apiKeyEl = document.getElementById('input-gemini-api-key');
 		if (apiKeyEl && document.activeElement !== apiKeyEl && !apiKeyEl.value) {
 			apiKeyEl.value = loadGeminiApiKeyLocal();
@@ -782,6 +991,9 @@ function renderBoard(data) {
 
 	// Render Calendar Events & Appointments
 	renderEvents(data.events || {});
+
+	// Render Senior Daily Check-In
+	renderSeniorCheckin(data);
 
 	// Render AI Daily Action Plan & Prep Card
 	renderAiSummaryCard();
@@ -837,6 +1049,9 @@ function saveData() {
 	const medsTaken = document.getElementById('input-meds-taken').checked;
 	const zipcode = document.getElementById('input-zipcode').value;
 	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
+	const aiFeedback = (document.getElementById('input-ai-feedback')?.value ?? '').trim();
+	const customCheckinQuestion = (document.getElementById('input-checkin-custom-question')?.value ?? '').trim();
+	const customCheckinChoices = (document.getElementById('input-checkin-custom-choices')?.value ?? '').trim();
 
 	// Recompute fresh Smart Plan from the newly edited form fields
 	const freshSmartPlan = buildSmartRuleBasedPlan({
@@ -846,6 +1061,9 @@ function saveData() {
 		medications,
 		medsTaken,
 		aiRules,
+		aiFeedback,
+		customCheckinQuestion,
+		customCheckinChoices,
 	});
 
 	const updatePayload = {
@@ -856,6 +1074,9 @@ function saveData() {
 		medsTaken: medsTaken,
 		zipcode: zipcode,
 		aiRules: aiRules,
+		aiFeedback: aiFeedback,
+		customCheckinQuestion: customCheckinQuestion,
+		customCheckinChoices: customCheckinChoices,
 		aiAutoRefresh: true,
 		aiSummary: {
 			todayPlan: freshSmartPlan.todayPlan,
@@ -1014,6 +1235,9 @@ function buildSmartRuleBasedPlan(boardData) {
 	const todayPlan = [];
 	const prepAlerts = [];
 
+	const feedback = ((data.aiFeedback || latestBoardData?.aiFeedback || '')).toLowerCase();
+	const seniorResp = (data.seniorResponse && data.seniorResponse.dateStr === todayStr) ? data.seniorResponse : null;
+
 	// 1. Paragraph 1: Morning Check-in + Full-Day Weather Outlook & Best Window
 	const medStatus = data.medsTaken
 		? 'With your daily medicine already taken, you are off to a great start today.'
@@ -1075,7 +1299,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		if (category === 'family') {
 			if (location === 'home') {
 				outingAdvice = hour !== null && hour < 13
-					? `Enjoy an easy morning at home and put on a fresh kettle of tea \u2014 ${firstEvt.title} is coming up soon!`
+					? `Enjoy an easy morning at home and ${feedback.includes('coffee') ? 'put on a fresh pot of coffee' : 'put on a fresh kettle of tea'} \u2014 ${firstEvt.title} is coming up soon!`
 					: `Pace your morning at a relaxing rhythm so you feel energized and refreshed when company arrives for ${firstEvt.title}.`;
 			} else {
 				outingAdvice = `Enjoy getting together with family for ${firstEvt.title}! Have an unhurried morning and eat a light meal beforehand.`;
@@ -1104,6 +1328,13 @@ function buildSmartRuleBasedPlan(boardData) {
 		if (reminderNote) {
 			outingAdvice += ` Also remember: ${reminderNote.replace(/[.!]+$/, '')}.`;
 		}
+		if (seniorResp && seniorResp.answer) {
+			if (seniorResp.question.toLowerCase().includes('dinner')) {
+				outingAdvice += ` Looking forward to dinner, enjoy ${seniorResp.answer.toLowerCase()} tonight.`;
+			} else if (seniorResp.question.toLowerCase().includes('agenda') || seniorResp.question.toLowerCase().includes('afternoon')) {
+				outingAdvice += ` Enjoy your afternoon focusing on ${seniorResp.answer.toLowerCase()}.`;
+			}
+		}
 		todayPlan.push(outingAdvice);
 	} else if (todaysBirthdays.length > 0) {
 		const names = todaysBirthdays.map((c) => c.name).join(' and ');
@@ -1116,11 +1347,19 @@ function buildSmartRuleBasedPlan(boardData) {
 		);
 	} else {
 		const hasCallReminder = (data.reminders || '').toLowerCase().includes('call');
-		todayPlan.push(
-			hasCallReminder
-				? 'With no appointments today, enjoy a relaxed afternoon and catch up with family by phone.'
-				: 'With an open schedule today, move at your own pace and take a short walk around the house every couple of hours.'
-		);
+		let openDaySentence = hasCallReminder
+			? 'With no appointments today, enjoy a relaxed afternoon and catch up with family by phone.'
+			: (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')
+				? 'With an open schedule today, move at your own pace and enjoy your favorite puzzles, books, or indoor hobbies.'
+				: 'With an open schedule today, move at your own pace and take a short walk around the house every couple of hours.');
+		if (seniorResp && seniorResp.answer) {
+			if (seniorResp.question.toLowerCase().includes('dinner')) {
+				openDaySentence += ` Looking forward to dinner, enjoy ${seniorResp.answer.toLowerCase()} tonight.`;
+			} else if (seniorResp.question.toLowerCase().includes('agenda') || seniorResp.question.toLowerCase().includes('afternoon')) {
+				openDaySentence += ` Enjoy focusing on ${seniorResp.answer.toLowerCase()} this afternoon.`;
+			}
+		}
+		todayPlan.push(openDaySentence);
 	}
 
 	// 3. Concise Multi-Day Prep & Health Coaching (Event Reminders + Infusion/Health Rules)
@@ -1493,6 +1732,12 @@ async function generateAiActionPlan(options = {}) {
 			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
 			medications: document.getElementById('input-medications')?.value || latestBoardData.medications || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
+			seniorCheckIn: (latestBoardData?.seniorResponse && latestBoardData.seniorResponse.dateStr === todayStr) ? {
+				question: latestBoardData.seniorResponse.question,
+				answer: latestBoardData.seniorResponse.answer,
+				timeLogged: new Date(latestBoardData.seniorResponse.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+			} : null,
+			caregiverNotesAndFeedback: (document.getElementById('input-ai-feedback')?.value || latestBoardData?.aiFeedback || '').trim(),
 			weatherForecast: lastWeatherData ? {
 				currentTemp: `${lastWeatherData.temp}\u00B0F`,
 				high: `${lastWeatherData.high}\u00B0F`,
@@ -1531,10 +1776,11 @@ async function generateAiActionPlan(options = {}) {
 					'CRITICAL FORMAT & LENGTH RULES (must fit UI without scrolling):\n' +
 					'1. `todayPlan` MUST contain EXACTLY 2 short paragraphs (2 to 3 sentences total, under 65 words combined):\n' +
 					'   - Paragraph 1 (Morning & Weather Outlook): Combine morning kickoff (hydration and medicine status) with a dynamic synthesis of the full-day weather curve (morning vs. afternoon peak, rain timing, and best outdoor window from `weatherForecast`). DO NOT parrot raw numbers or canned phrases. Offer thoughtful, practical daily advice (e.g. step outside during the warmest 1 to 3 PM window, or take an early walk before afternoon showers).\n' +
-					'   - Paragraph 2 (Schedule & Energy Pacing): Tailored directly to today\'s events (or a peaceful open day). For family visits (category: family), encourage hospitality (kettle for tea) and resting beforehand; for medical visits (category: medical), advise timely breakfast, ID/glasses, and unhurried pacing; for errands, comfortable shoes; for home services, keeping pathways clear.\n' +
+					'   - Paragraph 2 (Schedule Pacing & Senior Check-In): Tailored directly to today\'s events (or a peaceful open day). If the senior has responded to today\'s check-in question (`seniorCheckIn`), warmly and naturally acknowledge their choice or plan (e.g. their dinner choice or morning mood) without making it sound robotic. For family visits (category: family), encourage hospitality (kettle for tea) and resting beforehand; for medical visits (category: medical), advise timely breakfast, ID/glasses, and unhurried pacing; for errands, comfortable shoes; for home services, keeping pathways clear.\n' +
 					'2. `prepAlerts`: 1 to 2 short coaching items (1 sentence each) for proactive multi-day preparation (extra hydration before infusions/labs, setting out shoes, or resting before tomorrow\'s visit).\n' +
 					'3. `lookAhead`: Exactly 1 warm, encouraging sentence pacing energy over the next 3 to 5 days.\n' +
-					'4. Do not repeat raw schedule lists or coded boilerplate. Write naturally in warm, dignified English.',
+					'4. CAREGIVER FEEDBACK & PERSONAL PREFERENCES: If `caregiverNotesAndFeedback` is provided, you MUST strictly adhere to these personal preferences: respect their likes/dislikes (e.g. coffee vs tea, puzzles vs walks), adopt the requested tone, and avoid repeating any routines or topics the caregiver disliked.\n' +
+					'5. Do not repeat raw schedule lists or coded boilerplate. NEVER use emojis or icons in `todayPlan`. Write naturally in warm, dignified English.',
 				input:
 					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
 					JSON.stringify(boardSnapshot, null, 2),
