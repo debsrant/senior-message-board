@@ -116,7 +116,6 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
            "expirationDate": "2026-11-10"
          }
        },
-       "reminders": "Good morning Grandma! Sarah and I are stopping by at 3:00 PM.",
        "medicationNotes": "Morning pills are in the blue organizer on the kitchen counter.",
        "medicationList": {
          "med_1": {
@@ -134,10 +133,15 @@ Firebase provides the backend infrastructure: **Firebase Authentication** for us
            "createdAt": 1700000002000
          }
        },
-       "medications": "Lisinopril 10mg (Morning (8:00 AM)) - Take 1 pill with a full glass of water.\nCalcium & Vitamin D (With Lunch) - Take with food.",
        "medsTaken": false,
        "medsTakenTime": 0,
        "zipcode": "90210",
+        "cardPositions": {
+          "messages": 1,
+          "medications": 2,
+          "events": 3,
+          "contacts": 4
+        },
        "updatedAt": 1700000000000
      }
      ```

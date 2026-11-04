@@ -1,4 +1,4 @@
-﻿// TODO: Replace with your actual Firebase project configuration keys
+// TODO: Replace with your actual Firebase project configuration keys
 const firebaseConfig = {
 	apiKey: 'AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk',
 	authDomain: 'seniormessageboard.firebaseapp.com',
@@ -494,17 +494,9 @@ let liveUsersData = {};
 
 function normalizeCardPositions(posData) {
 	const raw = posData || {};
-	const msgPos = raw.messages !== undefined ? raw.messages : raw.reminders;
-	const normalizedRaw = {
-		messages: msgPos,
-		medications: raw.medications,
-		events: raw.events,
-		contacts: raw.contacts,
-	};
 	const keys = ['messages', 'medications', 'events', 'contacts'];
-	// Rank cards by their saved numeric order (gracefully compressing 5-card legacy layouts into 1..4)
 	const entries = keys.map((k, idx) => {
-		const val = parseInt(normalizedRaw[k], 10);
+		const val = parseInt(raw[k], 10);
 		return { key: k, order: isNaN(val) ? idx + 100 : val, tie: idx };
 	});
 	entries.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.tie - b.tie));
@@ -521,7 +513,7 @@ function applyCardPositions(posData) {
 
 	const grid = document.getElementById('display-cards-grid');
 	const cardMap = {
-		messages: document.getElementById('card-messages') || document.getElementById('card-reminders'),
+		messages: document.getElementById('card-messages'),
 		medications: document.getElementById('card-medications'),
 		events: document.getElementById('card-events'),
 		contacts: document.getElementById('card-contacts'),
@@ -546,7 +538,7 @@ function applyCardPositions(posData) {
 		});
 	}
 
-	const selMsg = document.getElementById('select-pos-messages') || document.getElementById('select-pos-reminders');
+	const selMsg = document.getElementById('select-pos-messages');
 	const selMed = document.getElementById('select-pos-medications');
 	const selEvt = document.getElementById('select-pos-events');
 	const selCon = document.getElementById('select-pos-contacts');
@@ -563,30 +555,24 @@ async function handleCardPositionChange(changedCard, newPosValue) {
 		return;
 	}
 
-	const targetCard = changedCard === 'reminders' ? 'messages' : changedCard;
 	const targetPos = parseInt(newPosValue, 10);
 	if (![1, 2, 3, 4].includes(targetPos)) return;
 
-	const oldPos = currentCardPositions[targetCard];
+	const oldPos = currentCardPositions[changedCard];
 	if (oldPos === targetPos) return;
 
 	const updatedPositions = { ...currentCardPositions };
-	// Swap with the card currently holding targetPos
 	Object.keys(updatedPositions).forEach((key) => {
-		if (key !== targetCard && updatedPositions[key] === targetPos) {
+		if (key !== changedCard && updatedPositions[key] === targetPos) {
 			updatedPositions[key] = oldPos;
 		}
 	});
-	updatedPositions[targetCard] = targetPos;
+	updatedPositions[changedCard] = targetPos;
 
 	applyCardPositions(updatedPositions);
 
 	try {
-		const savePayload = {
-			...updatedPositions,
-			reminders: updatedPositions.messages,
-		};
-		await database.ref('board/cardPositions').set(savePayload);
+		await database.ref('board/cardPositions').set(updatedPositions);
 		showToast('Display card order updated!');
 	} catch (err) {
 		console.error('Failed to update card positions:', err);
@@ -1032,10 +1018,10 @@ function formatMessageDisplayDate(ts) {
 		d.getFullYear() === now.getFullYear();
 	const timePart = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 	if (isToday) {
-		return `Today \u2022 ${timePart}`;
+		return `Today • ${timePart}`;
 	}
 	const datePart = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-	return `${datePart} \u2022 ${timePart}`;
+	return `${datePart} • ${timePart}`;
 }
 
 function getDefaultAuthorName() {
@@ -1060,29 +1046,13 @@ function getStructuredMessagesList(boardData) {
 			expirationDate: m.expirationDate || '',
 		}));
 	}
-	if (data.reminders && typeof data.reminders === 'string') {
-		return data.reminders
-			.split('\n')
-			.map((l) => l.trim())
-			.filter(Boolean)
-			.map((line, idx) => ({
-				id: `legacy_${idx}`,
-				text: line,
-				author: 'Family',
-				authorUid: '',
-				createdAt: data.updatedAt || Date.now(),
-				updatedAt: data.updatedAt || Date.now(),
-				expirationDate: '',
-				isLegacy: true,
-			}));
-	}
 	return [];
 }
 
 function renderMessagesCard(boardData) {
 	const data = boardData || latestBoardData || {};
-	const container = document.getElementById('disp-messages') || document.getElementById('disp-reminders');
-	const countBadge = document.getElementById('messages-count-badge') || document.getElementById('reminders-count-badge');
+	const container = document.getElementById('disp-messages');
+	const countBadge = document.getElementById('messages-count-badge');
 	if (!container) return;
 
 	const allMessages = getStructuredMessagesList(data);
@@ -1247,21 +1217,6 @@ function cancelEditMessage() {
 	}
 }
 
-async function syncLegacyRemindersString() {
-	try {
-		const snap = await database.ref('board/messages').once('value');
-		const msgs = snap.val() || {};
-		const todayStr = getTodayDateString();
-		const lines = Object.values(msgs)
-			.filter((m) => !isMessageExpired(m, todayStr))
-			.map((m) => m.text)
-			.filter(Boolean);
-		await database.ref('board/reminders').set(lines.join('\n'));
-	} catch (e) {
-		console.warn('Could not sync legacy reminders string:', e);
-	}
-}
-
 async function saveMessageItem() {
 	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
 		alert('Permission Denied: Only ADMIN and EDITOR users can post or edit messages.');
@@ -1309,7 +1264,6 @@ async function saveMessageItem() {
 			showToast('Message posted successfully!');
 		}
 
-		await syncLegacyRemindersString();
 		cancelEditMessage();
 
 		if (latestBoardData?.aiAutoRefresh !== false) {
@@ -1338,7 +1292,6 @@ async function deleteMessageItem(messageId) {
 		if (editingMessageId === messageId) {
 			cancelEditMessage();
 		}
-		await syncLegacyRemindersString();
 		showToast('Message deleted.');
 
 		if (latestBoardData?.aiAutoRefresh !== false) {
@@ -1364,19 +1317,6 @@ function getStructuredMedicationsList(boardData) {
 			notes: m.notes || '',
 			createdAt: m.createdAt || m.updatedAt || 0,
 		}));
-	}
-	if (data.medications && typeof data.medications === 'string') {
-		return data.medications
-			.split('\n')
-			.map((l) => l.trim())
-			.filter(Boolean)
-			.map((line, idx) => ({
-				id: `legacy_${idx}`,
-				name: line,
-				time: '',
-				notes: '',
-				isLegacy: true,
-			}));
 	}
 	return [];
 }
@@ -1418,7 +1358,7 @@ function renderMedicationsCard(boardData) {
 	if (medsList.length === 0) {
 		container.innerHTML = `
 			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
-				<div class="text-3xl text-slate-300">ðŸ’Š</div>
+				<div class="text-3xl text-slate-300">💊</div>
 				<div class="text-sm sm:text-base font-bold text-slate-600">No medications listed</div>
 				<div class="text-xs text-slate-400">Add medications in the caregiver panel.</div>
 			</div>
@@ -1534,7 +1474,7 @@ function startEditMedication(medId) {
 }
 
 function cancelEditMedication() {
-	editingMedicationId = null;
+	editingMessageId = null;
 
 	const nameInput = document.getElementById('input-med-name');
 	const timeInput = document.getElementById('input-med-time');
@@ -1573,9 +1513,7 @@ async function saveMedicationItem() {
 		return;
 	}
 
-	const medId = editingMedicationId && !editingMedicationId.startsWith('legacy_')
-		? editingMedicationId
-		: `med_${Date.now()}`;
+	const medId = editingMedicationId || `med_${Date.now()}`;
 
 	const medItem = {
 		id: medId,
@@ -1589,13 +1527,8 @@ async function saveMedicationItem() {
 	if (!latestBoardData.medicationList) latestBoardData.medicationList = {};
 	latestBoardData.medicationList[medId] = medItem;
 
-	const allMeds = Object.values(latestBoardData.medicationList);
-	const textSummary = allMeds.map((m) => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - ' + m.notes : ''}`).join('\n');
-	latestBoardData.medications = textSummary;
-
 	try {
 		await database.ref(`board/medicationList/${medId}`).set(medItem);
-		await database.ref('board/medications').set(textSummary);
 		showToast(`Medication "${name}" saved!`);
 	} catch (err) {
 		console.warn('Firebase medication save error:', err);
@@ -1618,13 +1551,8 @@ async function deleteMedicationItem(medId) {
 		delete latestBoardData.medicationList[medId];
 	}
 
-	const allMeds = Object.values(latestBoardData?.medicationList || {});
-	const textSummary = allMeds.map((m) => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - ' + m.notes : ''}`).join('\n');
-	latestBoardData.medications = textSummary;
-
 	try {
 		await database.ref(`board/medicationList/${medId}`).remove();
-		await database.ref('board/medications').set(textSummary);
 		showToast(`Medication "${name}" deleted.`);
 	} catch (err) {
 		console.warn('Firebase medication delete error:', err);
@@ -1734,12 +1662,20 @@ function renderBoard(data) {
 
 	// Populate Maintenance & AI Summary Inputs if user is admin or editor
 	if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
-		const titleEl = document.getElementById('input-board-title');
+				const titleEl = document.getElementById('input-board-title');
 		if (titleEl && document.activeElement !== titleEl) titleEl.value = data.boardTitle || 'Senior Message Board';
-		const remEl = document.getElementById('input-reminders');
-		if (remEl && document.activeElement !== remEl) remEl.value = data.reminders || '';
-		const medEl = document.getElementById('input-medications');
-		if (medEl && document.activeElement !== medEl) medEl.value = data.medications || '';
+
+		// Prune legacy transition data from Firebase
+		if (data.reminders !== undefined) {
+			database.ref('board/reminders').remove().catch(() => {});
+		}
+		if (data.medications !== undefined) {
+			database.ref('board/medications').remove().catch(() => {});
+		}
+		if (data.cardPositions && data.cardPositions.reminders !== undefined) {
+			database.ref('board/cardPositions/reminders').remove().catch(() => {});
+		}
+
 		const medNotesEl = document.getElementById('input-medication-notes');
 		if (medNotesEl && document.activeElement !== medNotesEl) {
 			medNotesEl.value = data.medicationNotes || '';
@@ -1748,7 +1684,6 @@ function renderBoard(data) {
 		if (medTakenEl) medTakenEl.checked = data.medsTaken || false;
 		const zipEl = document.getElementById('input-zipcode');
 		if (zipEl && document.activeElement !== zipEl) zipEl.value = data.zipcode || '';
-
 		const aiRulesEl = document.getElementById('input-ai-rules');
 		if (aiRulesEl && document.activeElement !== aiRulesEl) {
 			aiRulesEl.value = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
@@ -1834,9 +1769,7 @@ function saveData() {
 
 	const announcement = document.getElementById('input-announcement').value;
 	const boardTitle = document.getElementById('input-board-title').value;
-	const reminders = document.getElementById('input-reminders').value;
 	const medicationNotes = (document.getElementById('input-medication-notes')?.value || '').trim();
-	const medications = latestBoardData.medications || document.getElementById('input-medications')?.value || '';
 	const medsTaken = document.getElementById('input-meds-taken').checked;
 	const zipcode = document.getElementById('input-zipcode').value;
 	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
@@ -1848,8 +1781,6 @@ function saveData() {
 	const freshSmartPlan = buildSmartRuleBasedPlan({
 		...latestBoardData,
 		announcement,
-		reminders,
-		medications,
 		medsTaken,
 		aiRules,
 		aiFeedback,
@@ -1860,8 +1791,6 @@ function saveData() {
 	const updatePayload = {
 		boardTitle: boardTitle,
 		announcement: announcement,
-		reminders: reminders,
-		medications: medications,
 		medicationNotes: medicationNotes,
 		medsTaken: medsTaken,
 		zipcode: zipcode,
@@ -1882,11 +1811,13 @@ function saveData() {
 	};
 
 	if (userProfile.role === 'ADMIN') {
-		updatePayload.cardPositions = {
-			...currentCardPositions,
-			reminders: currentCardPositions.messages,
-		};
+		updatePayload.cardPositions = currentCardPositions;
 	}
+
+	// Delete legacy transition data in Firebase
+	database.ref('board/reminders').remove().catch(() => {});
+	database.ref('board/medications').remove().catch(() => {});
+	database.ref('board/cardPositions/reminders').remove().catch(() => {});
 
 	database.ref('board').update(
 		updatePayload,
@@ -2142,9 +2073,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		);
 	} else {
 		const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
-		const hasCallReminder =
-			(data.reminders || '').toLowerCase().includes('call') ||
-			activeMsgs.some((m) => (m.text || '').toLowerCase().includes('call'));
+		const hasCallReminder = activeMsgs.some((m) => (m.text || '').toLowerCase().includes('call'));
 		let openDaySentence = hasCallReminder
 			? 'With no appointments today, enjoy a relaxed afternoon and catch up with family by phone.'
 			: (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')
@@ -2538,7 +2467,6 @@ async function generateAiActionPlan(options = {}) {
 		const boardSnapshot = {
 			todayDate: todayStr,
 			announcement: document.getElementById('input-announcement')?.value || latestBoardData.announcement || '',
-			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
 			familyMessages: (() => {
 				const msgs = getStructuredMessagesList(latestBoardData);
 				const todayStr = getTodayDateString();
@@ -2546,12 +2474,9 @@ async function generateAiActionPlan(options = {}) {
 					.filter((m) => !isMessageExpired(m, todayStr))
 					.map((m) => `${m.text} (from ${m.author}, posted ${formatMessageDisplayDate(m.createdAt)})`);
 			})(),
-			medications: (() => {
-				const list = getStructuredMedicationsList(latestBoardData);
-				return list.length > 0
-					? list.map(m => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - Note: ' + m.notes : ''}`).join('\n')
-					: (latestBoardData.medications || '');
-			})(),
+			medications: getStructuredMedicationsList(latestBoardData)
+				.map((m) => `${m.name}${m.time ? ' (' + m.time + ')' : ''}${m.notes ? ' - Note: ' + m.notes : ''}`)
+				.join('\n'),
 			medicationInstructions: latestBoardData?.medicationNotes || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
 			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
@@ -4229,10 +4154,7 @@ async function deleteCalendarEvent(eventId) {
 	}
 }
 
-// Post Message (Legacy / Alias to saveData)
-function saveUserMessage() {
-	saveData();
-}
+
 
 // Notification System & Preferences
 function notifyMedicationTaken(time) {
