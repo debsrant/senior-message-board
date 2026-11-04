@@ -688,8 +688,89 @@ const DEFAULT_ROTATING_CHECKIN_QUESTIONS = [
 	},
 ];
 
+function generateSmartFallbackQuestion(boardData) {
+	const data = boardData || latestBoardData || {};
+	const todayStr = getTodayDateString();
+	const allEvents = Object.values(data.events || {}).filter(
+		(e) => isEventUpcomingOrActive(e, todayStr) && getEventDaysFromToday(e) === 0
+	);
+
+	// Event-based context
+	if (allEvents.length > 0) {
+		const first = allEvents[0];
+		const ctx = getEventContext(first);
+		if (ctx.category === 'family') {
+			return {
+				question: `${first.title} is coming up today - what sounds nicest to enjoy together?`,
+				choices: [
+					'Chat over a fresh drink',
+					'Share a meal or treats',
+					'Sit outside on the porch',
+					'Just relax and catch up',
+				],
+			};
+		}
+		if (ctx.category === 'medical') {
+			return {
+				question: `You have ${first.title} today - how are you feeling before heading out?`,
+				choices: [
+					'Ready and prepared',
+					'Taking things slow and steady',
+					'A bit tired or rushed',
+					'Looking forward to getting it done',
+				],
+			};
+		}
+	}
+
+	// Weather-based context
+	if (lastWeatherData) {
+		const rainChance = lastWeatherData.rainChanceMax || 0;
+		const high = lastWeatherData.high || 70;
+		if (rainChance >= 60) {
+			return {
+				question: 'It looks rainy today - what sounds most comforting to enjoy indoors?',
+				choices: [
+					'A warm drink and a good book',
+					'Working on a favorite puzzle',
+					'Watching a movie or show',
+					'Taking an afternoon rest',
+				],
+			};
+		}
+		if (high >= 65 && high <= 82) {
+			return {
+				question: 'The weather looks pleasant today - would you like to enjoy some fresh air?',
+				choices: [
+					'Sit on the porch or patio',
+					'Take a short stroll',
+					'Open windows for fresh air',
+					'Stay cozy inside',
+				],
+			};
+		}
+	}
+
+	// Time-of-day dinner context
+	const curHour = new Date().getHours();
+	if (curHour >= 16) {
+		return {
+			question: 'What sounds most appetizing for dinner tonight?',
+			choices: [
+				'Warm soup or stew',
+				'Pasta or comfort food',
+				'A sandwich or light salad',
+				'Whatever family brings',
+			],
+		};
+	}
+
+	return null;
+}
+
 function getActiveCheckinQuestion(boardData) {
 	const data = boardData || latestBoardData || {};
+	// 1. Explicit Admin custom question override
 	if (data.customCheckinQuestion && data.customCheckinQuestion.trim()) {
 		const qText = data.customCheckinQuestion.trim();
 		let choices = ['Yes', 'No', 'Not sure'];
@@ -700,16 +781,39 @@ function getActiveCheckinQuestion(boardData) {
 				.filter(Boolean);
 			if (parsed.length > 0) choices = parsed;
 		}
-		return { question: qText, choices };
+		return { question: qText, choices, source: 'Custom' };
 	}
 
+	// 2. AI-generated dynamic question for today
+	const todayStr = getTodayDateString();
+	if (
+		data.aiQuestion &&
+		data.aiQuestion.question &&
+		Array.isArray(data.aiQuestion.choices) &&
+		data.aiQuestion.choices.length >= 2 &&
+		data.aiQuestion.generatedDate === todayStr
+	) {
+		return {
+			question: data.aiQuestion.question.trim(),
+			choices: data.aiQuestion.choices.map((c) => c.trim()).filter(Boolean),
+			source: 'AI Generated',
+		};
+	}
+
+	// 3. Fallback smart context-aware question based on today's events, weather, or time of day
+	const smartQ = generateSmartFallbackQuestion(data);
+	if (smartQ) {
+		return { ...smartQ, source: 'Smart Dynamic' };
+	}
+
+	// 4. Default time-of-day rotation
 	const curHour = new Date().getHours();
 	const active =
 		DEFAULT_ROTATING_CHECKIN_QUESTIONS.find(
 			(q) => curHour >= q.startHour && curHour < q.endHour
 		) || DEFAULT_ROTATING_CHECKIN_QUESTIONS[0];
 
-	return { question: active.question, choices: active.choices };
+	return { question: active.question, choices: active.choices, source: 'Default' };
 }
 
 function renderSeniorCheckin(boardData) {
@@ -794,11 +898,20 @@ async function submitSeniorCheckin(choice) {
 
 	if (!latestBoardData) latestBoardData = {};
 	latestBoardData.seniorResponse = responsePayload;
+	if (!latestBoardData.seniorHistory) latestBoardData.seniorHistory = {};
+	const histKey = `resp_${Date.now()}`;
+	latestBoardData.seniorHistory[histKey] = responsePayload;
+
+	try {
+		localStorage.setItem('smb_local_senior_history', JSON.stringify(latestBoardData.seniorHistory));
+	} catch (e) {}
+
 	renderSeniorCheckin(latestBoardData);
 
 	try {
 		await database.ref('board/seniorResponse').set(responsePayload);
-		console.log('Senior check-in response synced to Firebase');
+		await database.ref(`board/seniorHistory/${histKey}`).set(responsePayload);
+		console.log('Senior check-in response and history synced to Firebase');
 	} catch (err) {
 		console.warn('Firebase sync of senior check-in failed (check database rules):', err);
 	}
@@ -816,7 +929,15 @@ function resetSeniorCheckinChoice() {
 function renderAdminCheckinResponse(resp, todayStr) {
 	const respTextEl = document.getElementById('admin-checkin-response-text');
 	const clearBtn = document.getElementById('btn-admin-clear-checkin');
+	const activeQInfoEl = document.getElementById('admin-active-question-info');
+	const historyEl = document.getElementById('admin-checkin-history');
 	if (!respTextEl) return;
+
+	// Show current active question info
+	const activeQ = getActiveCheckinQuestion(latestBoardData);
+	if (activeQInfoEl) {
+		activeQInfoEl.innerHTML = `Active Question: <em>"${escapeHtml(activeQ.question)}"</em> <span class="text-[10px] font-semibold text-slate-500">(${activeQ.source || 'Auto'})</span>`;
+	}
 
 	if (resp && resp.dateStr === todayStr && resp.answer) {
 		const timeStr = resp.timestamp
@@ -827,6 +948,27 @@ function renderAdminCheckinResponse(resp, todayStr) {
 	} else {
 		respTextEl.innerText = 'No response logged yet today.';
 		if (clearBtn) clearBtn.classList.add('hidden');
+	}
+
+	// Render recent history list
+	if (historyEl) {
+		let historyMap = latestBoardData?.seniorHistory;
+		if (!historyMap) {
+			try {
+				const rawHist = localStorage.getItem('smb_local_senior_history');
+				if (rawHist) historyMap = JSON.parse(rawHist);
+			} catch (e) {}
+		}
+		const historyList = Object.values(historyMap || {})
+			.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+			.slice(0, 3);
+
+		if (historyList.length > 0) {
+			historyEl.innerHTML = '<strong>Recent Feedback:</strong> ' + historyList.map(h => `${escapeHtml(h.answer)} <span class="text-slate-400">(${h.dateStr})</span>`).join(' \u2022 ');
+			historyEl.classList.remove('hidden');
+		} else {
+			historyEl.classList.add('hidden');
+		}
 	}
 }
 
@@ -1240,8 +1382,8 @@ function buildSmartRuleBasedPlan(boardData) {
 
 	// 1. Paragraph 1: Morning Check-in + Full-Day Weather Outlook & Best Window
 	const medStatus = data.medsTaken
-		? 'With your daily medicine already taken, you are off to a great start today.'
-		: 'Start your morning with a glass of water and your daily medicine.';
+		? 'With medicine already taken this morning, you are all set to relax and enjoy the day.'
+		: 'Good morning! Have an easy start to the day, keep some water nearby, and take your morning medicine when you are ready.';
 
 	let weatherAdvice = 'Take things at an easy, comfortable pace and keep a glass of water nearby.';
 	if (lastWeatherData) {
@@ -1674,9 +1816,20 @@ async function generateAiActionPlan(options = {}) {
 
 	if (!apiKey) {
 		// Instant Smart Care Companion generation without requiring an external key
+		const finalAiQuestion =
+			(parsed.dailyQuestion && parsed.dailyQuestion.question && Array.isArray(parsed.dailyQuestion.choices) && parsed.dailyQuestion.choices.length >= 2)
+				? {
+					question: parsed.dailyQuestion.question.trim(),
+					choices: parsed.dailyQuestion.choices.map((c) => c.trim()).filter(Boolean),
+					generatedDate: todayStr,
+					updatedAt: Date.now(),
+				}
+				: (smartBaseline.aiQuestion || null);
+
 		if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 			await database.ref('board').update({
 				aiRules: rulesText,
+				aiQuestion: finalAiQuestion,
 				aiSummary: {
 					todayPlan: smartBaseline.todayPlan,
 					prepAlerts: smartBaseline.prepAlerts,
@@ -1732,6 +1885,10 @@ async function generateAiActionPlan(options = {}) {
 			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
 			medications: document.getElementById('input-medications')?.value || latestBoardData.medications || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
+			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
+				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+				.slice(0, 6)
+				.map((h) => ({ date: h.dateStr, question: h.question, answered: h.answer })),
 			seniorCheckIn: (latestBoardData?.seniorResponse && latestBoardData.seniorResponse.dateStr === todayStr) ? {
 				question: latestBoardData.seniorResponse.question,
 				answer: latestBoardData.seniorResponse.answer,
@@ -1772,15 +1929,17 @@ async function generateAiActionPlan(options = {}) {
 				model: 'gemini-3.8-flash',
 				store: false,
 				system_instruction:
-					'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board.\n' +
-					'CRITICAL FORMAT & LENGTH RULES (must fit UI without scrolling):\n' +
-					'1. `todayPlan` MUST contain EXACTLY 2 short paragraphs (2 to 3 sentences total, under 65 words combined):\n' +
-					'   - Paragraph 1 (Morning & Weather Outlook): Combine morning kickoff (hydration and medicine status) with a dynamic synthesis of the full-day weather curve (morning vs. afternoon peak, rain timing, and best outdoor window from `weatherForecast`). DO NOT parrot raw numbers or canned phrases. Offer thoughtful, practical daily advice (e.g. step outside during the warmest 1 to 3 PM window, or take an early walk before afternoon showers).\n' +
-					'   - Paragraph 2 (Schedule Pacing & Senior Check-In): Tailored directly to today\'s events (or a peaceful open day). If the senior has responded to today\'s check-in question (`seniorCheckIn`), warmly and naturally acknowledge their choice or plan (e.g. their dinner choice or morning mood) without making it sound robotic. For family visits (category: family), encourage hospitality (kettle for tea) and resting beforehand; for medical visits (category: medical), advise timely breakfast, ID/glasses, and unhurried pacing; for errands, comfortable shoes; for home services, keeping pathways clear.\n' +
-					'2. `prepAlerts`: 1 to 2 short coaching items (1 sentence each) for proactive multi-day preparation (extra hydration before infusions/labs, setting out shoes, or resting before tomorrow\'s visit).\n' +
-					'3. `lookAhead`: Exactly 1 warm, encouraging sentence pacing energy over the next 3 to 5 days.\n' +
-					'4. CAREGIVER FEEDBACK & PERSONAL PREFERENCES: If `caregiverNotesAndFeedback` is provided, you MUST strictly adhere to these personal preferences: respect their likes/dislikes (e.g. coffee vs tea, puzzles vs walks), adopt the requested tone, and avoid repeating any routines or topics the caregiver disliked.\n' +
-					'5. Do not repeat raw schedule lists or coded boilerplate. NEVER use emojis or icons in `todayPlan`. Write naturally in warm, dignified English.',
+					'You are a loving, thoughtful family member speaking directly to an older adult ("you") on their home message board.\n' +
+					'Your voice is warm, natural, colloquial, and genuinely human - like a note left on the by someone who cares deeply about them. Avoid robotic checklists, clinical instructions, or automated assistant cliches\n\n' +
+					'CRITICAL RULES:\n' +
+					'1. `todayPlan` (EXACTLY 2 short paragraphs, 2 to 3 sentences total, under 60 words combined, NEVER USE EMOJIS):\n' +
+					'   - Paragraph 1: Conversational morning kickoff describing how the day feels naturally without reading like a weather forecast. If medicine is needed, mention it warmly as part of an easy morning start.\n' +
+					'   - Paragraph 2: Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful open day). If the senior answered today\'s check-in question (`seniorCheckIn`), warmly and naturally weave their preference or choice into this paragraph.\n' +
+					'2. `dailyQuestion`: Create ONE thoughtful, engaging check-in question for the senior for today based on live context (weather, today\'s plans, or learning from their recent choices in `seniorRecentHistoryAndFeedback`). Provide 3 or 4 distinct, senior-friendly choices (each under 6 words). DO NOT include emojis or icons in the question or choices.\n' +
+					'3. LEARN FROM THE SENIOR: Review `seniorRecentHistoryAndFeedback`. Notice what they enjoy (e.g. favorite foods, porch sitting, puzzles) or if they felt tired recently. Acknowledge and build on their real habits rather than guessing.\n' +
+					'4. CAREGIVER GUIDANCE: If `caregiverNotesAndFeedback` is provided, follow every detail faithfully (tone, avoided routines, favorite drinks/hobbies).\n' +
+					'5. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
+					'6. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.',
 				input:
 					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
 					JSON.stringify(boardSnapshot, null, 2),
@@ -1807,8 +1966,23 @@ async function generateAiActionPlan(options = {}) {
 								description:
 									'1 short, warm sentence on how to pace energy over the next 3 to 5 days.',
 							},
+						dailyQuestion: {
+								type: 'object',
+								properties: {
+									question: {
+										type: 'string',
+										description: 'A friendly, single-sentence check-in question directly relevant to today. No emojis.',
+									},
+									choices: {
+										type: 'array',
+										items: { type: 'string' },
+										description: '3 or 4 distinct answer choices under 6 words each. No emojis.',
+									},
+								},
+								required: ['question', 'choices'],
+							},
 						},
-						required: ['todayPlan', 'prepAlerts', 'lookAhead'],
+						required: ['todayPlan', 'prepAlerts', 'lookAhead', 'dailyQuestion'],
 					},
 				},
 			}),
