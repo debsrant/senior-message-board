@@ -1,4 +1,4 @@
-﻿# Project Instructions
+# Project Instructions
 
 This document provides setup and operational instructions for each product and service used in the **Senior Message Board** project.
 
@@ -193,7 +193,7 @@ Example rules:
      - Prominent, high-contrast **"💊 I TOOK MY MEDS"** button when action is required.
      - Automatically transforms into a calm, reassuring **"✅ Meds Logged"** state with timestamp ("Logged today at 8:30 AM") and badge once logged, eliminating redundant warning boxes.
   4. **Main Message & Daily Companion Hub (`#card-announcement`) (Spacious 2-Column Layout)**:
-     - **Column 1 (`📣 Today's Message & Suggestions`)**: Displays the caregiver's personalized daily announcement in large, comforting typography when present—and **automatically hides completely when empty** so no placeholder takes up screen space. Directly underneath, displays conversational AI daily suggestions.
+     - **Column 1 (`📣 Today's Message & Suggestions`)**: Displays the caregiver's personalized daily announcement in large, comforting typography when present—and **automatically hides completely when empty** so no placeholder takes up screen space. Directly underneath, displays conversational AI daily suggestions (`#disp-ai-today-plan`), kept to exactly 2 concise, easy-to-scan paragraphs (under ~65 words total): Paragraph 1 synthesizes morning hydration/meds with the full-day weather curve (morning chill vs. afternoon peak, rain timing, and best fresh air window); Paragraph 2 tailors schedule and energy pacing directly to today's events (family visits, doctor appointments, or relaxing pace).
      - **Column 2 (`📅 Scheduled for Today & Health Prep`)**: Displays today's appointments, major US holidays, and birthdays (with `#today-events-count-badge`), followed by proactive multi-day prep advice (`#disp-ai-prep-alerts`) and the pacing look-ahead (`#disp-ai-look-ahead`).
   5. **Positionable 4-Card Reminders Section (1 Column on Phones, 2 Columns on Tablets, 3 Columns on Larger Screens)**: Displays **Daily Reminders**, **Medications** (simplified medication information panel), **Appointments & Events** (which automatically weaves upcoming major US holidays chronologically into the upcoming appointments list with holiday emojis and countdown badges), and **Contacts List** in a responsive grid (`grid-cols-1 md:grid-cols-2 xl:grid-cols-3`, with card height `max-h-[22.5rem] sm:max-h-96` and internal scrolling), ordered dynamically according to the Admin's chosen positions (Position 1 through Position 4).
   6. **Entry Count Badges on All Scrollable Cards**: Every scrollable card (**Scheduled for Today**, **Daily Reminders**, **Medications**, **Appointments & Events**, and **Contacts List**) automatically displays a badge indicating the number of entries (`1 Entry` or `N Entries`) when entries exist—and hides the badge when empty—so the senior knows at a glance how many items are inside each scrollable card.
@@ -279,8 +279,8 @@ The board displays local weather and upcoming major US holidays using public, ke
     - Endpoint: `https://nominatim.openstreetmap.org/search?postalcode={zip}&country=US&format=json`
     - No API key is required. Ensure respectful request frequencies (requests are triggered only when the ZIP code updates).
 2. **Open-Meteo Weather API**:
-    - Fetches current temperatures, daily highs/lows, and weather condition codes.
-    - Endpoint: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
+    - Fetches current temperatures, daily highs/lows, hourly temperature curves (morning 8–11 AM, afternoon peak 12–4 PM, evening wind-down 5–9 PM), precipitation probabilities, and computes the best outdoor/fresh air window.
+    - Endpoint: `https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true&hourly=temperature_2m,precipitation_probability,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&temperature_unit=fahrenheit`
     - Open-source, free for non-commercial use, and requires no API key.
 3. **Nager.Date Public Holidays API**:
     - Fetches upcoming US public holidays (`https://date.nager.at/api/v3/NextPublicHolidays/US`) and merges them with the built-in US cultural holiday calendar. Requires no API key.

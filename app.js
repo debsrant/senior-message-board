@@ -211,14 +211,80 @@ async function updateWeather(zip) {
 				'';
 
 			const weatherRes = await fetch(
-				`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min&timezone=auto&temperature_unit=fahrenheit`
+				`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,precipitation_probability,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto&temperature_unit=fahrenheit`
 			);
 			const weatherData = await weatherRes.json();
 
 			const temp = Math.round(weatherData.current_weather.temperature);
-			const high = Math.round(weatherData.daily.temperature_2m_max[0]);
-			const low = Math.round(weatherData.daily.temperature_2m_min[0]);
+			const high = Math.round(weatherData.daily?.temperature_2m_max?.[0] ?? temp);
+			const low = Math.round(weatherData.daily?.temperature_2m_min?.[0] ?? temp);
 			const code = weatherData.current_weather.weathercode;
+			const rainChanceMax = Math.round(weatherData.daily?.precipitation_probability_max?.[0] ?? 0);
+
+			const hourlyTemps = weatherData.hourly?.temperature_2m || [];
+			const hourlyPrecip = weatherData.hourly?.precipitation_probability || [];
+			const hourlyCodes = weatherData.hourly?.weathercode || [];
+
+			// Morning curve (8 AM - 11 AM)
+			const morningTemps = hourlyTemps.slice(8, 12).map(Math.round).filter((n) => !isNaN(n));
+			const morningLow = morningTemps.length ? Math.min(...morningTemps) : low;
+			const morningHigh = morningTemps.length ? Math.max(...morningTemps) : temp;
+			const morningCode = hourlyCodes[9] !== undefined ? hourlyCodes[9] : code;
+			const morningDesc = getWeatherDesc(morningCode);
+
+			// Afternoon peak (12 PM - 4 PM)
+			const afternoonTemps = hourlyTemps.slice(12, 17).map(Math.round).filter((n) => !isNaN(n));
+			const afternoonPeak = afternoonTemps.length ? Math.max(...afternoonTemps) : high;
+			const afternoonCode = hourlyCodes[14] !== undefined ? hourlyCodes[14] : code;
+			const afternoonDesc = getWeatherDesc(afternoonCode);
+
+			// Evening wind-down (5 PM - 9 PM)
+			const eveningTemps = hourlyTemps.slice(17, 22).map(Math.round).filter((n) => !isNaN(n));
+			const eveningAvg = eveningTemps.length ? Math.round(eveningTemps.reduce((a, b) => a + b, 0) / eveningTemps.length) : low;
+
+			// Full-day rain timing & likelihood
+			let rainTiming = "Dry and clear all day";
+			if (rainChanceMax >= 30) {
+				let firstRainHour = -1;
+				for (let h = 6; h <= 22; h++) {
+					if (hourlyPrecip[h] >= 30) {
+						firstRainHour = h;
+						break;
+					}
+				}
+				if (firstRainHour !== -1) {
+					const rainPeriod = firstRainHour < 12 ? "morning" : firstRainHour < 17 ? "afternoon" : "evening";
+					const rainHourStr = (firstRainHour % 12 || 12) + (firstRainHour >= 12 ? " PM" : " AM");
+					rainTiming = `Rain expected in the ${rainPeriod} around ${rainHourStr} (${rainChanceMax}% chance)`;
+				} else {
+					rainTiming = `Chance of showers later today (${rainChanceMax}%)`;
+				}
+			}
+
+			// Best outdoor / fresh air window
+			let bestWindow = "Early afternoon";
+			if (rainChanceMax >= 70 && !hourlyPrecip.slice(10, 17).some((p) => p < 40)) {
+				bestWindow = "Indoor day recommended (rainy throughout)";
+			} else {
+				let bestHour = 14;
+				let bestScore = -999;
+				for (let h = 10; h <= 16; h++) {
+					const t = hourlyTemps[h] || 60;
+					const p = hourlyPrecip[h] || 0;
+					const tempScore = 75 - Math.abs(72 - t);
+					const score = tempScore - p * 0.8;
+					if (score > bestScore) {
+						bestScore = score;
+						bestHour = h;
+					}
+				}
+				const startH = (bestHour - 1) % 12 || 12;
+				const startAmpm = (bestHour - 1) >= 12 ? "PM" : "AM";
+				const endH = (bestHour + 1) % 12 || 12;
+				const endAmpm = (bestHour + 1) >= 12 ? "PM" : "AM";
+				const bestTemp = Math.round(hourlyTemps[bestHour] || high);
+				bestWindow = `${startH}:00 ${startAmpm} \u2013 ${endH}:00 ${endAmpm} (around ${bestTemp}\u00B0F)`;
+			}
 
 			const weatherIcons = {
 				0: '☀️',
@@ -267,6 +333,12 @@ async function updateWeather(zip) {
 				icon: weatherIcons[code] || '🌤️',
 				desc,
 				suggestion,
+				rainChanceMax,
+				rainTiming,
+				morning: `${morningLow}\u00B0F to ${morningHigh}\u00B0F (${morningDesc.toLowerCase()})`,
+				afternoon: `peak ${afternoonPeak}\u00B0F (${afternoonDesc.toLowerCase()})`,
+				evening: `cooling to around ${eveningAvg}\u00B0F`,
+				bestWindow,
 			};
 			renderAiSummaryCard();
 		}
@@ -942,34 +1014,39 @@ function buildSmartRuleBasedPlan(boardData) {
 	const todayPlan = [];
 	const prepAlerts = [];
 
-	// 1. Concise Medication & Weather Suggestion (incorporating getWeatherSuggestion)
-	const medSentence = data.medsTaken
-		? 'Great job taking your daily medicine already!'
-		: 'Start your morning by taking your medicine with a full glass of water and tapping the red button above.';
+	// 1. Paragraph 1: Morning Check-in + Full-Day Weather Outlook & Best Window
+	const medStatus = data.medsTaken
+		? 'With your daily medicine already taken, you are off to a great start today.'
+		: 'Start your morning with a glass of water and your daily medicine.';
 
-	let weatherSentence = 'Keep a glass of water nearby and take a few gentle stretches today.';
+	let weatherAdvice = 'Take things at an easy, comfortable pace and keep a glass of water nearby.';
 	if (lastWeatherData) {
-		const rawSug = (lastWeatherData.suggestion || '')
-			.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, '')
-			.trim();
-		const cleanSug = rawSug
-			? rawSug.charAt(0).toLowerCase() + rawSug.slice(1).replace(/[.!]+$/, '')
-			: '';
-		if (cleanSug) {
-			weatherSentence = `At ${lastWeatherData.temp}°F (${lastWeatherData.desc.toLowerCase()}), it's a lovely time for ${cleanSug}.`;
-		} else if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
-			weatherSentence = "Since it's rainy outside, stay cozy indoors with a warm drink or puzzle.";
-		} else if (lastWeatherData.temp >= 82) {
-			weatherSentence = "It's warm today, so enjoy the cooler morning air and sip extra water.";
-		} else if (lastWeatherData.temp < 52) {
-			weatherSentence = "It's chilly out, so dress in warm layers if you step outside.";
+		const high = lastWeatherData.high;
+		const low = lastWeatherData.low;
+		const rainChance = lastWeatherData.rainChanceMax || 0;
+		const bestWin = lastWeatherData.bestWindow || '';
+
+		if (rainChance >= 60) {
+			if (lastWeatherData.rainTiming && !lastWeatherData.rainTiming.toLowerCase().includes('dry')) {
+				weatherAdvice = `Weather reaches a high of ${high}\u00B0F (${lastWeatherData.desc.toLowerCase()}). ${lastWeatherData.rainTiming}, so enjoy a cozy morning indoors or step out before the rain begins.`;
+			} else {
+				weatherAdvice = `With showers across today\'s forecast (high of ${high}\u00B0F), it is best to stay cozy inside with a warm drink or puzzle.`;
+			}
+		} else if (high >= 82) {
+			weatherAdvice = `Temperatures warm to an afternoon high of ${high}\u00B0F (${lastWeatherData.desc.toLowerCase()}). Take advantage of the cooler morning air (${lastWeatherData.morning || low + '\u00B0F'}) and keep well-hydrated.`;
+		} else if (high < 52) {
+			weatherAdvice = `It stays brisk with a high near ${high}\u00B0F (${lastWeatherData.desc.toLowerCase()}). Dress in warm layers and enjoy the sunshine from inside or bundle up if stepping out.`;
 		} else {
-			weatherSentence = 'The weather is pleasant for some fresh air or a short stroll.';
+			if (bestWin && !bestWin.toLowerCase().includes('indoor')) {
+				weatherAdvice = `Weather warms from ${lastWeatherData.morning || low + '\u00B0F'} to a pleasant high of ${high}\u00B0F, with ${bestWin} being the nicest stretch for fresh air or a light stroll.`;
+			} else {
+				weatherAdvice = `Expect pleasant conditions today warming to a comfortable high of ${high}\u00B0F under ${lastWeatherData.desc.toLowerCase()}.`;
+			}
 		}
 	}
-	todayPlan.push(`${medSentence} ${weatherSentence}`);
+	todayPlan.push(`${medStatus} ${weatherAdvice}`);
 
-	// 2. Concise Today's Pacing, Outings (with Event Reminders & Multi-Day support), Birthdays & Social Connection
+	// 2. Paragraph 2: Today\'s Schedule Pacing, Outing Prep, Family Visits, Birthdays & Social Connection
 	const allEvents = Object.entries(currentEventsMap || {})
 		.map(([id, evt]) => ({
 			id,
@@ -998,7 +1075,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		if (category === 'family') {
 			if (location === 'home') {
 				outingAdvice = hour !== null && hour < 13
-					? `Enjoy an easy morning at home and put on a fresh kettle of teaâ€”${firstEvt.title} is coming up soon!`
+					? `Enjoy an easy morning at home and put on a fresh kettle of tea \u2014 ${firstEvt.title} is coming up soon!`
 					: `Pace your morning at a relaxing rhythm so you feel energized and refreshed when company arrives for ${firstEvt.title}.`;
 			} else {
 				outingAdvice = `Enjoy getting together with family for ${firstEvt.title}! Have an unhurried morning and eat a light meal beforehand.`;
@@ -1035,7 +1112,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		);
 	} else if (todaysHolidays.length > 0) {
 		todayPlan.push(
-			`Happy ${todaysHolidays[0].name}—treat yourself today and keep your phone handy for family calls.`
+			`Happy ${todaysHolidays[0].name} \u2014 treat yourself today and keep your phone handy for family calls.`
 		);
 	} else {
 		const hasCallReminder = (data.reminders || '').toLowerCase().includes('call');
@@ -1146,7 +1223,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		const evtCtx = getEventContext(evt);
 		if (evtCtx.category === 'family' && evt.diffDays >= 1 && evt.diffDays <= 2 && (!evt.reminder || !evt.reminder.trim())) {
 			prepAlerts.push(
-				`Looking forward to ${evt.title} ${whenPhrase}â€”take time to rest up today so you have plenty of energy for company.`
+				`Looking forward to ${evt.title} ${whenPhrase} \u2014 take time to rest up today so you have plenty of energy for company.`
 			);
 			return;
 		}
@@ -1200,7 +1277,7 @@ function buildSmartRuleBasedPlan(boardData) {
 			const tomCtx = getEventContext(tomEvt);
 			if (tomCtx.category === 'family') {
 				lookAheadParts.push(
-					`Look forward to seeing family tomorrow (${tomEvt.title})â€”enjoy a restful, relaxing evening tonight.`
+					`Look forward to seeing family tomorrow (${tomEvt.title}) \u2014 enjoy a restful, relaxing evening tonight.`
 				);
 			} else {
 				lookAheadParts.push(
@@ -1212,7 +1289,7 @@ function buildSmartRuleBasedPlan(boardData) {
 			const nextCtx = getEventContext(nextEvt);
 			if (nextCtx.category === 'family') {
 				lookAheadParts.push(
-					`You have family visiting in ${nextEvt.diffDays} days (${nextEvt.title})â€”look forward to a wonderful time together.`
+					`You have family visiting in ${nextEvt.diffDays} days (${nextEvt.title}) \u2014 look forward to a wonderful time together.`
 				);
 			} else {
 				lookAheadParts.push(
@@ -1383,6 +1460,14 @@ async function generateAiActionPlan(options = {}) {
 	if (btnText) btnText.innerText = 'Generating with Gemini AI...';
 
 	try {
+		if (!lastWeatherData && latestBoardData?.zipcode) {
+			try {
+				await updateWeather(latestBoardData.zipcode);
+			} catch (e) {
+				console.warn('Weather refresh before AI plan failed:', e);
+			}
+		}
+
 		const todayStr = getTodayDateString();
 		const { allContacts } = getCombinedContactsList();
 		const upcomingEventsList = Object.values(currentEventsMap || {})
@@ -1400,7 +1485,7 @@ async function generateAiActionPlan(options = {}) {
 					reminder: e.reminder || undefined,
 				};
 			})
-			.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+			sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
 		const boardSnapshot = {
 			todayDate: todayStr,
@@ -1408,7 +1493,17 @@ async function generateAiActionPlan(options = {}) {
 			reminders: document.getElementById('input-reminders')?.value || latestBoardData.reminders || '',
 			medications: document.getElementById('input-medications')?.value || latestBoardData.medications || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
-			weather: lastWeatherData || 'Weather not loaded yet',
+			weatherForecast: lastWeatherData ? {
+				currentTemp: `${lastWeatherData.temp}\u00B0F`,
+				high: `${lastWeatherData.high}\u00B0F`,
+				low: `${lastWeatherData.low}\u00B0F`,
+				condition: lastWeatherData.desc,
+				morningCurve: lastWeatherData.morning,
+				afternoonPeak: lastWeatherData.afternoon,
+				eveningWindDown: lastWeatherData.evening,
+				rainTimingAndLikelihood: lastWeatherData.rainTiming,
+				bestOutdoorWindow: lastWeatherData.bestWindow,
+			} : 'Weather not loaded yet',
 			upcomingAppointments: upcomingEventsList,
 			upcomingHolidays: (upcomingHolidays || []).slice(0, 4),
 			contactsAndBirthdays: allContacts.map((c) => ({
@@ -1432,16 +1527,14 @@ async function generateAiActionPlan(options = {}) {
 				model: 'gemini-3.8-flash',
 				store: false,
 				system_instruction:
-					'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board. ' +
-					'CRITICAL RULES: (1) Keep every item VERY CONCISE - 1 to 2 short, easy-to-scan sentences max. ' +
-					'(2) Tailor advice specifically to the event context (`category` and `location`): ' +
-					'- For family/friend visits (category: family): focus on hospitality, connection, and energy pacing. If location is "home", suggest putting on a kettle of tea or coffee and resting beforehand so they have energy for visitors; if location is "outing", encourage having a lovely meal with loved ones. ' +
-					'- For doctor or medical visits (category: medical): focus on timely breakfast, Medicare card/glasses, driver notes, and questions for the doctor. ' +
-					'- For errands (category: errand): focus on weather-appropriate outerwear, comfortable shoes, and pacing. ' +
-					'- For home services (category: service): focus on keeping phone nearby and clear pathways. ' +
-					'(3) Do NOT simply repeat or parrot the schedule items. Give actionable, empathetic advice in natural conversational sentences. ' +
-					'(4) Naturally incorporate the weather activity suggestion (`weather.suggestion`) into `todayPlan`. ' +
-					'(5) Always incorporate any appointment `reminder` field and `caregiverPrepRules` (like drinking extra water days before an infusion) into `prepAlerts`.',
+					'You are a warm, caring, concise daily companion speaking directly to an older adult ("you") looking at their home message board.\n' +
+					'CRITICAL FORMAT & LENGTH RULES (must fit UI without scrolling):\n' +
+					'1. `todayPlan` MUST contain EXACTLY 2 short paragraphs (2 to 3 sentences total, under 65 words combined):\n' +
+					'   - Paragraph 1 (Morning & Weather Outlook): Combine morning kickoff (hydration and medicine status) with a dynamic synthesis of the full-day weather curve (morning vs. afternoon peak, rain timing, and best outdoor window from `weatherForecast`). DO NOT parrot raw numbers or canned phrases. Offer thoughtful, practical daily advice (e.g. step outside during the warmest 1 to 3 PM window, or take an early walk before afternoon showers).\n' +
+					'   - Paragraph 2 (Schedule & Energy Pacing): Tailored directly to today\'s events (or a peaceful open day). For family visits (category: family), encourage hospitality (kettle for tea) and resting beforehand; for medical visits (category: medical), advise timely breakfast, ID/glasses, and unhurried pacing; for errands, comfortable shoes; for home services, keeping pathways clear.\n' +
+					'2. `prepAlerts`: 1 to 2 short coaching items (1 sentence each) for proactive multi-day preparation (extra hydration before infusions/labs, setting out shoes, or resting before tomorrow\'s visit).\n' +
+					'3. `lookAhead`: Exactly 1 warm, encouraging sentence pacing energy over the next 3 to 5 days.\n' +
+					'4. Do not repeat raw schedule lists or coded boilerplate. Write naturally in warm, dignified English.',
 				input:
 					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
 					JSON.stringify(boardSnapshot, null, 2),
@@ -1455,13 +1548,13 @@ async function generateAiActionPlan(options = {}) {
 								type: 'array',
 								items: { type: 'string' },
 								description:
-									'1 to 2 short, concise conversational sentences offering actionable advice for today (tailored to event context, medication check-in, and weather suggestion).',
+									'Exactly 2 short, concise paragraphs (under 65 words total). Paragraph 1 combines morning hydration/medicine with a dynamic full-day weather outlook and best outdoor window. Paragraph 2 provides thoughtful pacing tailored to today\'s schedule or family visit.',
 							},
 							prepAlerts: {
 								type: 'array',
 								items: { type: 'string' },
 								description:
-									'1 to 2 short, concise coaching sentences giving proactive multi-day preparation advice tailored to upcoming event context (resting up before family visits, hydrating before medical appointments, and reminder notes).',
+									'1 to 2 short, concise coaching sentences giving proactive multi-day preparation advice tailored to upcoming event context and caregiver prep rules.',
 							},
 							lookAhead: {
 								type: 'string',
@@ -1502,7 +1595,7 @@ async function generateAiActionPlan(options = {}) {
 		const parsed = JSON.parse(rawJsonText);
 		const finalTodayPlan =
 			Array.isArray(parsed.todayPlan) && parsed.todayPlan.length > 0
-				? parsed.todayPlan
+				? parsed.todayPlan.slice(0, 2)
 				: smartBaseline.todayPlan;
 		const finalPrepAlerts =
 			Array.isArray(parsed.prepAlerts) && parsed.prepAlerts.length > 0

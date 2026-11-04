@@ -1,4 +1,4 @@
-﻿# Senior Message Board System - Project Context
+# Senior Message Board System - Project Context
 
 ## Architecture
 
@@ -23,7 +23,7 @@
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
 - Clock, Weather & Morning Action Header: Prominent Date & Time on the left, Weather Widget in the center, and a simplified Medication Check-In on the right (tactile **"💊 I TOOK MY MEDS"** button that smoothly transforms into a clean **"✅ Meds Logged"** state with timestamp when complete).
 - Main Message & Daily Companion Hub (`#card-announcement`): Spacious 2-column layout on tablet/desktop (stacking on phones):
-    - Column 1 displays **📣 Today's Important Message** in large type (which automatically hides completely when empty so no placeholder takes up space) and **💬 Suggestions for Today** (`#disp-ai-today-plan`) directly underneath.
+    - Column 1 displays **📣 Today's Important Message** in large type (which automatically hides completely when empty so no placeholder takes up space) and **💬 Suggestions for Today** (`#disp-ai-today-plan`) directly underneath, formatted into 2 concise, scannable paragraphs (under ~65 words total) synthesizing morning hydration/meds with full-day weather curves (morning chill vs. afternoon peak, rain timing, and best outdoor window) and event pacing.
     - Column 2 displays **📅 Scheduled for Today** (with entry-count badge `#today-events-count-badge`), **💧 Helpful Health & Prep Tips** (`#disp-ai-prep-alerts`), and **🌿 Pacing the Next Few Days** (`#disp-ai-look-ahead`).
 - Calendar, Appointments & Merged Upcoming US Holidays (`#card-events`): Displays upcoming single-day and optional multi-day doctor visits, family visits, errands, and events (`date`, `endDate`, `category`: medical/family/errand/service/other, `location`: home/outing) chronologically woven together with the next 4 upcoming major US federal and cultural holidays (fetched via Nager.Date Public Holidays API + built-in US holiday calendar with emojis and countdown badges), senior-friendly badges (`TODAY`, `TODAY • Thru ...`, `TOMORROW`, or date range), notes/driver details, an event-specific `reminder` field, inline appointment editing, and automatic past-event cleanup after the effective end date has passed.
 - Contacts List & Birthdays Card (`#card-contacts`): Automatically displays all active registered users alongside additional non-user contacts (managed by ADMIN and EDITOR roles), complete with relationship labels, phone numbers, and birthdays (highlighting birthdays falling on today).
