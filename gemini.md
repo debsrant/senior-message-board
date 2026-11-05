@@ -1,4 +1,4 @@
-# Senior Message Board System - Project Context
+﻿# Senior Message Board System - Project Context
 
 ## Architecture
 
@@ -34,3 +34,4 @@
 - Light, Mobile-First UI: High-contrast light color scheme (`bg-slate-100` background, `bg-white` cards, `blue-600` primary actions) with always-visible Main Message card, responsive mobile cards for user management, and 16px (`text-base`) inputs to prevent mobile browser zoom.
 - 3-Tab Admin & Editor Panel: Organized into 3 focused tabs (`📅 Daily Updates`, `🤖 AI & Board Settings`, and `👥 Contacts, Profile & Users`) to eliminate scroll fatigue. Daily Updates places Today's Message, Family Messages, Medications, Senior Daily Check-In, and Appointments side by side; AI & Board Settings houses Caregiver Prep Rules, Caregiver Notes & Feedback for AI, optional Gemini API key, Board Title, Weather Zipcode, and Admin Card Ordering; Contacts, Profile & Users houses Contacts & Birthdays, My Profile, and Admin User Management.
 - Medication Notification System: Browser push notifications, audio chime, and in-app alerts dispatched to editors and admins when medication is logged.
+- Low-Vision & 80+ Senior Display Typography: All text elements across the kiosk display panel (#view-display) are optimized for seniors aged 80+ who are not wearing glasses: massive clock (up to 96px ont-black), extra-large date (24-30px bold), prominent 48px announcement banner, 20-24px suggestions and daily check-in questions with tactile 18-20px response buttons, 24-30px medication button, 20-24px medication names, messages, appointments, and contacts with high-contrast bold weights, plus sub-pixel anti-aliasing and optimized legibility CSS.

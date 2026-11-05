@@ -75,3 +75,11 @@ input[type="submit"] {
 	}
 }
 
+
+
+/* Senior High-Legibility Display Typography */
+#view-display {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+}

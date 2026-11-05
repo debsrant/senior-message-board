@@ -54,12 +54,12 @@
 		<header class="bg-white border-b border-slate-200 px-4 py-3 sm:px-6 sticky top-0 z-30 shadow-sm">
 			<div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-3">
 				<div class="flex flex-col">
-					<h1 id="disp-board-title" class="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+					<h1 id="disp-board-title" class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
 						Senior Message Board
 					</h1>
 					<div
 						id="connection-status"
-						class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mt-0.5"
+						class="text-xs uppercase tracking-wider text-slate-500 font-bold mt-0.5"
 					>
 						Connecting...
 					</div>
@@ -105,12 +105,12 @@
 				>
 					<!-- Date & Time (Left) -->
 					<div>
-						<div id="display-date" class="text-lg sm:text-2xl text-blue-600 font-semibold">
+						<div id="display-date" class="text-2xl sm:text-3xl text-blue-700 font-bold">
 							Loading date...
 						</div>
 						<div
 							id="display-time"
-							class="text-5xl sm:text-6xl font-extrabold text-slate-900 tracking-tight mt-0.5"
+							class="text-6xl sm:text-7xl md:text-8xl font-black text-slate-900 tracking-tight mt-1"
 						>
 							00:00
 						</div>
@@ -123,16 +123,16 @@
 					>
 						<div id="weather-icon" class="text-4xl sm:text-5xl">☀️</div>
 						<div>
-							<div id="weather-city" class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-0.5"></div>
+							<div id="weather-city" class="text-sm sm:text-base text-blue-700 font-extrabold uppercase tracking-wider mb-0.5"></div>
 							<div class="flex items-baseline gap-2">
-								<div id="weather-temp" class="text-3xl sm:text-4xl font-bold text-slate-900">
+								<div id="weather-temp" class="text-4xl sm:text-5xl font-black text-slate-900">
 									--°F
 								</div>
-								<div id="weather-desc" class="text-sm sm:text-base text-slate-600 capitalize font-medium">
+								<div id="weather-desc" class="text-lg sm:text-xl text-slate-700 capitalize font-bold">
 									Loading...
 								</div>
 							</div>
-							<div id="weather-range" class="text-xs font-medium text-slate-500">
+							<div id="weather-range" class="text-sm sm:text-base font-bold text-slate-600">
 								High: --° | Low: --°
 							</div>
 						</div>
@@ -144,12 +144,12 @@
 						class="border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center sm:items-end gap-1.5 min-w-[14rem]"
 					>
 						<div class="flex items-center justify-between sm:justify-end gap-2">
-							<span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+							<span class="text-sm sm:text-base font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
 								<span>💊</span> Medication Check-In
 							</span>
 							<span
 								id="meds-status-badge"
-								class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"
+								class="hidden text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"
 							>
 								COMPLETED
 							</span>
@@ -158,14 +158,14 @@
 						<button
 							id="btn-take-meds"
 							onclick="markMedsTaken()"
-							class="w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl"
+							class="w-full sm:w-auto px-7 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl"
 						>
 							<span>💊 I TOOK MY MEDS</span>
 						</button>
 
 						<p
 							id="meds-taken-time"
-							class="text-xs sm:text-sm text-slate-600 font-medium text-center sm:text-right hidden"
+							class="text-base sm:text-lg text-emerald-800 font-bold text-center sm:text-right hidden"
 						>
 							Taken at --:--
 						</p>
@@ -182,39 +182,39 @@
 						<div class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
 							<!-- Announcement Block (Hidden if empty) -->
 							<div id="disp-announcement-container" class="space-y-2 hidden">
-								<h2 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
+								<h2 class="text-blue-800 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
 									<span>📣</span> Today's Important Message
 								</h2>
 								<p
 									id="disp-announcement"
-									class="text-2xl sm:text-3xl font-bold text-slate-900 leading-snug"
+									class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-snug"
 								></p>
 							</div>
 
 							<!-- Integrated AI Suggestions for Today -->
 							<div id="disp-ai-today-section" class="space-y-1.5">
-								<h3 class="text-indigo-800 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+								<h3 class="text-indigo-900 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
 									<span>💬</span> Suggestions for Today
 								</h3>
 								<div
 									id="disp-ai-today-plan"
-									class="p-3 sm:p-3.5 bg-white/90 rounded-xl border border-indigo-200/80 space-y-1.5 text-sm sm:text-base text-slate-800 leading-relaxed font-medium"
+									class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-indigo-200/90 space-y-2 text-lg sm:text-xl font-semibold text-slate-900 leading-relaxed"
 								>
-									<p class="text-sm text-slate-400 italic">Putting together friendly suggestions for your day...</p>
+									<p class="text-base sm:text-lg text-slate-500 italic">Putting together friendly suggestions for your day...</p>
 								</div>
 							</div>
 
 							<!-- Senior Daily Check-In (Interactive, No Emojis) -->
 							<div id="disp-senior-checkin-section" class="pt-3 border-t border-blue-200/70 space-y-2">
 								<div class="flex items-center justify-between">
-									<h3 class="text-blue-900 font-bold uppercase tracking-wider text-[11px]">
+									<h3 class="text-blue-900 font-black uppercase tracking-wider text-sm sm:text-base">
 										Daily Check-In
 									</h3>
-									<span id="disp-checkin-status-badge" class="hidden text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+									<span id="disp-checkin-status-badge" class="hidden text-xs sm:text-sm font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
 										Logged
 									</span>
 								</div>
-								<p id="disp-checkin-question" class="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+								<p id="disp-checkin-question" class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 leading-snug">
 									Loading question...
 								</p>
 								<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -222,15 +222,15 @@
 								</div>
 								<div id="disp-checkin-confirmation" class="hidden p-3 bg-white/95 rounded-xl border border-blue-200 flex items-center justify-between gap-3">
 									<div>
-										<span class="text-xs font-bold uppercase tracking-wider text-blue-700 block">Response Recorded</span>
-										<span id="disp-checkin-answer-text" class="text-sm sm:text-base font-bold text-slate-900 block"></span>
-										<span id="disp-checkin-time-text" class="text-xs text-slate-500 block"></span>
+										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
+										<span id="disp-checkin-answer-text" class="text-xl sm:text-2xl font-black text-slate-900 block"></span>
+										<span id="disp-checkin-time-text" class="text-sm sm:text-base font-semibold text-slate-600 block"></span>
 									</div>
 									<button
 										type="button"
 										id="btn-change-checkin"
 										onclick="resetSeniorCheckinChoice()"
-										class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition shrink-0 cursor-pointer"
+										class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm sm:text-base font-bold rounded-xl border border-slate-300 transition shrink-0 cursor-pointer"
 									>
 										Change
 									</button>
@@ -245,7 +245,7 @@
 						>
 							<div class="space-y-2">
 								<div class="flex items-center justify-between gap-2">
-									<h2 class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+									<h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
 										<span>📅</span> Scheduled for Today
 									</h2>
 									<span
@@ -258,8 +258,8 @@
 								<div id="disp-today-events-list" class="space-y-2 max-h-52 overflow-y-auto pr-1">
 									<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
 										<div class="text-lg">ðŸŒ¿</div>
-										<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
-										<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
+										<div class="text-lg sm:text-xl font-black text-slate-800">No events scheduled for today</div>
+										<div class="text-sm sm:text-base font-semibold text-slate-600">Enjoy a relaxing day!</div>
 									</div>
 								</div>
 							</div>
@@ -267,18 +267,18 @@
 							<!-- Integrated AI Prep Alerts & Pacing Look-Ahead -->
 							<div id="disp-ai-prep-section" class="pt-3 border-t border-blue-200/70 space-y-2">
 								<div class="space-y-1.5">
-									<h3 class="text-sky-800 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+									<h3 class="text-sky-900 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
 										<span>💧</span> Helpful Health &amp; Prep Tips
 									</h3>
 									<div id="disp-ai-prep-alerts" class="space-y-1.5">
-										<div class="p-2.5 sm:p-3 bg-white/90 rounded-xl border border-sky-200 text-xs sm:text-sm text-sky-900 leading-snug font-medium">
+										<div class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-sky-200 text-base sm:text-lg text-sky-950 leading-relaxed font-bold">
 											No special preparation needed right now - just keep sipping water throughout the day.
 										</div>
 									</div>
 								</div>
-								<div class="p-2.5 sm:p-3 bg-white/80 rounded-xl border border-indigo-100 flex items-start gap-2">
+								<div class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-indigo-100 flex items-start gap-2.5">
 									<span class="text-sm shrink-0 mt-0.5">ðŸŒ¿</span>
-									<p id="disp-ai-look-ahead" class="text-xs sm:text-sm text-slate-700 leading-snug font-medium">
+									<p id="disp-ai-look-ahead" class="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
 										Looking ahead at your week...
 									</p>
 								</div>
@@ -294,12 +294,12 @@
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[28rem] sm:min-h-[34rem] max-h-[34rem] sm:max-h-[36rem]"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+							<h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
 								<span>💬</span> Messages
 							</h2>
 							<span
 								id="messages-count-badge"
-								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+								class="hidden text-sm font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
 							>
 								0 Messages
 							</span>
@@ -315,12 +315,12 @@
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[28rem] sm:min-h-[34rem] max-h-[34rem] sm:max-h-[36rem]"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+							<h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
 								<span>💊</span> Medications
 							</h2>
 							<span
 								id="medications-count-badge"
-								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200"
+								class="hidden text-sm font-bold px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200"
 							>
 								0 Entries
 							</span>
@@ -328,7 +328,7 @@
 						<!-- General Notes for Senior (shown if present) -->
 						<div
 							id="disp-medications-general-notes"
-							class="hidden mb-2.5 p-2.5 bg-purple-50/80 rounded-xl border border-purple-200 text-xs sm:text-sm text-purple-950 font-medium shrink-0"
+							class="hidden mb-3 p-3.5 sm:p-4 bg-purple-50 rounded-2xl border-2 border-purple-200 text-base sm:text-lg text-purple-950 font-bold shrink-0"
 						></div>
 						<div
 							id="disp-medications"
@@ -344,12 +344,12 @@
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[28rem] sm:min-h-[34rem] max-h-[34rem] sm:max-h-[36rem]"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+							<h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
 								<span>📅</span> Appointments &amp; Events
 							</h2>
 							<span
 								id="events-count-badge"
-								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
+								class="hidden text-sm font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200"
 							>
 								0 Entries
 							</span>
@@ -359,7 +359,7 @@
 						<div id="disp-events-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
 							<div class="w-full p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-center space-y-1">
 								<div class="text-xl">🌿</div>
-								<div class="text-base font-semibold text-slate-700">No appointments scheduled</div>
+								<div class="text-xl sm:text-2xl font-black text-slate-800">No appointments scheduled</div>
 								<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
 							</div>
 						</div>
@@ -371,12 +371,12 @@
 						class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col min-h-[28rem] sm:min-h-[34rem] max-h-[34rem] sm:max-h-[36rem]"
 					>
 						<div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2.5 shrink-0">
-							<h2 class="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
+							<h2 class="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
 								<span>📇</span> Contacts List
 							</h2>
 							<span
 								id="contacts-count-badge"
-								class="hidden text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+								class="hidden text-sm font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
 							>
 								0 Entries
 							</span>
@@ -384,7 +384,7 @@
 
 						<!-- Dynamic Contacts List Container -->
 						<div id="disp-contacts-list" class="space-y-2 overflow-y-auto flex-1 pr-1">
-							<div class="py-4 text-center text-sm text-slate-400 italic">
+							<div class="py-4 text-center text-base sm:text-lg text-slate-500 font-medium italic">
 								Loading contacts...
 							</div>
 						</div>

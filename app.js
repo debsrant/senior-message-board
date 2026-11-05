@@ -1,4 +1,4 @@
-// TODO: Replace with your actual Firebase project configuration keys
+﻿// TODO: Replace with your actual Firebase project configuration keys
 const firebaseConfig = {
 	apiKey: 'AIzaSyAAE3km6cEHuqaX2gnNl6z899hKjQDvKsk',
 	authDomain: 'seniormessageboard.firebaseapp.com',
@@ -872,7 +872,7 @@ function renderSeniorCheckin(boardData) {
 				<button
 					type="button"
 					onclick="submitSeniorCheckin('${escapeHtml(choice).replace(/'/g, "\\'")}')"
-					class="w-full text-left px-4 py-3 bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white rounded-xl border-2 border-blue-200 hover:border-blue-400 text-slate-800 font-semibold text-sm sm:text-base transition shadow-none cursor-pointer"
+					class="w-full text-left px-5 py-4 bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white rounded-2xl border-2 border-blue-300 hover:border-blue-500 text-slate-900 font-bold text-lg sm:text-xl transition shadow-xs cursor-pointer"
 				>
 					${escapeHtml(choice)}
 				</button>
@@ -1075,8 +1075,8 @@ function renderMessagesCard(boardData) {
 		container.innerHTML = `
 			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
 				<div class="text-3xl text-slate-300">💬</div>
-				<div class="text-sm sm:text-base font-bold text-slate-600">No messages yet</div>
-				<div class="text-xs text-slate-400">Family can post messages from their phones or computers.</div>
+				<div class="text-xl sm:text-2xl font-black text-slate-800">No messages yet</div>
+				<div class="text-sm sm:text-base font-semibold text-slate-500">Family can post messages from their phones or computers.</div>
 			</div>
 		`;
 		return;
@@ -1086,13 +1086,13 @@ function renderMessagesCard(boardData) {
 		.map((msg) => {
 			const formattedDate = formatMessageDisplayDate(msg.createdAt);
 			return `
-				<div class="p-3 sm:p-3.5 bg-slate-50/90 rounded-xl border border-slate-200/90 space-y-2 shadow-2xs">
-					<p class="text-base sm:text-lg font-medium text-slate-900 leading-snug whitespace-pre-line">${escapeHtml(msg.text)}</p>
-					<div class="flex items-center justify-between text-xs text-slate-500 pt-1.5 border-t border-slate-200/60">
-						<span class="font-bold text-blue-700 flex items-center gap-1">
-							<span class="text-slate-400 font-normal">From</span> ${escapeHtml(msg.author || 'Family')}
+				<div class="p-4 sm:p-5 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5 shadow-2xs">
+					<p class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug whitespace-pre-line">${escapeHtml(msg.text)}</p>
+					<div class="flex items-center justify-between text-sm sm:text-base text-slate-600 pt-2 border-t border-slate-200/80">
+						<span class="font-black text-blue-800 flex items-center gap-1.5">
+							<span class="text-slate-500 font-medium">From</span> ${escapeHtml(msg.author || 'Family')}
 						</span>
-						<span class="text-[11px] font-medium text-slate-400">${escapeHtml(formattedDate)}</span>
+						<span class="text-xs sm:text-sm font-semibold text-slate-500">${escapeHtml(formattedDate)}</span>
 					</div>
 				</div>
 			`;
@@ -1333,8 +1333,8 @@ function renderMedicationsCard(boardData) {
 		if (generalNotes) {
 			generalNotesEl.innerHTML = `
 				<div class="flex items-start gap-1.5">
-					<span class="text-xs font-bold uppercase tracking-wider text-purple-900 shrink-0">Note:</span>
-					<span class="text-xs sm:text-sm text-purple-950 font-medium">${escapeHtml(generalNotes)}</span>
+					<span class="text-sm sm:text-base font-black uppercase tracking-wider text-purple-900 shrink-0">Note:</span>
+					<span class="text-base sm:text-lg text-purple-950 font-bold leading-snug">${escapeHtml(generalNotes)}</span>
 				</div>
 			`;
 			generalNotesEl.classList.remove('hidden');
@@ -1359,8 +1359,8 @@ function renderMedicationsCard(boardData) {
 		container.innerHTML = `
 			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
 				<div class="text-3xl text-slate-300">💊</div>
-				<div class="text-sm sm:text-base font-bold text-slate-600">No medications listed</div>
-				<div class="text-xs text-slate-400">Add medications in the caregiver panel.</div>
+				<div class="text-xl sm:text-2xl font-black text-slate-800">No medications listed</div>
+				<div class="text-sm sm:text-base font-semibold text-slate-500">Add medications in the caregiver panel.</div>
 			</div>
 		`;
 		return;
@@ -1369,18 +1369,18 @@ function renderMedicationsCard(boardData) {
 	container.innerHTML = medsList
 		.map(
 			(med) => `
-			<div class="p-3 bg-slate-50/90 rounded-xl border border-slate-200/90 space-y-1">
+			<div class="p-3.5 sm:p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-1.5">
 				<div class="flex items-center justify-between gap-2">
-					<span class="font-bold text-base sm:text-lg text-slate-900">${escapeHtml(med.name)}</span>
+					<span class="font-black text-xl sm:text-2xl text-slate-900">${escapeHtml(med.name)}</span>
 					${
 						med.time
-							? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shrink-0">${escapeHtml(med.time)}</span>`
+							? `<span class="text-sm sm:text-base font-black px-3 py-1 rounded-lg bg-purple-100 text-purple-900 border border-purple-300 shrink-0">${escapeHtml(med.time)}</span>`
 							: ''
 					}
 				</div>
 				${
 					med.notes
-						? `<p class="text-xs sm:text-sm text-slate-600 leading-snug font-medium pl-0.5">${escapeHtml(med.notes)}</p>`
+						? `<p class="text-base sm:text-lg text-slate-700 leading-relaxed font-semibold pl-0.5">${escapeHtml(med.notes)}</p>`
 						: ''
 				}
 			</div>
@@ -1621,7 +1621,7 @@ function renderBoard(data) {
 	if (data.medsTaken) {
 		if (medBtn) {
 			medBtn.className =
-				'w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl shadow-none';
+				'w-full sm:w-auto px-7 py-4 sm:py-5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl shadow-none';
 			medBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
 		}
 		if (medBadge) medBadge.classList.remove('hidden');
@@ -1643,7 +1643,7 @@ function renderBoard(data) {
 	} else {
 		if (medBtn) {
 			medBtn.className =
-				'w-full sm:w-auto px-6 py-3.5 sm:py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 text-xl sm:text-2xl';
+				'w-full sm:w-auto px-7 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl';
 			medBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
 		}
 		if (medBadge) medBadge.classList.add('hidden');
@@ -2349,7 +2349,7 @@ function renderAiSummaryCard() {
 		todayPlanEl.innerHTML = todayPlan
 			.map(
 				(paragraph) => `
-				<p class="text-slate-900 leading-snug">
+				<p class="text-slate-900 leading-relaxed text-lg sm:text-xl font-semibold">
 					${escapeHtml(paragraph)}
 				</p>
 			`
@@ -2367,7 +2367,7 @@ function renderAiSummaryCard() {
 		prepAlertsEl.innerHTML = prepAlerts
 			.map(
 				(alertText) => `
-				<div class="p-2.5 sm:p-3 bg-sky-50 rounded-xl border border-sky-300 text-sky-950 text-xs sm:text-sm font-semibold leading-snug shadow-sm">
+				<div class="p-3.5 sm:p-4 bg-sky-50 rounded-2xl border-2 border-sky-300 text-sky-950 text-base sm:text-lg font-bold leading-relaxed shadow-xs">
 					${escapeHtml(alertText)}
 				</div>
 			`
@@ -3095,8 +3095,8 @@ function renderContacts() {
 			dispContainer.innerHTML = `
 				<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
 					<div class="text-2xl">📇</div>
-					<div class="text-base font-bold text-slate-700">No contacts listed</div>
-					<div class="text-xs text-slate-500">Add family or contacts in the panel.</div>
+					<div class="text-xl sm:text-2xl font-black text-slate-800">No contacts listed</div>
+					<div class="text-sm sm:text-base font-semibold text-slate-500">Add family or contacts in the panel.</div>
 				</div>
 			`;
 		} else {
@@ -3105,15 +3105,15 @@ function renderContacts() {
 				const bdayText = formatBirthdayDisplay(c.birthday);
 				const bdayToday = isBirthdayToday(c.birthday);
 				html += `
-					<div class="p-3.5 bg-slate-50 rounded-xl border ${
+					<div class="p-4 bg-slate-50 rounded-2xl border ${
 						bdayToday ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200'
 					} space-y-1">
 						<div class="flex items-center justify-between gap-2 flex-wrap">
-							<div class="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-1.5 flex-wrap">
+							<div class="font-black text-slate-900 text-xl sm:text-2xl flex items-center gap-2 flex-wrap">
 								<span>${escapeHtml(c.name)}</span>
 								${
 									c.relation
-										? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+										? `<span class="text-xs sm:text-sm font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${
 												c.isUser
 													? 'bg-blue-50 text-blue-700 border border-blue-200'
 													: 'bg-white text-slate-600 border border-slate-200'
@@ -3123,7 +3123,7 @@ function renderContacts() {
 							</div>
 							${
 								bdayText
-									? `<span class="text-xs font-semibold px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+									? `<span class="text-sm sm:text-base font-bold px-3 py-1 rounded-md border flex items-center gap-1.5 ${
 											bdayToday
 												? 'bg-amber-100 text-amber-800 border-amber-300 font-bold'
 												: 'bg-white text-slate-600 border-slate-200'
@@ -3131,7 +3131,7 @@ function renderContacts() {
 									: ''
 							}
 						</div>
-						<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-600 font-medium">
+						<div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-base sm:text-lg text-slate-900 font-bold">
 							${c.phone ? `<span>📞 ${escapeHtml(c.phone)}</span>` : ''}
 							${c.email ? `<span class="truncate">✉️ ${escapeHtml(c.email)}</span>` : ''}
 						</div>
@@ -3648,13 +3648,13 @@ function renderTodayColumn() {
 	todaysHolidays.forEach((h) => {
 		const emoji = getHolidayEmoji(h.name);
 		todayHtml += `
-			<div class="w-full bg-amber-50 p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
 				<span class="text-2xl shrink-0">${emoji}</span>
 				<div>
-					<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
 						Holiday Today
 					</div>
-					<div class="text-base sm:text-lg font-bold text-slate-900">
+					<div class="text-xl sm:text-2xl font-black text-slate-900">
 						${escapeHtml(h.name)}
 					</div>
 				</div>
@@ -3665,18 +3665,18 @@ function renderTodayColumn() {
 	// 2. Render any User or Contact Birthday falling on today
 	todaysBirthdays.forEach((c) => {
 		todayHtml += `
-			<div class="w-full bg-amber-50 p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm flex items-center gap-3">
+			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
 				<span class="text-2xl shrink-0">🎂</span>
 				<div>
-					<div class="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
 						Birthday Today!
 					</div>
-					<div class="text-base sm:text-lg font-bold text-slate-900">
+					<div class="text-xl sm:text-2xl font-black text-slate-900">
 						Happy Birthday, ${escapeHtml(c.name)}!
 					</div>
 					${
 						c.relation
-							? `<div class="text-xs font-medium text-amber-900/80">${escapeHtml(c.relation)}</div>`
+							? `<div class="text-sm sm:text-base font-bold text-amber-900/90">${escapeHtml(c.relation)}</div>`
 							: ''
 					}
 				</div>
@@ -3688,9 +3688,9 @@ function renderTodayColumn() {
 	todayEvents.forEach((evt) => {
 		const { time, isMultiDay, rangeLabel } = formatEventDate(evt.date, evt.time, evt.endDate);
 		todayHtml += `
-			<div class="w-full bg-white p-3 sm:p-3.5 rounded-xl border-2 border-amber-300 shadow-sm space-y-1">
+			<div class="w-full bg-white p-4 rounded-2xl border-2 border-amber-300 shadow-sm space-y-1.5">
 				<div class="flex items-center gap-2 flex-wrap">
-					<span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">
+					<span class="text-xs sm:text-sm font-black uppercase tracking-wider px-3 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
 						TODAY
 					</span>
 					${
@@ -3702,23 +3702,23 @@ function renderTodayColumn() {
 					}
 					${
 						time
-							? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+							? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">⏰ ${time}</span>`
 							: ''
 					}
 				</div>
-				<div class="text-base sm:text-lg font-bold text-slate-900 pt-0.5">
+				<div class="text-xl sm:text-2xl font-black text-slate-900 pt-0.5 leading-snug">
 					${escapeHtml(evt.title)}
 				</div>
 				${
 					evt.notes
-						? `<div class="text-xs sm:text-sm text-slate-600 font-medium flex items-center gap-1.5"><span class="text-sm">🚗</span> ${escapeHtml(
+						? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2"><span class="text-lg">🚗</span> ${escapeHtml(
 								evt.notes
 						  )}</div>`
 						: ''
 				}
 				${
 					evt.reminder
-						? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
+						? `<div class="text-base sm:text-lg text-indigo-800 font-bold flex items-center gap-2 pt-0.5"><span class="text-lg">💡</span> ${escapeHtml(
 								evt.reminder
 						  )}</div>`
 						: ''
@@ -3815,22 +3815,22 @@ function renderEvents(eventsObj) {
 					const emoji = getHolidayEmoji(h.name);
 					const { formattedDate, countdown, badgeClass } = formatHolidayCountdown(h.date);
 					html += `
-						<div class="w-full bg-amber-50/50 p-3.5 sm:p-4 rounded-xl border border-amber-200 flex items-center justify-between gap-3">
+						<div class="w-full bg-amber-50/50 p-4 sm:p-5 rounded-2xl border border-amber-200 flex items-center justify-between gap-3">
 							<div class="flex items-center gap-3 min-w-0">
 								<span class="text-2xl shrink-0">${emoji}</span>
 								<div class="min-w-0">
 									<div class="flex items-center gap-1.5 flex-wrap">
-										<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
+										<span class="text-xs sm:text-sm font-black uppercase tracking-wider px-2.5 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300">
 											US Holiday
 										</span>
-										<span class="text-xs font-semibold text-slate-600">${formattedDate}</span>
+										<span class="text-sm sm:text-base font-bold text-slate-700">${formattedDate}</span>
 									</div>
-									<div class="text-lg sm:text-xl font-bold text-slate-900 truncate pt-0.5">
+									<div class="text-xl sm:text-2xl font-black text-slate-900 truncate pt-1">
 										${escapeHtml(h.name)}
 									</div>
 								</div>
 							</div>
-							<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border shrink-0 ${badgeClass}">
+							<span class="text-sm sm:text-base font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border shrink-0 ${badgeClass}">
 								${countdown}
 							</span>
 						</div>
@@ -3839,24 +3839,24 @@ function renderEvents(eventsObj) {
 					const evt = item.evt;
 					const { badge, badgeColor, time } = formatEventDate(evt.date, evt.time, evt.endDate);
 					html += `
-						<div class="w-full bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
+						<div class="w-full bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex flex-col justify-between gap-2.5">
 							<div class="space-y-1">
 								<div class="flex items-center gap-2 flex-wrap">
-									<span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${badgeColor}">
+									<span class="text-xs sm:text-sm font-black uppercase tracking-wider px-3 py-1 rounded-md border ${badgeColor}">
 										${badge}
 									</span>
 									${
 										time
-											? `<span class="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-md flex items-center gap-1">⏰ ${time}</span>`
+											? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">⏰ ${time}</span>`
 											: ''
 									}
 								</div>
-								<div class="text-xl sm:text-2xl font-bold text-slate-900 pt-1">
+								<div class="text-2xl sm:text-3xl font-black text-slate-900 pt-1 leading-snug">
 									${escapeHtml(evt.title)}
 								</div>
 								${
 									evt.notes
-										? `<div class="text-sm text-slate-600 font-medium flex items-center gap-1.5 pt-0.5"><span class="text-base">🚗</span> ${escapeHtml(
+										? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2 pt-0.5"><span class="text-lg">🚗</span> ${escapeHtml(
 												evt.notes
 										  )}</div>`
 										: ''
