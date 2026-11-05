@@ -21,7 +21,7 @@
 ## Key Setup Features
 
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
-- Clock, Weather & Morning Action Header: Prominent Date & Time on the left, Weather Widget in the center, and a simplified Medication Check-In on the right (tactile **"💊 I TOOK MY MEDS"** button that smoothly transforms into a clean **"✅ Meds Logged"** state with timestamp when complete).
+- Clock & Medication Action Header: Optimized 60/40 tablet split featuring a prominent Date & Time on the left (60% column, clock up to `text-9xl` and date `text-4xl`), and an extra-large, full-width Medication Check-In on the right (40% column, tactile **"💊 I TOOK MY MEDS"** button `text-2xl sm:text-3xl lg:text-4xl` that smoothly transforms into a clean **"✅ Meds Logged"** state with timestamp when complete). The visual weather widget has been removed from the header to declutter the tablet display, while weather data is continuously fetched in the background and utilized for the AI summaries and Morning Briefing.
 - Main Message & Daily Companion Hub (`#card-announcement` - Option 1: Unified Morning Briefing & Check-In): Replaces dense text and duplicate event boxes with a clean, high-contrast 2-column layout:
     - **Hero Announcement (Across Top)**: Displays **📣 Today's Important Message** in prominent type (`text-3xl sm:text-4xl lg:text-5xl font-black`) spanning full width; automatically hides when empty so no placeholder takes up space.
     - **Left Column - ☀️ Morning Briefing & Reminders (`#disp-ai-today-plan`)**: Formatted as an easy-to-digest bulleted list (3 to 5 concise points, `text-xl sm:text-2xl font-medium text-slate-800`) covering:

@@ -322,11 +322,16 @@ async function updateWeather(zip) {
 			const desc = getWeatherDesc(code);
 			const suggestion = getWeatherSuggestion(code);
 
-			document.getElementById('weather-temp').innerText = `${temp}°F`;
-			document.getElementById('weather-range').innerText = `High: ${high}° | Low: ${low}°`;
-			document.getElementById('weather-icon').innerText = weatherIcons[code] || '🌤️';
-			document.getElementById('weather-desc').innerText = desc;
-			document.getElementById('weather-widget').classList.remove('hidden');
+			const tempEl = document.getElementById('weather-temp');
+			if (tempEl) tempEl.innerText = `${temp}\u00B0F`;
+			const rangeEl = document.getElementById('weather-range');
+			if (rangeEl) rangeEl.innerText = `High: ${high}\u00B0 | Low: ${low}\u00B0`;
+			const iconEl = document.getElementById('weather-icon');
+			if (iconEl) iconEl.innerText = weatherIcons[code] || '\u{1F324}\uFE0F';
+			const descEl = document.getElementById('weather-desc');
+			if (descEl) descEl.innerText = desc;
+			const widgetEl = document.getElementById('weather-widget');
+			if (widgetEl) widgetEl.classList.remove('hidden');
 
 			lastWeatherData = {
 				city,
@@ -396,6 +401,7 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+setInterval(() => { if (currentZip) updateWeather(currentZip); }, 60 * 60 * 1000);
 
 // View Switcher Tabs
 function switchView(view) {
@@ -1618,7 +1624,7 @@ function renderBoard(data) {
 	if (data.medsTaken) {
 		if (medBtn) {
 			medBtn.className =
-				'w-full sm:w-auto px-7 py-4 sm:py-5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl shadow-none';
+				'w-full px-6 py-4 sm:py-5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl lg:text-4xl shadow-none';
 			medBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
 		}
 		if (medBadge) medBadge.classList.remove('hidden');
@@ -1640,7 +1646,7 @@ function renderBoard(data) {
 	} else {
 		if (medBtn) {
 			medBtn.className =
-				'w-full sm:w-auto px-7 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl';
+				'w-full px-6 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl lg:text-4xl cursor-pointer';
 			medBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
 		}
 		if (medBadge) medBadge.classList.add('hidden');

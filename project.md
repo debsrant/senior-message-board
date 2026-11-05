@@ -371,8 +371,8 @@ If adding other fee-based or server-side third-party services in the future (e.g
 ### E. Low-Vision & Senior Display Accessibility (80+ Senior Without Glasses)
 
 To ensure the display panel is effortlessly readable for an 80+ senior who is not wearing her glasses:
-1. **Header**: Clock increased to 60-96px (`text-6xl` to `text-8xl font-black`), date increased to 24-30px (`text-2xl sm:text-3xl font-bold`), and weather temperature to 36-48px with 18-20px descriptions.
-2. **Medication Check-In**: Prominent 24-30px (`text-2xl sm:text-3xl font-black`) button with generous padding (`py-4 sm:py-5 px-7`), high-contrast colors, and 16-18px confirmation time badge.
+1. **Header**: Optimized 60/40 tablet split with clock increased to 60-128px (`text-6xl` to `text-9xl font-black`) and date increased to 24-36px (`text-2xl` to `text-4xl font-black`), cleanly separated by a vertical border from the medication section. Visual weather widget removed to maximize clock readability, while weather data continues to power AI summaries.
+2. **Medication Check-In**: Prominent full-width button in the 40% column (`w-full py-4 sm:py-5 text-2xl sm:text-3xl lg:text-4xl font-black`), high-contrast colors, and 16-18px confirmation time badge.
 3. **Unified Morning Briefing & Check-In**: Huge 30-48px (`text-3xl sm:text-4xl lg:text-5xl font-black`) hero announcement text, uncluttered 2-column layout with 20-24px (`text-xl sm:text-2xl`) Morning Briefing bullet points featuring zero numbers in the weather summary and bolded action items (`font-black text-slate-950`), alongside 24-30px Daily Check-In questions with 20-24px tactile choice buttons without confusing emojis.
 4. **4 Grid Cards**: High-visibility 20-24px (`text-xl sm:text-2xl font-black`) card titles and count badges, 20-24px medication names and family message text, 16-18px medication instructions and driver notes, and bold 16-18px contact phone numbers.
 5. **CSS Rendering**: Sub-pixel anti-aliasing (`-webkit-font-smoothing: antialiased`) and `text-rendering: optimizeLegibility` enabled on the display view.
