@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
@@ -172,117 +172,85 @@
 					</div>
 				</div>
 
-				<!-- Main Message & AI Daily Companion Hub (2-Column Layout on Tablet/Desktop, Stacked on Phone) -->
+				<!-- Main Message & AI Daily Companion Hub (Option 1: Unified Morning Briefing & Check-In) -->
 				<div
 					id="card-announcement"
-					class="bg-blue-50/80 p-5 sm:p-6 rounded-2xl border-2 border-blue-300 shadow-sm"
+					class="bg-blue-50/90 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-5"
 				>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 items-stretch">
-						<!-- Column 1: Today's Important Message (Hidden if empty) + AI Suggestions for Today -->
-						<div class="flex flex-col justify-between space-y-3 pb-4 md:pb-0 border-b md:border-b-0 md:border-r border-blue-200/80 md:pr-5">
-							<!-- Announcement Block (Hidden if empty) -->
-							<div id="disp-announcement-container" class="space-y-2 hidden">
-								<h2 class="text-blue-800 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
-									<span>📣</span> Today's Important Message
-								</h2>
-								<p
-									id="disp-announcement"
-									class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-snug"
-								></p>
-							</div>
+					<!-- Today's Important Hero Message (Across Top, Spanning Full Width, Hidden if empty) -->
+					<div id="disp-announcement-container" class="space-y-2 pb-5 border-b-2 border-blue-200/80 hidden">
+						<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
+								<span>&#128227;</span> Today's Important Message
+						</h2>
+						<p
+							id="disp-announcement"
+							class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 leading-snug"
+						></p>
+					</div>
 
-							<!-- Integrated AI Suggestions for Today -->
-							<div id="disp-ai-today-section" class="space-y-1.5">
-								<h3 class="text-indigo-900 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
-									<span>💬</span> Suggestions for Today
-								</h3>
-								<div
-									id="disp-ai-today-plan"
-									class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-indigo-200/90 space-y-2 text-lg sm:text-xl font-semibold text-slate-900 leading-relaxed"
-								>
-									<p class="text-base sm:text-lg text-slate-500 italic">Putting together friendly suggestions for your day...</p>
-								</div>
-							</div>
-
-							<!-- Senior Daily Check-In (Interactive, No Emojis) -->
-							<div id="disp-senior-checkin-section" class="pt-3 border-t border-blue-200/70 space-y-2">
-								<div class="flex items-center justify-between">
-									<h3 class="text-blue-900 font-black uppercase tracking-wider text-sm sm:text-base">
-										Daily Check-In
-									</h3>
-									<span id="disp-checkin-status-badge" class="hidden text-xs sm:text-sm font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-										Logged
-									</span>
-								</div>
-								<p id="disp-checkin-question" class="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 leading-snug">
-									Loading question...
-								</p>
-								<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-									<!-- Dynamic choice buttons generated here without emojis -->
-								</div>
-								<div id="disp-checkin-confirmation" class="hidden p-3 bg-white/95 rounded-xl border border-blue-200 flex items-center justify-between gap-3">
-									<div>
-										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
-										<span id="disp-checkin-answer-text" class="text-xl sm:text-2xl font-black text-slate-900 block"></span>
-										<span id="disp-checkin-time-text" class="text-sm sm:text-base font-semibold text-slate-600 block"></span>
-									</div>
-									<button
-										type="button"
-										id="btn-change-checkin"
-										onclick="resetSeniorCheckinChoice()"
-										class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm sm:text-base font-bold rounded-xl border border-slate-300 transition shrink-0 cursor-pointer"
-									>
-										Change
-									</button>
-								</div>
+					<!-- 2-Column Balanced Grid: Left = Morning Briefing & Reminders, Right = Daily Check-In -->
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+						<!-- Left Column: Morning Briefing & Reminders (Bulleted list with bolded actions, no weather numbers) -->
+						<div id="disp-ai-today-section" class="flex flex-col space-y-3">
+							<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
+								<span>&#9728;&#65039;</span> Morning Briefing &amp; Reminders
+							</h3>
+							<div
+								id="disp-ai-today-plan"
+								class="p-4 sm:p-5 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs"
+							>
+								<ul class="space-y-3 sm:space-y-3.5">
+									<li class="flex items-start gap-3">
+										<span class="inline-block w-2.5 h-2.5 mt-2.5 rounded-full bg-blue-600 shrink-0"></span>
+										<span class="text-xl sm:text-2xl text-slate-500 italic">Putting together your morning briefing...</span>
+									</li>
+								</ul>
 							</div>
 						</div>
 
-						<!-- Column 2: Scheduled for Today + AI Health & Prep Tips + Look-Ahead -->
-						<div
-							id="disp-today-events-section"
-							class="flex flex-col justify-between space-y-3"
-						>
-							<div class="space-y-2">
-								<div class="flex items-center justify-between gap-2">
-									<h2 class="text-sm sm:text-base font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-										<span>📅</span> Scheduled for Today
-									</h2>
-									<span
-										id="today-events-count-badge"
-										class="hidden text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300"
-									>
-										0 Entries
-									</span>
-								</div>
-								<div id="disp-today-events-list" class="space-y-2 max-h-52 overflow-y-auto pr-1">
-									<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-										<div class="text-lg">ðŸŒ¿</div>
-										<div class="text-lg sm:text-xl font-black text-slate-800">No events scheduled for today</div>
-										<div class="text-sm sm:text-base font-semibold text-slate-600">Enjoy a relaxing day!</div>
-									</div>
-								</div>
+						<!-- Right Column: Senior Daily Check-In (Interactive, Senior Friendly, No Emojis) -->
+						<div id="disp-senior-checkin-section" class="flex flex-col space-y-3 lg:border-l-2 lg:border-blue-200/80 lg:pl-8">
+							<div class="flex items-center justify-between">
+								<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
+								<span>&#128172;</span> Daily Check-In
+								</h3>
+								<span id="disp-checkin-status-badge" class="hidden text-sm sm:text-base font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border-2 border-emerald-300">
+									Logged
+								</span>
 							</div>
+							<p id="disp-checkin-question" class="text-2xl sm:text-3xl font-black text-slate-950 leading-snug">
+								Loading question...
+							</p>
+							<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+								<!-- Dynamic choice buttons generated here without emojis -->
+							</div>
+							<div id="disp-checkin-confirmation" class="hidden p-4 bg-white/95 rounded-2xl border-2 border-blue-200 flex items-center justify-between gap-4 shadow-xs">
+								<div class="space-y-1">
+									<span class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
+									<span id="disp-checkin-answer-text" class="text-2xl sm:text-3xl font-black text-slate-950 block"></span>
+									<span id="disp-checkin-time-text" class="text-base sm:text-lg font-semibold text-slate-600 block"></span>
+								</div>
+								<button
+									type="button"
+									id="btn-change-checkin"
+									onclick="resetSeniorCheckinChoice()"
+									class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-300 transition shrink-0 cursor-pointer"
+								>
+									Change
+								</button>
+							</div>
+						</div>
+					</div>
 
-							<!-- Integrated AI Prep Alerts & Pacing Look-Ahead -->
-							<div id="disp-ai-prep-section" class="pt-3 border-t border-blue-200/70 space-y-2">
-								<div class="space-y-1.5">
-									<h3 class="text-sky-900 font-black uppercase tracking-wider text-sm sm:text-base flex items-center gap-1.5">
-										<span>💧</span> Helpful Health &amp; Prep Tips
-									</h3>
-									<div id="disp-ai-prep-alerts" class="space-y-1.5">
-										<div class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-sky-200 text-base sm:text-lg text-sky-950 leading-relaxed font-bold">
-											No special preparation needed right now - just keep sipping water throughout the day.
-										</div>
-									</div>
-								</div>
-								<div class="p-3.5 sm:p-4 bg-white/95 rounded-2xl border-2 border-indigo-100 flex items-start gap-2.5">
-									<span class="text-sm shrink-0 mt-0.5">ðŸŒ¿</span>
-									<p id="disp-ai-look-ahead" class="text-base sm:text-lg text-slate-800 leading-relaxed font-semibold">
-										Looking ahead at your week...
-									</p>
-								</div>
-							</div>
+					<!-- Hidden Compatibility Elements (Preserves existing DOM hooks for alerts and event counts without visual clutter) -->
+					<div class="hidden" aria-hidden="true">
+						<div id="disp-today-events-section">
+							<span id="today-events-count-badge">0</span>
+							<div id="disp-today-events-list"></div>
+						</div>
+						<div id="disp-ai-prep-section">
+							<div id="disp-ai-prep-alerts"></div>
+							<p id="disp-ai-look-ahead"></p>
 						</div>
 					</div>
 				</div>
@@ -454,7 +422,7 @@
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>📣</span> Today's Important Message
+								<span>&#128227;</span> Today's Important Message
 									</h3>
 									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
 										Admin &amp; Editor
@@ -568,7 +536,7 @@
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>💊</span> Medications &amp; Daily Check-In
+								<span>&#128172;</span> Daily Check-In
 									</h3>
 									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
 										Admin &amp; Editor

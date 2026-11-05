@@ -1,4 +1,4 @@
-﻿# Senior Message Board System - Project Context
+# Senior Message Board System - Project Context
 
 ## Architecture
 
@@ -22,9 +22,14 @@
 
 - Real-time `on('value')` listener synchronizes admin and editor edits from phone/PC to tablet instantly.
 - Clock, Weather & Morning Action Header: Prominent Date & Time on the left, Weather Widget in the center, and a simplified Medication Check-In on the right (tactile **"💊 I TOOK MY MEDS"** button that smoothly transforms into a clean **"✅ Meds Logged"** state with timestamp when complete).
-- Main Message & Daily Companion Hub (`#card-announcement`): Spacious 2-column layout on tablet/desktop (stacking on phones):
-    - Column 1 displays **📣 Today's Important Message** in large type (which automatically hides completely when empty so no placeholder takes up space), **💬 Suggestions for Today** (`#disp-ai-today-plan`) formatted into 2 concise paragraphs written in a warm family voice, and an interactive **Daily Check-In** (`#disp-senior-checkin-section`) where the AI generates dynamic daily questions and learns from the senior's choices over time (with zero icons/emojis).
-    - Column 2 displays **📅 Scheduled for Today** (with entry-count badge `#today-events-count-badge`), **💧 Helpful Health & Prep Tips** (`#disp-ai-prep-alerts`), and **🌿 Pacing the Next Few Days** (`#disp-ai-look-ahead`).
+- Main Message & Daily Companion Hub (`#card-announcement` - Option 1: Unified Morning Briefing & Check-In): Replaces dense text and duplicate event boxes with a clean, high-contrast 2-column layout:
+    - **Hero Announcement (Across Top)**: Displays **📣 Today's Important Message** in prominent type (`text-3xl sm:text-4xl lg:text-5xl font-black`) spanning full width; automatically hides when empty so no placeholder takes up space.
+    - **Left Column - ☀️ Morning Briefing & Reminders (`#disp-ai-today-plan`)**: Formatted as an easy-to-digest bulleted list (3 to 5 concise points, `text-xl sm:text-2xl font-medium text-slate-800`) covering:
+        1. **Weather Outlook**: Summarizes the day's weather feel completely naturally **without using any numbers** (no degrees, no percentages, no temperature digits; e.g. "Mild, bright, and sunny today.").
+        2. **Action Required Bolding**: Bolds specific actionable advice with ultra-bold styling (`<strong class="font-black text-slate-950">`) so the senior immediately spots what to do (e.g. "**Take your morning medicine with breakfast**", "**Put on a warm cardigan**", "**Bring your ID and sunglasses**").
+        3. **Medication & Schedule Pacing**: Covers medication timing, today's appointments, multi-day preparation alerts, and senior check-in feedback acknowledgment.
+    - **Right Column - 💬 Daily Check-In (`#disp-senior-checkin-section`)**: Interactive senior check-in with large question text (`text-2xl sm:text-3xl font-black`), dynamic choices with zero emojis (`text-xl sm:text-2xl font-bold` buttons), and clear logged response confirmation with change option.
+    - **Clutter Elimination**: Removes duplicate "Scheduled for Today" events and separate fragmented alerts from the announcement card area (appointments are already highlighted with `TODAY` badges in the Appointments & Events card immediately below), maintaining hidden DOM compatibility elements.
 - Calendar, Appointments & Merged Upcoming US Holidays (`#card-events`): Displays upcoming single-day and optional multi-day doctor visits, family visits, errands, and events (`date`, `endDate`, `category`: medical/family/errand/service/other, `location`: home/outing) chronologically woven together with the next 4 upcoming major US federal and cultural holidays (fetched via Nager.Date Public Holidays API + built-in US holiday calendar with emojis and countdown badges), senior-friendly badges (`TODAY`, `TODAY • Thru ...`, `TOMORROW`, or date range), notes/driver details, an event-specific `reminder` field, inline appointment editing, and automatic past-event cleanup after the effective end date has passed.
 - Contacts List & Birthdays Card (`#card-contacts`): Automatically displays all active registered users alongside additional non-user contacts (managed by ADMIN and EDITOR roles), complete with relationship labels, phone numbers, and birthdays (highlighting birthdays falling on today).
 - Consolidated Contact & User Normalization: Centralized normalization utilities (`normalizeUserContact`, `normalizeContactRecord`, `syncCurrentUserContactToBoard`) eliminate duplicate boilerplate code across login, profile saves, user table administration, and contact rendering.
