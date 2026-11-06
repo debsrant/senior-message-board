@@ -126,7 +126,6 @@ auth.onAuthStateChanged(async (user) => {
 		const sectionAdminOnly = document.getElementById('section-admin-only');
 		const adminCardPositions = document.getElementById('admin-card-positions');
 		const panelTitle = document.getElementById('admin-panel-title');
-		const publishBtn = document.getElementById('btn-publish-data');
 
 		if (userProfile.role === 'ADMIN') {
 			if (btnAdmin) {
@@ -136,7 +135,6 @@ auth.onAuthStateChanged(async (user) => {
 			if (sectionAdminOnly) sectionAdminOnly.classList.remove('hidden');
 			if (adminCardPositions) adminCardPositions.classList.remove('hidden');
 			if (panelTitle) panelTitle.innerText = 'Remote Administration Panel';
-			if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
 			initUsersManagement();
 		} else if (userProfile.role === 'EDITOR') {
 			if (btnAdmin) {
@@ -146,7 +144,6 @@ auth.onAuthStateChanged(async (user) => {
 			if (sectionAdminOnly) sectionAdminOnly.classList.add('hidden');
 			if (adminCardPositions) adminCardPositions.classList.add('hidden');
 			if (panelTitle) panelTitle.innerText = 'Editor & Maintenance Panel';
-			if (publishBtn) publishBtn.innerText = 'Publish Changes Instantly';
 		} else {
 			// VIEWER role (tablet kiosk display)
 			if (btnAdmin) btnAdmin.classList.add('hidden');
@@ -3482,8 +3479,145 @@ function markMedsTaken() {
 	);
 }
 
-// Save Data to Firebase
+// ================= SCOPED ADMIN FORM SAVE HANDLERS =================
 
+async function saveAnnouncementOnly() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: You do not have permission to modify board content.');
+		return;
+	}
+	const announcement = (document.getElementById('input-announcement')?.value || '').trim();
+	const btn = document.getElementById('btn-save-announcement');
+	if (btn) btn.disabled = true;
+
+	try {
+		await database.ref('board').update({
+			announcement: announcement,
+			updatedAt: Date.now(),
+		});
+		showToast("Today's important message saved!");
+	} catch (err) {
+		console.error('Failed to save announcement:', err);
+		alert('Failed to save announcement: ' + err.message);
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+async function saveMedicationInstructionsOnly() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: You do not have permission to modify board content.');
+		return;
+	}
+	const medicationNotes = (document.getElementById('input-medication-notes')?.value || '').trim();
+	const medsTaken = !!document.getElementById('input-meds-taken')?.checked;
+	const btn = document.getElementById('btn-save-med-instructions');
+	if (btn) btn.disabled = true;
+
+	const updatePayload = {
+		medicationNotes: medicationNotes,
+		medsTaken: medsTaken,
+		updatedAt: Date.now(),
+	};
+	if (medsTaken) {
+		updatePayload.medsTakenTime = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+	}
+
+	try {
+		await database.ref('board').update(updatePayload);
+		showToast('Medication instructions and status saved!');
+	} catch (err) {
+		console.error('Failed to save medication instructions:', err);
+		alert('Failed to save medication instructions: ' + err.message);
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+async function saveCheckinQuestionSettings() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: You do not have permission to modify board content.');
+		return;
+	}
+	const customCheckinQuestion = (document.getElementById('input-checkin-custom-question')?.value || '').trim();
+	const customCheckinChoices = (document.getElementById('input-checkin-custom-choices')?.value || '').trim();
+	const btn = document.getElementById('btn-save-checkin-question');
+	if (btn) btn.disabled = true;
+
+	try {
+		await database.ref('board').update({
+			customCheckinQuestion: customCheckinQuestion,
+			customCheckinChoices: customCheckinChoices,
+			updatedAt: Date.now(),
+		});
+		showToast('Check-in question settings saved!');
+	} catch (err) {
+		console.error('Failed to save check-in question settings:', err);
+		alert('Failed to save check-in question settings: ' + err.message);
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+async function saveAiRulesOnly() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: You do not have permission to modify board content.');
+		return;
+	}
+	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
+	const aiFeedback = (document.getElementById('input-ai-feedback')?.value ?? '').trim();
+	const btn = document.getElementById('btn-save-ai-rules');
+	if (btn) btn.disabled = true;
+
+	try {
+		await database.ref('board').update({
+			aiRules: aiRules,
+			aiFeedback: aiFeedback,
+			updatedAt: Date.now(),
+		});
+		showToast('Care rules and AI notes saved!');
+	} catch (err) {
+		console.error('Failed to save AI care rules:', err);
+		alert('Failed to save AI care rules: ' + err.message);
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+async function saveDisplaySettingsOnly() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: You do not have permission to modify board content.');
+		return;
+	}
+	const boardTitle = (document.getElementById('input-board-title')?.value || '').trim() || 'Senior Message Board';
+	const zipcode = (document.getElementById('input-zipcode')?.value || '').trim();
+	const btn = document.getElementById('btn-save-display-settings');
+	if (btn) btn.disabled = true;
+
+	const updatePayload = {
+		boardTitle: boardTitle,
+		zipcode: zipcode,
+		updatedAt: Date.now(),
+	};
+	if (userProfile.role === 'ADMIN' && currentCardPositions) {
+		updatePayload.cardPositions = currentCardPositions;
+	}
+
+	try {
+		await database.ref('board').update(updatePayload);
+		showToast('Board display settings saved!');
+		if (zipcode && typeof fetchWeatherData === 'function') {
+			fetchWeatherData(zipcode);
+		}
+	} catch (err) {
+		console.error('Failed to save display settings:', err);
+		alert('Failed to save display settings: ' + err.message);
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+// Fallback comprehensive save function
 function saveData() {
 	console.log('Attempting to save board data...');
 	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
@@ -3491,15 +3625,15 @@ function saveData() {
 		return;
 	}
 
-	const announcement = document.getElementById('input-announcement').value;
-	const boardTitle = document.getElementById('input-board-title').value;
+	const announcement = (document.getElementById('input-announcement')?.value || '').trim();
+	const boardTitle = (document.getElementById('input-board-title')?.value || '').trim() || 'Senior Message Board';
 	const medicationNotes = (document.getElementById('input-medication-notes')?.value || '').trim();
-	const medsTaken = document.getElementById('input-meds-taken').checked;
-	const zipcode = document.getElementById('input-zipcode').value;
+	const medsTaken = !!document.getElementById('input-meds-taken')?.checked;
+	const zipcode = (document.getElementById('input-zipcode')?.value || '').trim();
 	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
 	const aiFeedback = (document.getElementById('input-ai-feedback')?.value ?? '').trim();
-	const customCheckinQuestion = (document.getElementById('input-checkin-custom-question')?.value ?? '').trim();
-	const customCheckinChoices = (document.getElementById('input-checkin-custom-choices')?.value ?? '').trim();
+	const customCheckinQuestion = (document.getElementById('input-checkin-custom-question')?.value || '').trim();
+	const customCheckinChoices = (document.getElementById('input-checkin-custom-choices')?.value || '').trim();
 
 	// Recompute fresh Smart Plan from the newly edited form fields
 	const freshSmartPlan = buildSmartRuleBasedPlan({
@@ -3534,7 +3668,7 @@ function saveData() {
 		updatedAt: Date.now(),
 	};
 
-	if (userProfile.role === 'ADMIN') {
+	if (userProfile.role === 'ADMIN' && currentCardPositions) {
 		updatePayload.cardPositions = currentCardPositions;
 	}
 
@@ -3554,8 +3688,7 @@ function saveData() {
 				if (loadGeminiApiKeyLocal()) {
 					generateAiActionPlan({ silent: true });
 				}
-				alert('Changes published successfully! Tablet will update instantly.');
-				switchView('display');
+				showToast('All changes published successfully!');
 			}
 		}
 	);
