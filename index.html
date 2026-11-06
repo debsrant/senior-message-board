@@ -1408,38 +1408,56 @@
 								</button>
 							</div>
 
-							<!-- Optional Gemini API Key + Refresh Button -->
-							<div class="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-3">
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-indigo-950">
-										Optional Gemini API Key <span class="text-slate-500 font-normal">(Saved on this device only)</span>
+							<!-- Admin-Only Gemini API Key Area -->
+							<div
+								id="section-gemini-api-key"
+								class="hidden p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-2.5"
+							>
+								<div class="flex items-center justify-between">
+									<label class="block text-xs font-bold text-indigo-950 uppercase tracking-wider">
+										Gemini API Key
 									</label>
-									<input
-										type="password"
-										id="input-gemini-api-key"
-										onchange="saveGeminiApiKeyLocal(this.value)"
-										placeholder="AIza... (Leave blank to use built-in Smart Care Companion)"
-										class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
-									/>
+									<span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full">
+										Admin Only
+									</span>
 								</div>
+								<input
+									type="password"
+									id="input-gemini-api-key"
+									onchange="saveGeminiApiKeyLocal(this.value)"
+									placeholder="AIza... (Leave blank to use built-in Smart Care Companion)"
+									class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
+								/>
+								<p class="text-[11px] text-slate-500">
+									Saved securely on this device only. Powers generative AI actions for the board.
+								</p>
+							</div>
+
+							<!-- Action Button: Refresh AI Summary Now -->
+							<div>
 								<button
 									type="button"
 									id="btn-generate-ai-plan"
 									onclick="generateAiActionPlan()"
-									class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
+									class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
 								>
 									<span id="btn-generate-ai-text">Refresh AI Summary Now</span>
 								</button>
 							</div>
 						</div>
 
-						<!-- Right Column: Board Title, Weather Zipcode & Card Order -->
+						<!-- Right Column: Board Title & Weather Zipcode -->
 						<div id="section-maintenance" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-									Board Title, Weather &amp; Layout
-								</h3>
-								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
+								<div>
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Board Title &amp; Weather
+									</h3>
+									<p class="text-xs text-slate-500 mt-0.5">
+										Configure display name and weather location.
+									</p>
+								</div>
+								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
 									Admin &amp; Editor
 								</span>
 							</div>
@@ -1463,86 +1481,6 @@
 										placeholder="e.g. 90210"
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 									/>
-								</div>
-							</div>
-
-							<!-- Admin-Only Card Position Ordering -->
-							<div
-								id="admin-card-positions"
-								class="hidden pt-3 border-t border-slate-100 space-y-2.5"
-							>
-								<div class="flex items-center justify-between">
-									<h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-										Display Card Order
-									</h4>
-									<span class="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md">
-										Admin Only
-									</span>
-								</div>
-								<p class="text-xs text-slate-500">
-									Choose the position (1 to 4) for each card in the Reminders section:
-								</p>
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-messages" class="block text-xs font-semibold text-slate-700">
-											Messages
-										</label>
-										<select
-											id="select-pos-messages"
-											onchange="handleCardPositionChange('messages', this.value)"
-											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-										>
-											<option value="1" selected>Position 1</option>
-											<option value="2">Position 2</option>
-											<option value="3">Position 3</option>
-											<option value="4">Position 4</option>
-										</select>
-									</div>
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-medications" class="block text-xs font-semibold text-slate-700">
-											Medications
-										</label>
-										<select
-											id="select-pos-medications"
-											onchange="handleCardPositionChange('medications', this.value)"
-											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-										>
-											<option value="1">Position 1</option>
-											<option value="2" selected>Position 2</option>
-											<option value="3">Position 3</option>
-											<option value="4">Position 4</option>
-										</select>
-									</div>
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-events" class="block text-xs font-semibold text-slate-700">
-											Appointments &amp; Events
-										</label>
-										<select
-											id="select-pos-events"
-											onchange="handleCardPositionChange('events', this.value)"
-											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-										>
-											<option value="1">Position 1</option>
-											<option value="2">Position 2</option>
-											<option value="3" selected>Position 3</option>
-											<option value="4">Position 4</option>
-										</select>
-									</div>
-									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-										<label for="select-pos-contacts" class="block text-xs font-semibold text-slate-700">
-											Contacts List
-										</label>
-										<select
-											id="select-pos-contacts"
-											onchange="handleCardPositionChange('contacts', this.value)"
-											class="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-900 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-										>
-											<option value="1">Position 1</option>
-											<option value="2">Position 2</option>
-											<option value="3">Position 3</option>
-											<option value="4" selected>Position 4</option>
-										</select>
-									</div>
 								</div>
 							</div>
 

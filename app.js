@@ -124,7 +124,7 @@ auth.onAuthStateChanged(async (user) => {
 		// Setup view permissions based on role
 		const btnAdmin = document.getElementById('btn-admin');
 		const sectionAdminOnly = document.getElementById('section-admin-only');
-		const adminCardPositions = document.getElementById('admin-card-positions');
+		const geminiApiKeySection = document.getElementById('section-gemini-api-key');
 		const panelTitle = document.getElementById('admin-panel-title');
 
 		if (userProfile.role === 'ADMIN') {
@@ -133,7 +133,7 @@ auth.onAuthStateChanged(async (user) => {
 				btnAdmin.classList.remove('hidden');
 			}
 			if (sectionAdminOnly) sectionAdminOnly.classList.remove('hidden');
-			if (adminCardPositions) adminCardPositions.classList.remove('hidden');
+			if (geminiApiKeySection) geminiApiKeySection.classList.remove('hidden');
 			if (panelTitle) panelTitle.innerText = 'Remote Administration Panel';
 			initUsersManagement();
 		} else if (userProfile.role === 'EDITOR') {
@@ -142,12 +142,12 @@ auth.onAuthStateChanged(async (user) => {
 				btnAdmin.classList.remove('hidden');
 			}
 			if (sectionAdminOnly) sectionAdminOnly.classList.add('hidden');
-			if (adminCardPositions) adminCardPositions.classList.add('hidden');
+			if (geminiApiKeySection) geminiApiKeySection.classList.add('hidden');
 			if (panelTitle) panelTitle.innerText = 'Editor & Maintenance Panel';
 		} else {
 			// VIEWER role (tablet kiosk display)
 			if (btnAdmin) btnAdmin.classList.add('hidden');
-			if (adminCardPositions) adminCardPositions.classList.add('hidden');
+			if (geminiApiKeySection) geminiApiKeySection.classList.add('hidden');
 		}
 
 		initBoard();
@@ -754,12 +754,20 @@ const DEFAULT_AI_RULES =
 	'Physical Therapy: Set out comfortable sneakers and loose clothing.';
 
 function saveGeminiApiKeyLocal(key) {
+	if (!userProfile || userProfile.role !== 'ADMIN') {
+		alert('Permission Denied: Only ADMIN users can configure the Gemini API key.');
+		const input = document.getElementById('input-gemini-api-key');
+		if (input) input.value = '';
+		return;
+	}
 	try {
 		const trimmed = (key || '').trim();
 		if (trimmed) {
 			localStorage.setItem('smb_gemini_api_key', trimmed);
+			showToast('Gemini API key saved securely on this device.');
 		} else {
 			localStorage.removeItem('smb_gemini_api_key');
+			showToast('Gemini API key removed.');
 		}
 	} catch (e) {
 		console.warn('Could not save Gemini API key to localStorage:', e);
@@ -3411,8 +3419,8 @@ function renderBoard(data) {
 			customChoicesEl.value = data.customCheckinChoices || '';
 		}
 		const apiKeyEl = document.getElementById('input-gemini-api-key');
-		if (apiKeyEl && document.activeElement !== apiKeyEl && !apiKeyEl.value) {
-			apiKeyEl.value = loadGeminiApiKeyLocal();
+		if (apiKeyEl && document.activeElement !== apiKeyEl) {
+			apiKeyEl.value = userProfile.role === 'ADMIN' ? loadGeminiApiKeyLocal() : '';
 		}
 	}
 
@@ -3599,9 +3607,6 @@ async function saveDisplaySettingsOnly() {
 		zipcode: zipcode,
 		updatedAt: Date.now(),
 	};
-	if (userProfile.role === 'ADMIN' && currentCardPositions) {
-		updatePayload.cardPositions = currentCardPositions;
-	}
 
 	try {
 		await database.ref('board').update(updatePayload);
@@ -3667,10 +3672,6 @@ function saveData() {
 		},
 		updatedAt: Date.now(),
 	};
-
-	if (userProfile.role === 'ADMIN' && currentCardPositions) {
-		updatePayload.cardPositions = currentCardPositions;
-	}
 
 	// Delete legacy transition data in Firebase
 	database.ref('board/reminders').remove().catch(() => {});
@@ -4350,7 +4351,7 @@ async function generateAiActionPlan(options = {}) {
 	const btnText = document.getElementById('btn-generate-ai-text');
 	const apiKeyInput = document.getElementById('input-gemini-api-key');
 	const apiKey = (apiKeyInput?.value || loadGeminiApiKeyLocal() || '').trim();
-	if (apiKeyInput && apiKey) {
+	if (apiKeyInput && apiKey && userProfile?.role === 'ADMIN') {
 		saveGeminiApiKeyLocal(apiKey);
 	}
 
