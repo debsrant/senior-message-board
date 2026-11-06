@@ -1543,16 +1543,20 @@ function updateAdminJournalCount() {
 
 // ---------------- AI Story Polisher & Gemini REST Client ----------------
 
-// Universal Browser-Compatible Gemini API Caller with CORS Support and Dynamic Model Discovery
+// Universal Browser-Compatible Gemini API Caller with CORS Support, Timeouts, and Dynamic Model Discovery
 let cachedGeminiModel = null;
 
 async function getAvailableGeminiModel(cleanKey) {
 	if (cachedGeminiModel) return cachedGeminiModel;
+
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second limit for discovery
+
 	try {
 		const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, {
 			method: 'GET',
+			signal: controller.signal,
 			headers: {
-				'Content-Type': 'application/json',
 				'x-goog-api-key': cleanKey,
 			},
 		});
@@ -1612,6 +1616,8 @@ async function getAvailableGeminiModel(cleanKey) {
 		if (e.message && (e.message.includes('API key') || e.message.includes('disabled') || e.message.includes('PERMISSION') || e.message.includes('has not been used'))) {
 			throw e;
 		}
+	} finally {
+		clearTimeout(timeoutId);
 	}
 	return 'gemini-3.8-flash';
 }
@@ -1633,10 +1639,14 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.
 
 	let lastError = null;
 	for (const model of uniqueModels) {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout per model attempt
+
 		try {
 			const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
 			const response = await fetch(url, {
 				method: 'POST',
+				signal: controller.signal,
 				headers: {
 					'Content-Type': 'application/json',
 					'x-goog-api-key': cleanKey,
@@ -1668,10 +1678,17 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.
 			throw new Error(errMsg);
 		} catch (err) {
 			lastError = err;
+			if (err.name === 'AbortError') {
+				lastError = new Error(`Connection to model ${model} timed out after 20 seconds.`);
+				console.warn(lastError.message);
+				continue;
+			}
 			if (err.message && err.message.includes('404')) {
 				continue;
 			}
 			throw err;
+		} finally {
+			clearTimeout(timeoutId);
 		}
 	}
 	throw lastError || new Error('All model requests failed. Please check your Gemini API key in Google AI Studio.');
@@ -4239,7 +4256,10 @@ async function generateAiActionPlan(options = {}) {
 				},
 				aiQuestion: smartAiQuestion,
 			};
-			await database.ref('board').update(updatePayload);
+			await Promise.race([
+				database.ref('board').update(updatePayload),
+				new Promise((resolve) => setTimeout(resolve, 5000)),
+			]).catch((e) => console.warn('Database save warning:', e));
 		}
 		if (latestBoardData) {
 			latestBoardData.aiQuestion = smartAiQuestion;
@@ -4259,7 +4279,10 @@ async function generateAiActionPlan(options = {}) {
 	try {
 		if (!lastWeatherData && latestBoardData?.zipcode) {
 			try {
-				await updateWeather(latestBoardData.zipcode);
+				await Promise.race([
+					updateWeather(latestBoardData.zipcode),
+					new Promise((resolve) => setTimeout(resolve, 5000)),
+				]);
 			} catch (e) {
 				console.warn('Weather refresh before AI plan failed:', e);
 			}
@@ -4425,7 +4448,10 @@ async function generateAiActionPlan(options = {}) {
 			if (finalAiQuestion) {
 				updatePayload.aiQuestion = finalAiQuestion;
 			}
-			await database.ref('board').update(updatePayload);
+			await Promise.race([
+				database.ref('board').update(updatePayload),
+				new Promise((resolve) => setTimeout(resolve, 5000)),
+			]).catch((e) => console.warn('Database save warning:', e));
 		}
 		if (finalAiQuestion && latestBoardData) {
 			latestBoardData.aiQuestion = finalAiQuestion;
