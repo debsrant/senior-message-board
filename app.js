@@ -1541,7 +1541,55 @@ function updateAdminJournalCount() {
 	if (totalText) totalText.innerText = count === 1 ? '1 Memory Recorded' : `${count} Memories Recorded`;
 }
 
-// ---------------- AI Story Polisher (Gemini 3.8 Flash + Smart Rule-Based Engine) ----------------
+// ---------------- AI Story Polisher & Gemini REST Client ----------------
+
+// Universal Browser-Compatible Gemini API Caller with CORS Support and Model Fallback
+async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.5-flash') {
+	const cleanKey = (apiKey || '').trim().replace(/^["']|["']$/g, '');
+	if (!cleanKey) throw new Error('No API key provided');
+
+	const modelsToTry = [preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash'];
+	const uniqueModels = [...new Set(modelsToTry)];
+
+	let lastError = null;
+	for (const model of uniqueModels) {
+		try {
+			const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(requestPayload),
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+				if (text) {
+					return text;
+				}
+				throw new Error('Gemini API returned an empty response.');
+			}
+
+			if (response.status === 404) {
+				console.warn(`Model ${model} returned 404, attempting fallback...`);
+				continue;
+			}
+
+			const errorData = await response.json().catch(() => null);
+			const errMsg = errorData?.error?.message || `HTTP ${response.status}`;
+			throw new Error(errMsg);
+		} catch (err) {
+			lastError = err;
+			if (err.message && err.message.includes('404')) {
+				continue;
+			}
+			throw err;
+		}
+	}
+	throw lastError || new Error('Failed to connect to Gemini API.');
+}
 
 async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voice' }) {
 	const raw = (transcript || '').trim();
@@ -1551,60 +1599,41 @@ async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voic
 	const apiKey = loadGeminiApiKeyLocal() || (latestBoardData?.geminiApiKey || '');
 	if (apiKey) {
 		try {
-			const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Api-Revision': '2026-05-20',
-					'x-goog-api-key': apiKey,
-				},
-				body: JSON.stringify({
-					model: 'gemini-3.8-flash',
-					store: false,
-					system_instruction:
-						"You are a loving family biographer helping an 80+ senior who has early-stage Alzheimer's capture her precious life memories.\n" +
-						'Given a spoken memory prompt and raw transcript (which may contain vocal fillers like "um", "let me see", repetitions, or conversational tangents):\n' +
-						'1. Clean up conversational stutter/hesitations while strictly keeping her authentic colloquial phrasing, personality, dialect, and voice intact. Do NOT over-formalize or make it sound academic.\n' +
-						'2. Format the memory into 1 to 3 warm, evocative paragraphs written in the first person ("I remember...").\n' +
-						'3. Create a warm, evocative 2 to 5 word Title for the memory book (e.g. "Dancing at the Pavilion", "Our 1957 Blue Chevy").\n' +
-						'4. Return a clean JSON object.',
-					input: `Topic / Prompt: ${promptTopic || "Mom's Memory"}\nRaw Spoken Transcript:\n${raw}`,
-					response_format: {
-						type: 'text',
-						mime_type: 'application/json',
-						schema: {
-							type: 'object',
-							properties: {
-								title: { type: 'string', description: 'Evocative 2-5 word memory title' },
-								story: {
-									type: 'string',
-									description: "1 to 3 short paragraphs in Mom's warm, authentic first-person voice",
-								},
-								summary: { type: 'string', description: 'One short sentence capturing the essence of the story' },
-							},
-							required: ['title', 'story'],
-						},
-					},
-				}),
-			});
+			const systemInstructionText =
+				"You are a loving family biographer helping an 80+ senior who has early-stage Alzheimer's capture her precious life memories.\n" +
+				'Given a spoken memory prompt and raw transcript (which may contain vocal fillers like "um", "let me see", repetitions, or conversational tangents):\n' +
+				'1. Clean up conversational stutter/hesitations while strictly keeping her authentic colloquial phrasing, personality, dialect, and voice intact. Do NOT over-formalize or make it sound academic.\n' +
+				'2. Format the memory into 1 to 3 warm, evocative paragraphs written in the first person ("I remember...").\n' +
+				'3. Create a warm, evocative 2 to 5 word Title for the memory book (e.g. "Dancing at the Pavilion", "Our 1957 Blue Chevy").\n' +
+				'4. Output MUST be valid JSON with keys: "title" (string), "story" (string), and "summary" (string).';
 
-			if (response.ok) {
-				const data = await response.json();
-				let parsed = null;
-				if (data.output) {
-					try {
-						parsed = JSON.parse(data.output);
-					} catch (e) {
-						if (typeof data.output === 'object') parsed = data.output;
-					}
-				}
-				if (parsed && parsed.story) {
-					return {
-						title: (parsed.title || 'Family Memory').trim(),
-						story: (parsed.story || raw).trim(),
-						summary: (parsed.summary || '').trim(),
-					};
-				}
+			const requestPayload = {
+				systemInstruction: {
+					parts: [{ text: systemInstructionText }],
+				},
+				contents: [
+					{
+						parts: [
+							{
+								text: `Topic / Prompt: ${promptTopic || "Mom's Memory"}\nRaw Spoken Transcript:\n${raw}`,
+							},
+						],
+					},
+				],
+				generationConfig: {
+					responseMimeType: 'application/json',
+				},
+			};
+
+			const textOutput = await callGeminiApi(apiKey, requestPayload, 'gemini-2.5-flash');
+			const cleanJson = textOutput.replace(/```json\n?|\n?```/g, '').trim();
+			const parsed = JSON.parse(cleanJson);
+			if (parsed && (parsed.story || parsed.title)) {
+				return {
+					title: (parsed.title || 'Family Memory').trim(),
+					story: (parsed.story || raw).trim(),
+					summary: (parsed.summary || '').trim(),
+				};
 			}
 		} catch (err) {
 			console.warn('Gemini story polishing failed, falling back to smart rule-based polisher:', err);
@@ -4225,111 +4254,51 @@ async function generateAiActionPlan(options = {}) {
 			detectedSmartPrepAlerts: smartBaseline.prepAlerts,
 		};
 
-		const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Api-Revision': '2026-05-20',
-				'x-goog-api-key': apiKey,
+		const systemInstructionText =
+			'You are a loving, thoughtful family member speaking directly to an 80+ senior ("you") on their home message board.\n' +
+			'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and completely human.\n' +
+			'STRICT ACCESSIBILITY & ALZHEIMER\'S GUIDELINES:\n' +
+			'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
+			'- Avoid long paragraphs or dense text blocks. High visual spacing and short 1-2 sentence paragraphs prevent disorientation.\n' +
+			'- Zero emojis anywhere.\n\n' +
+			'CRITICAL RULES:\n' +
+			'1. `todayPlan` (AN ARRAY OF 2 TO 5 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
+			'   - PARAGRAPH 1 (WEATHER & MORNING OUTLOOK): Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. E.g. "Crisp, sunny weather today with cool afternoon air. **Put on a warm sweater** before sitting out on the porch."\n' +
+			'   - PARAGRAPH 2 (MEDICATION & HYDRATION): Note morning medication status and hydration advice with bold markdown **action text**, e.g. "**Take your morning medicine with breakfast** and drink a full glass of water."\n' +
+			'   - PARAGRAPH 3 (SCHEDULE & PACING): Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful quiet day at home).\n' +
+			'   - PARAGRAPH 4 (FAMILY LOVE NOTES - IDEA D): If family messages exist in `familyMessages`, warmly weave their loving words into a short paragraph, e.g. "Sarah sent a sweet note: \'[message text]\'. **Have a wonderful day** knowing your family is thinking of you."\n' +
+			'   - PARAGRAPH 5 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
+			'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
+			'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
+			'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
+			'   - Choices must include 3 distinct nostalgic/warm choices plus 1 low-pressure escape choice (e.g. "Not sure today" or "None of these"). Under 6 words each. Zero emojis.\n' +
+			'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
+			'4. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.\n\n' +
+			'Output MUST be a valid JSON object with keys: "todayPlan" (array of strings), "prepAlerts" (array of strings), "lookAhead" (string), "dailyQuestion" (object with "question" string and "choices" array of strings).';
+
+		const requestPayload = {
+			systemInstruction: {
+				parts: [{ text: systemInstructionText }],
 			},
-			body: JSON.stringify({
-				model: 'gemini-3.8-flash',
-				store: false,
-				system_instruction:
-					'You are a loving, thoughtful family member speaking directly to an 80+ senior ("you") on their home message board.\n' +
-					'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and completely human.\n' +
-					'STRICT ACCESSIBILITY & ALZHEIMER\'S GUIDELINES:\n' +
-					'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
-					'- Avoid long paragraphs or dense text blocks. High visual spacing and short 1-2 sentence paragraphs prevent disorientation.\n' +
-					'- Zero emojis anywhere.\n\n' +
-					'CRITICAL RULES:\n' +
-					'1. `todayPlan` (AN ARRAY OF 2 TO 5 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
-					'   - PARAGRAPH 1 (WEATHER & MORNING OUTLOOK): Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. E.g. "Crisp, sunny weather today with cool afternoon air. **Put on a warm sweater** before sitting out on the porch."\n' +
-					'   - PARAGRAPH 2 (MEDICATION & HYDRATION): Note morning medication status and hydration advice with bold markdown **action text**, e.g. "**Take your morning medicine with breakfast** and drink a full glass of water."\n' +
-					'   - PARAGRAPH 3 (SCHEDULE & PACING): Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful quiet day at home).\n' +
-					'   - PARAGRAPH 4 (FAMILY LOVE NOTES - IDEA D): If family messages exist in `familyMessages`, warmly weave their loving words into a short paragraph, e.g. "Sarah sent a sweet note: \'[message text]\'. **Have a wonderful day** knowing your family is thinking of you."\n' +
-					'   - PARAGRAPH 5 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
-					'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
-					'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
-					'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
-					'   - Choices must include 3 distinct nostalgic/warm choices plus 1 low-pressure escape choice (e.g. "Not sure today" or "None of these"). Under 6 words each. Zero emojis.\n' +
-					'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
-					'4. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.',
-				input:
-					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
-					JSON.stringify(boardSnapshot, null, 2),
-				response_format: {
-					type: 'text',
-					mime_type: 'application/json',
-					schema: {
-						type: 'object',
-						properties: {
-							todayPlan: {
-								type: 'array',
-								items: { type: 'string' },
-								description:
-									'An array of 2 to 5 short, warm paragraphs (1-2 sentences each). Each paragraph has bold markdown **action text** for any required action. The weather description MUST NOT contain any numbers, digits, degree symbols, or percentages. Weave family messages into a paragraph when present. No bullet points or emojis.',
-							},
-							prepAlerts: {
-								type: 'array',
-								items: { type: 'string' },
-								description:
-									'1 to 2 short, concise coaching sentences giving proactive multi-day preparation advice tailored to upcoming event context and caregiver prep rules.',
-							},
-							lookAhead: {
-								type: 'string',
-								description:
-									'1 short, warm sentence on how to pace energy over the next 3 to 5 days.',
-							},
-							dailyQuestion: {
-								type: 'object',
-								properties: {
-									question: {
-										type: 'string',
-										description:
-											'A creative, warm single-sentence check-in question sparking nostalgia, music memories, cozy comforts, or daydreams. STRICTLY FORBIDDEN: never ask what they are doing today or what is for dinner. Zero emojis.',
-									},
-									choices: {
-										type: 'array',
-										items: { type: 'string' },
-										description:
-											'3 or 4 distinct, uplifting, senior-friendly answer choices under 6 words each. Zero emojis.',
-									},
-								},
-								required: ['question', 'choices'],
-							},
+			contents: [
+				{
+					parts: [
+						{
+							text:
+								'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
+								JSON.stringify(boardSnapshot, null, 2),
 						},
-						required: ['todayPlan', 'prepAlerts', 'lookAhead', 'dailyQuestion'],
-					},
+					],
 				},
-			}),
-		});
+			],
+			generationConfig: {
+				responseMimeType: 'application/json',
+			},
+		};
 
-		if (!response.ok) {
-			const errText = await response.text();
-			throw new Error(`Gemini API HTTP ${response.status}: ${errText}`);
-		}
-
-		const result = await response.json();
-		let rawJsonText = '';
-		if (typeof result.output_text === 'string' && result.output_text) {
-			rawJsonText = result.output_text;
-		} else if (Array.isArray(result.steps)) {
-			for (let i = result.steps.length - 1; i >= 0; i--) {
-				const step = result.steps[i];
-				if (step && step.type === 'model_output' && Array.isArray(step.content)) {
-					const textParts = step.content
-						.filter((part) => part && part.type === 'text' && typeof part.text === 'string')
-						.map((part) => part.text);
-					if (textParts.length > 0) {
-						rawJsonText = textParts.join('');
-						break;
-					}
-				}
-			}
-		}
-
-		const parsed = JSON.parse(rawJsonText);
+		const rawJsonText = await callGeminiApi(apiKey, requestPayload, 'gemini-2.5-flash');
+		const cleanJson = rawJsonText.replace(/```json\n?|\n?```/g, '').trim();
+		const parsed = JSON.parse(cleanJson);
 		const finalTodayPlan =
 			Array.isArray(parsed.todayPlan) && parsed.todayPlan.length >= 2
 				? parsed.todayPlan.slice(0, 5)
