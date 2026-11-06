@@ -1543,12 +1543,66 @@ function updateAdminJournalCount() {
 
 // ---------------- AI Story Polisher & Gemini REST Client ----------------
 
-// Universal Browser-Compatible Gemini API Caller with CORS Support and Model Fallback
+// Universal Browser-Compatible Gemini API Caller with CORS Support and Dynamic Model Discovery
+let cachedGeminiModel = null;
+
+async function getAvailableGeminiModel(cleanKey) {
+	if (cachedGeminiModel) return cachedGeminiModel;
+	try {
+		const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'x-goog-api-key': cleanKey,
+			},
+		});
+
+		if (res.ok) {
+			const data = await res.json();
+			const supported = (data?.models || [])
+				.filter((m) => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+				.map((m) => m.name.replace(/^models\//, ''));
+			console.log('Available Gemini models for this key:', supported);
+
+			const preferredList = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+			for (const p of preferredList) {
+				if (supported.includes(p)) {
+					cachedGeminiModel = p;
+					return p;
+				}
+			}
+			if (supported.length > 0) {
+				cachedGeminiModel = supported[0];
+				return supported[0];
+			}
+		} else {
+			const errData = await res.json().catch(() => null);
+			if (errData?.error?.message) {
+				throw new Error(errData.error.message);
+			}
+		}
+	} catch (e) {
+		console.warn('Model discovery check:', e.message);
+		if (e.message && (e.message.includes('API key') || e.message.includes('disabled') || e.message.includes('PERMISSION') || e.message.includes('has not been used'))) {
+			throw e;
+		}
+	}
+	return 'gemini-2.5-flash';
+}
+
 async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.5-flash') {
 	const cleanKey = (apiKey || '').trim().replace(/^["']|["']$/g, '');
 	if (!cleanKey) throw new Error('No API key provided');
 
-	const modelsToTry = [preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash'];
+	// Attempt to discover active model or validate key
+	let activeModel = preferredModel;
+	try {
+		activeModel = await getAvailableGeminiModel(cleanKey);
+	} catch (discoveryErr) {
+		throw discoveryErr;
+	}
+
+	const modelsToTry = [activeModel, preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash'];
 	const uniqueModels = [...new Set(modelsToTry)];
 
 	let lastError = null;
@@ -1559,6 +1613,7 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
+					'x-goog-api-key': cleanKey,
 				},
 				body: JSON.stringify(requestPayload),
 			});
@@ -1567,18 +1622,23 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.
 				const data = await response.json();
 				const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 				if (text) {
+					cachedGeminiModel = model;
 					return text;
 				}
 				throw new Error('Gemini API returned an empty response.');
 			}
 
+			const errorData = await response.json().catch(() => null);
+			const errMsg = errorData?.error?.message || `HTTP ${response.status} on ${model}`;
+
+			// If it's a 404 model not found, save error and try next model in fallback list
 			if (response.status === 404) {
-				console.warn(`Model ${model} returned 404, attempting fallback...`);
+				console.warn(`Model ${model} returned 404 (${errMsg}), trying fallback...`);
+				lastError = new Error(errMsg);
 				continue;
 			}
 
-			const errorData = await response.json().catch(() => null);
-			const errMsg = errorData?.error?.message || `HTTP ${response.status}`;
+			// For any other error (e.g. invalid key, quota, permission), throw immediately
 			throw new Error(errMsg);
 		} catch (err) {
 			lastError = err;
@@ -1588,7 +1648,7 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.
 			throw err;
 		}
 	}
-	throw lastError || new Error('Failed to connect to Gemini API.');
+	throw lastError || new Error('All model requests failed. Please check your Gemini API key in Google AI Studio.');
 }
 
 async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voice' }) {
