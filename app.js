@@ -2106,7 +2106,7 @@ async function polishCaregiverStoryWithAI() {
 
 	if (polishBtn) {
 		polishBtn.disabled = true;
-		polishBtn.innerHTML = '<span>⏳</span> Formatting with AI...';
+		polishBtn.innerHTML = 'Formatting with AI...';
 	}
 
 	try {
@@ -4132,7 +4132,7 @@ async function generateAiActionPlan(options = {}) {
 		renderAiSummaryCard();
 		renderSeniorCheckin(latestBoardData);
 		if (!silent) {
-			showToast('\u2728 Conversational Action Plan refreshed!');
+			showToast('Conversational Action Plan refreshed!');
 		}
 		return;
 	}
@@ -4378,7 +4378,7 @@ async function generateAiActionPlan(options = {}) {
 		renderAiSummaryCard();
 		renderSeniorCheckin(latestBoardData);
 		if (!silent) {
-			showToast('\u2728 Gemini AI Action Plan refreshed!');
+			showToast('Gemini AI Action Plan refreshed!');
 		}
 	} catch (err) {
 		console.error('Gemini AI generation error, falling back to Smart Plan:', err);
