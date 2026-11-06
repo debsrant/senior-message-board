@@ -256,14 +256,23 @@
 									<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
 										<!-- Dynamic choice buttons generated here without emojis -->
 									</div>
-									<div class="pt-1 flex items-center justify-between">
+									<div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+										<button
+											type="button"
+											id="btn-kiosk-start-voice"
+											onclick="startKioskVoiceCapture()"
+											class="flex-1 py-3.5 px-4 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:from-purple-900 active:to-indigo-900 text-white rounded-2xl text-lg sm:text-xl font-black shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer"
+										>
+											<span class="text-2xl">🎙️</span>
+											<span>Tap & Speak Your Story</span>
+										</button>
 										<button
 											type="button"
 											id="btn-ask-another-question"
 											onclick="cycleNextCheckinQuestion()"
-											class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-950 rounded-xl text-base sm:text-lg font-bold border-2 border-blue-200 transition flex items-center gap-2 cursor-pointer shadow-2xs"
+											class="px-4 py-3.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-950 rounded-2xl text-base sm:text-lg font-bold border-2 border-blue-200 transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
 										>
-											<span>🔄</span> Ask me another question
+											<span>🔄</span> Another Question
 										</button>
 									</div>
 								</div>
@@ -279,12 +288,66 @@
 									<div id="disp-checkin-followup-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
 										<!-- Dynamic follow-up choices generated here -->
 									</div>
+									<div class="pt-1">
+										<button
+											type="button"
+											onclick="startKioskVoiceCapture(true)"
+											class="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-950 rounded-xl text-base sm:text-lg font-bold border-2 border-purple-200 transition flex items-center justify-center gap-2 cursor-pointer"
+										>
+											<span>🎙️</span> Tap & Speak More About This
+										</button>
+									</div>
+								</div>
+
+								<!-- Voice Recording Container: Tap & Speak Story for Mom -->
+								<div id="disp-checkin-voice" class="hidden p-5 sm:p-6 bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl border-2 border-indigo-300 space-y-4 shadow-sm">
+									<div class="flex items-center justify-between">
+										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
+											<span class="inline-block w-3.5 h-3.5 rounded-full bg-rose-500 animate-pulse"></span>
+											Listening to Your Story
+										</span>
+										<span id="disp-voice-timer" class="text-sm sm:text-base font-mono font-bold text-indigo-800 bg-white px-3 py-1 rounded-lg border border-indigo-200">00:00</span>
+									</div>
+
+									<p id="disp-voice-prompt" class="text-xl sm:text-2xl font-black text-slate-950 leading-snug">
+										Tell us about your memory...
+									</p>
+
+									<div class="p-4 sm:p-5 bg-white rounded-2xl border-2 border-indigo-200 min-h-[7rem] max-h-48 overflow-y-auto space-y-2">
+										<div id="disp-voice-status-text" class="text-base sm:text-lg font-semibold text-slate-500 italic">
+											Speak naturally. Take all the time you need, Mom...
+										</div>
+										<div id="disp-voice-transcript" class="text-xl sm:text-2xl font-bold text-slate-950 leading-relaxed"></div>
+									</div>
+
+									<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+										<button
+											type="button"
+											id="btn-voice-finish"
+											onclick="stopKioskVoiceCapture(true)"
+											class="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-black text-xl sm:text-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+										>
+											<span>✅</span> I'm Finished Speaking
+										</button>
+										<button
+											type="button"
+											id="btn-voice-cancel"
+											onclick="cancelKioskVoiceCapture()"
+											class="py-3 px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-base sm:text-lg transition cursor-pointer"
+										>
+											Cancel
+										</button>
+									</div>
+
+									<div id="disp-voice-fallback-msg" class="hidden text-xs sm:text-sm font-semibold text-amber-900 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+										Microphone is not enabled on this browser. Tap Cancel to return to the answer buttons.
+									</div>
 								</div>
 
 								<!-- Confirmation Container: Logged Summary -->
 								<div id="disp-checkin-confirmation" class="hidden p-5 bg-white/95 rounded-2xl border-2 border-blue-200 flex items-center justify-between gap-4 shadow-xs">
-									<div class="space-y-1.5">
-										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
+									<div class="space-y-1.5 flex-1">
+										<span id="disp-checkin-confirm-title" class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
 										<span id="disp-checkin-answer-text" class="text-2xl sm:text-3xl font-black text-slate-950 block"></span>
 										<span id="disp-checkin-followup-answer-text" class="text-xl sm:text-2xl font-bold text-slate-800 block"></span>
 										<span id="disp-checkin-time-text" class="text-base sm:text-lg font-semibold text-slate-600 block"></span>
@@ -780,14 +843,23 @@
 										<div id="admin-active-question-info" class="text-[11px] text-blue-700 font-medium mt-1"></div>
 										<div id="admin-checkin-history" class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500"></div>
 										<div class="mt-3 pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-											<button
-												type="button"
-												onclick="openMemoryJournalModal()"
-												class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-											>
-												<span>📖</span> View Memory Journal
-												<span id="admin-journal-count-badge" class="px-2 py-0.5 rounded-full bg-indigo-800 text-[10px] font-bold">0 entries</span>
-											</button>
+											<div class="flex items-center gap-2">
+												<button
+													type="button"
+													onclick="openMemoryJournalModal()"
+													class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+												>
+													<span>📖</span> View Memory Journal
+													<span id="admin-journal-count-badge" class="px-2 py-0.5 rounded-full bg-indigo-800 text-[10px] font-bold">0 entries</span>
+												</button>
+												<button
+													type="button"
+													onclick="openStoryCatcherModal()"
+													class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+												>
+													<span>🎙️</span> Story Catcher Interview
+												</button>
+											</div>
 											<button
 												type="button"
 												id="btn-admin-clear-checkin"
@@ -1545,13 +1617,186 @@
 					<div class="flex items-center gap-2">
 						<span id="journal-total-count-text" class="text-xs font-bold text-slate-700">0 Memories Recorded</span>
 					</div>
-					<button
-						type="button"
-						onclick="toggleAddJournalEntryForm()"
-						class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-					>
-						<span>➕</span> Add a Memory Note
-					</button>
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							id="btn-toggle-story-catcher"
+							onclick="toggleStoryCatcherForm()"
+							class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+						>
+							<span>🎙️</span> Story Catcher Interview
+						</button>
+						<button
+							type="button"
+							id="btn-toggle-quick-note"
+							onclick="toggleAddJournalEntryForm()"
+							class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+						>
+							<span>➕</span> Quick Text Note
+						</button>
+					</div>
+				</div>
+
+				<!-- Caregiver Story Catcher Mode Container (Collapsible) -->
+				<div
+					id="journal-story-catcher-container"
+					class="hidden p-5 bg-gradient-to-br from-indigo-50/90 via-purple-50/70 to-pink-50/60 border-b border-indigo-200 space-y-4"
+				>
+					<div class="flex items-start justify-between gap-3">
+						<div>
+							<h3 class="text-sm font-black text-indigo-950 flex items-center gap-2">
+								<span class="text-lg">🎙️</span> Caregiver Story Catcher Interview
+							</h3>
+							<p class="text-xs text-indigo-800/80 mt-0.5">
+								Sit with Mom, pick an evocative spark below, and tap Record. Speak naturally together — our AI will transcribe the conversation and weave her authentic words into a lasting keepsake story.
+							</p>
+						</div>
+						<button
+							type="button"
+							onclick="toggleStoryCatcherForm()"
+							class="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer"
+						>
+							✕
+						</button>
+					</div>
+
+					<!-- AI Conversation Sparks (Click to set topic) -->
+					<div class="space-y-1.5">
+						<div class="flex items-center justify-between">
+							<span class="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+								<span>💡</span> Conversation Sparks (Click to ask Mom):
+							</span>
+							<button
+								type="button"
+								onclick="refreshStoryCatcherSparks()"
+								class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+							>
+								<span>🔄</span> Fresh Sparks
+							</button>
+						</div>
+						<div id="story-catcher-sparks-list" class="grid grid-cols-1 md:grid-cols-3 gap-2">
+							<!-- Populated dynamically with 3 interactive spark cards -->
+						</div>
+					</div>
+
+					<!-- Interview Details & Controls -->
+					<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+						<div class="sm:col-span-2">
+							<label class="block text-[11px] font-bold text-slate-700 mb-1">Interview Topic / Memory Question</label>
+							<input
+								type="text"
+								id="input-story-catcher-topic"
+								placeholder="e.g. Favorite childhood pet, Sunday dinner traditions"
+								class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+							/>
+						</div>
+						<div>
+							<label class="block text-[11px] font-bold text-slate-700 mb-1">Date</label>
+							<input
+								type="date"
+								id="input-story-catcher-date"
+								class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
+							/>
+						</div>
+					</div>
+
+					<!-- Voice Interview Recorder Box -->
+					<div class="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-2xs space-y-3">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2">
+								<span id="story-catcher-rec-indicator" class="hidden w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+								<span id="story-catcher-rec-status" class="text-xs font-bold text-slate-700">Ready to record</span>
+							</div>
+							<span id="story-catcher-rec-timer" class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">00:00</span>
+						</div>
+
+						<div class="flex flex-wrap items-center gap-2">
+							<button
+								type="button"
+								id="btn-story-catcher-record"
+								onclick="toggleCaregiverVoiceRecording()"
+								class="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
+							>
+								<span>🎙️</span> <span id="btn-story-catcher-record-text">Start Voice Interview</span>
+							</button>
+							<button
+								type="button"
+								id="btn-story-catcher-clear"
+								onclick="clearStoryCatcherTranscript()"
+								class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+							>
+								Clear
+							</button>
+						</div>
+
+						<!-- Live / Editable Transcript -->
+						<div>
+							<label class="block text-[11px] font-bold text-slate-600 mb-1">Conversation Transcript (Spoken or typed)</label>
+							<textarea
+								id="input-story-catcher-transcript"
+								rows="3"
+								placeholder="Spoken words will appear here in real-time as you and Mom chat, or you can type/paste notes here..."
+								class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+							></textarea>
+						</div>
+					</div>
+
+					<!-- AI Story Polishing & Finalization -->
+					<div class="p-4 bg-white/90 rounded-2xl border border-purple-200 shadow-2xs space-y-3">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<div class="flex items-center gap-1.5">
+								<span class="text-sm">✨</span>
+								<span class="text-xs font-bold text-purple-950">AI Story Polishing</span>
+							</div>
+							<button
+								type="button"
+								id="btn-format-story-ai"
+								onclick="polishCaregiverStoryWithAI()"
+								class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:from-purple-800 active:to-indigo-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+							>
+								<span>✨</span> Format Story with AI
+							</button>
+						</div>
+
+						<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+							<div class="sm:col-span-1">
+								<label class="block text-[11px] font-bold text-slate-700 mb-1">Story Title</label>
+								<input
+									type="text"
+									id="input-story-catcher-title"
+									placeholder="e.g. Baking Peach Pies"
+									class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs text-slate-900 font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+								/>
+							</div>
+							<div class="sm:col-span-2">
+								<label class="block text-[11px] font-bold text-slate-700 mb-1">Polished Keepsake Story (Mom's Voice)</label>
+								<textarea
+									id="input-story-catcher-story"
+									rows="3"
+									placeholder="Click 'Format Story with AI' to turn the raw conversation above into a heartwarming first-person memory story..."
+									class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none"
+								></textarea>
+							</div>
+						</div>
+
+						<div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
+							<button
+								type="button"
+								onclick="toggleStoryCatcherForm()"
+								class="px-3.5 py-2 bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs cursor-pointer"
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								id="btn-save-story-catcher"
+								onclick="saveCaregiverStoryInterview()"
+								class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+							>
+								<span>💾</span> Save to Mom's Memory Book
+							</button>
+						</div>
+					</div>
 				</div>
 
 				<!-- Optional Caregiver Add Memory Form (collapsible) -->

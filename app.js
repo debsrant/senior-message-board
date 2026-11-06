@@ -1337,22 +1337,39 @@ function renderSeniorCheckin(boardData) {
 	if (hasAnsweredToday) {
 		if (turn1El) turn1El.classList.add('hidden');
 		if (turn2El) turn2El.classList.add('hidden');
+		document.getElementById('disp-checkin-voice')?.classList.add('hidden');
 		confirmEl.classList.remove('hidden');
 		if (badgeEl) badgeEl.classList.remove('hidden');
 
-		if (answerTextEl) {
-			if (resp.answer.toLowerCase().includes('not sure') || resp.answer.toLowerCase().includes('none')) {
-				answerTextEl.innerText = `${resp.answer} — and that is completely fine!`;
-			} else {
-				answerTextEl.innerText = resp.answer;
+		const confirmTitleEl = document.getElementById('disp-checkin-confirm-title');
+		if (resp.isStory) {
+			if (confirmTitleEl) confirmTitleEl.innerText = "Mom's Memory Recorded";
+			if (answerTextEl) answerTextEl.innerText = `📖 "${resp.answer}"`;
+			if (followupAnswerTextEl) {
+				if (resp.storyText) {
+					const preview = resp.storyText.length > 140 ? resp.storyText.slice(0, 137) + '...' : resp.storyText;
+					followupAnswerTextEl.innerText = `"${preview}"`;
+					followupAnswerTextEl.classList.remove('hidden');
+				} else {
+					followupAnswerTextEl.classList.add('hidden');
+				}
 			}
-		}
-		if (followupAnswerTextEl) {
-			if (resp.followupAnswer && resp.followupAnswer !== "I'm all done for now") {
-				followupAnswerTextEl.innerText = `Mom: "${resp.followupAnswer}"`;
-				followupAnswerTextEl.classList.remove('hidden');
-			} else {
-				followupAnswerTextEl.classList.add('hidden');
+		} else {
+			if (confirmTitleEl) confirmTitleEl.innerText = 'Response Recorded';
+			if (answerTextEl) {
+				if (resp.answer.toLowerCase().includes('not sure') || resp.answer.toLowerCase().includes('none')) {
+					answerTextEl.innerText = `${resp.answer} — and that is completely fine!`;
+				} else {
+					answerTextEl.innerText = resp.answer;
+				}
+			}
+			if (followupAnswerTextEl) {
+				if (resp.followupAnswer && resp.followupAnswer !== "I'm all done for now") {
+					followupAnswerTextEl.innerText = `Mom: "${resp.followupAnswer}"`;
+					followupAnswerTextEl.classList.remove('hidden');
+				} else {
+					followupAnswerTextEl.classList.add('hidden');
+				}
 			}
 		}
 		if (timeTextEl) {
@@ -1364,6 +1381,9 @@ function renderSeniorCheckin(boardData) {
 	} else {
 		confirmEl.classList.add('hidden');
 		if (badgeEl) badgeEl.classList.add('hidden');
+		if (!kioskVoiceActive) {
+			document.getElementById('disp-checkin-voice')?.classList.add('hidden');
+		}
 
 		const activeTopic = getActiveCheckinTopic(data);
 
@@ -1427,7 +1447,70 @@ function renderSeniorCheckin(boardData) {
 	renderAdminCheckinResponse(resp, todayStr);
 }
 
-// ================= SENIOR MEMORY JOURNAL (PERSISTENT & CHRONOLOGICAL) =================
+// ================= SENIOR MEMORY JOURNAL & VOICE STORYTELLING =================
+
+const REMINISCENCE_INTERVIEW_SPARKS = [
+	{
+		topic: 'Sunday Dinner Traditions',
+		category: 'Family & Cooking',
+		question: "What was your family's favorite Sunday dinner or special recipe growing up?",
+	},
+	{
+		topic: 'First Car & Road Trips',
+		category: 'Adventures & Travel',
+		question: 'Tell us about the first car you ever drove or had in your family.',
+	},
+	{
+		topic: 'Dances & Big Bands',
+		category: 'Music & Joy',
+		question: 'What was your favorite song or big band to dance to when you were young?',
+	},
+	{
+		topic: 'Childhood Neighborhood & Friends',
+		category: 'Hometown Memories',
+		question: 'What games did you and the neighborhood kids play until the streetlights came on?',
+	},
+	{
+		topic: 'Favorite Childhood Pet',
+		category: 'Pets & Companions',
+		question: 'Tell us about a special pet you had growing up and what made them so wonderful.',
+	},
+	{
+		topic: 'How Mom and Dad Met',
+		category: 'Love & Romance',
+		question: 'Tell us the story of how you and Dad first met.',
+	},
+	{
+		topic: 'Holiday Baking & Treats',
+		category: 'Traditions & Holidays',
+		question: 'What holiday baking or treats did you love making the most with family?',
+	},
+	{
+		topic: 'First Job & Independence',
+		category: 'Youth & Work',
+		question: 'What was your very first job, and what did you buy with your first paycheck?',
+	},
+	{
+		topic: 'Summer Vacations & Lakes',
+		category: 'Summer Days',
+		question: 'Where was your favorite place to go on warm summer days or family vacations?',
+	},
+	{
+		topic: 'School Days & Best Friends',
+		category: 'School Memories',
+		question: 'Who was your best friend in school, and what fun things did you two do together?',
+	},
+	{
+		topic: 'Favorite Outfits & Dances',
+		category: 'Fashion & Memories',
+		question: 'Tell us about a favorite dress or outfit you felt so special wearing.',
+	},
+	{
+		topic: 'Advice from Parents',
+		category: 'Wisdom & Family',
+		question: 'What was the best advice your mother or father ever shared with you?',
+	},
+];
 
 async function recordSeniorJournalEntry(entry) {
 	const todayStr = getTodayDateString();
@@ -1441,6 +1524,9 @@ async function recordSeniorJournalEntry(entry) {
 		followupQuestion: entry.followupQuestion || '',
 		followupAnswer: entry.followupAnswer || '',
 		notes: entry.notes || '',
+		rawTranscript: entry.rawTranscript || '',
+		storyTitle: entry.storyTitle || '',
+		source: entry.source || 'checkin_tap',
 	};
 
 	if (!latestBoardData) latestBoardData = {};
@@ -1470,6 +1556,636 @@ function updateAdminJournalCount() {
 	if (totalText) totalText.innerText = count === 1 ? '1 Memory Recorded' : `${count} Memories Recorded`;
 }
 
+// ---------------- AI Story Polisher (Gemini 3.8 Flash + Smart Rule-Based Engine) ----------------
+
+async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voice' }) {
+	const raw = (transcript || '').trim();
+	if (!raw) return { title: 'Spoken Memory', story: '', summary: '' };
+
+	// 1. Try Gemini API if key is present on device
+	const apiKey = loadGeminiApiKeyLocal() || (latestBoardData?.geminiApiKey || '');
+	if (apiKey) {
+		try {
+			const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Api-Revision': '2026-05-20',
+					'x-goog-api-key': apiKey,
+				},
+				body: JSON.stringify({
+					model: 'gemini-3.8-flash',
+					store: false,
+					system_instruction:
+						"You are a loving family biographer helping an 80+ senior who has early-stage Alzheimer's capture her precious life memories.\n" +
+						'Given a spoken memory prompt and raw transcript (which may contain vocal fillers like "um", "let me see", repetitions, or conversational tangents):\n' +
+						'1. Clean up conversational stutter/hesitations while strictly keeping her authentic colloquial phrasing, personality, dialect, and voice intact. Do NOT over-formalize or make it sound academic.\n' +
+						'2. Format the memory into 1 to 3 warm, evocative paragraphs written in the first person ("I remember...").\n' +
+						'3. Create a warm, evocative 2 to 5 word Title for the memory book (e.g. "Dancing at the Pavilion", "Our 1957 Blue Chevy").\n' +
+						'4. Return a clean JSON object.',
+					input: `Topic / Prompt: ${promptTopic || "Mom's Memory"}\nRaw Spoken Transcript:\n${raw}`,
+					response_format: {
+						type: 'text',
+						mime_type: 'application/json',
+						schema: {
+							type: 'object',
+							properties: {
+								title: { type: 'string', description: 'Evocative 2-5 word memory title' },
+								story: {
+									type: 'string',
+									description: "1 to 3 short paragraphs in Mom's warm, authentic first-person voice",
+								},
+								summary: { type: 'string', description: 'One short sentence capturing the essence of the story' },
+							},
+							required: ['title', 'story'],
+						},
+					},
+				}),
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				let parsed = null;
+				if (data.output) {
+					try {
+						parsed = JSON.parse(data.output);
+					} catch (e) {
+						if (typeof data.output === 'object') parsed = data.output;
+					}
+				}
+				if (parsed && parsed.story) {
+					return {
+						title: (parsed.title || 'Family Memory').trim(),
+						story: (parsed.story || raw).trim(),
+						summary: (parsed.summary || '').trim(),
+					};
+				}
+			}
+		} catch (err) {
+			console.warn('Gemini story polishing failed, falling back to smart rule-based polisher:', err);
+		}
+	}
+
+	// 2. Built-in Smart Rule-Based Story Polisher (Zero API key required)
+	return smartRuleBasedStoryPolish(raw, promptTopic);
+}
+
+function smartRuleBasedStoryPolish(rawTranscript, promptTopic) {
+	if (!rawTranscript) return { title: 'Spoken Memory', story: '', summary: '' };
+
+	// Clean common vocal fillers and stutters
+	let cleaned = rawTranscript
+		.replace(/\b(um+|uh+|er+|ah+|you know|like I said|sort of|kind of|let's see|let me see)\b/gi, '')
+		.replace(/\b(\w+)\s+\1\b/gi, '$1') // remove stutter duplicates (e.g. "we we" -> "we")
+		.replace(/\s+/g, ' ')
+		.trim();
+
+	// Capitalize sentences
+	cleaned = cleaned.replace(/(^\s*|[.!?]\s+)([a-z])/g, (m, p1, p2) => p1 + p2.toUpperCase());
+	if (cleaned && !/[.!?]$/.test(cleaned)) cleaned += '.';
+
+	// Determine Title
+	let title = '';
+	if (promptTopic && promptTopic.length > 3 && !promptTopic.toLowerCase().includes('loading')) {
+		title = promptTopic
+			.replace(/^(what was your|what were your|what is your|tell us about|tell me about|who was your|did you|where was your|which)\s+/i, '')
+			.replace(/[?.]+$/, '');
+		title = title.charAt(0).toUpperCase() + title.slice(1);
+		if (title.length > 35) title = title.slice(0, 32) + '...';
+	} else {
+		const firstWords = cleaned.split(' ').slice(0, 4).join(' ');
+		title = firstWords ? `${firstWords}...` : "Mom's Memory";
+	}
+
+	return {
+		title: title || "Mom's Memory",
+		story: cleaned,
+		summary: cleaned.slice(0, 100),
+	};
+}
+
+// ---------------- Option 1: Kiosk "Tap & Talk" Voice Journaling ----------------
+
+let kioskRecognition = null;
+let kioskVoiceActive = false;
+let kioskVoiceTimer = null;
+let kioskSilenceTimer = null;
+let kioskVoiceSeconds = 0;
+let kioskTranscript = '';
+let kioskCurrentPrompt = '';
+
+function getSpeechRecognitionClass() {
+	return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+}
+
+function startKioskVoiceCapture(isFollowup = false) {
+	const activeTopic = getActiveCheckinTopic(latestBoardData);
+	if (isFollowup && checkinConversationState.turn1Choice) {
+		const choice = checkinConversationState.turn1Choice;
+		const followup = activeTopic.followups && activeTopic.followups[choice];
+		kioskCurrentPrompt = followup ? followup.question : activeTopic.question;
+	} else {
+		kioskCurrentPrompt = activeTopic.question || "Mom's Spoken Memory";
+	}
+
+	const promptEl = document.getElementById('disp-voice-prompt');
+	const transcriptEl = document.getElementById('disp-voice-transcript');
+	const timerEl = document.getElementById('disp-voice-timer');
+	const statusTextEl = document.getElementById('disp-voice-status-text');
+	const fallbackEl = document.getElementById('disp-voice-fallback-msg');
+
+	if (promptEl) promptEl.innerText = kioskCurrentPrompt;
+	if (transcriptEl) transcriptEl.innerText = '';
+	if (timerEl) timerEl.innerText = '00:00';
+	if (statusTextEl) {
+		statusTextEl.innerText = 'Speak naturally. Take all the time you need, Mom...';
+		statusTextEl.classList.remove('hidden');
+	}
+	if (fallbackEl) fallbackEl.classList.add('hidden');
+
+	// Hide checkin containers and show voice container
+	document.getElementById('disp-checkin-turn1')?.classList.add('hidden');
+	document.getElementById('disp-checkin-turn2')?.classList.add('hidden');
+	document.getElementById('disp-checkin-confirmation')?.classList.add('hidden');
+	document.getElementById('disp-checkin-voice')?.classList.remove('hidden');
+
+	kioskTranscript = '';
+	kioskVoiceSeconds = 0;
+	kioskVoiceActive = true;
+
+	// Reset idle timer while Mom is talking
+	resetKioskIdleTimer();
+
+	// Check browser SpeechRecognition support
+	const SpeechClass = getSpeechRecognitionClass();
+	if (!SpeechClass) {
+		if (fallbackEl) {
+			fallbackEl.innerText = 'Speech recognition is not supported in this browser. Tap Cancel to use the buttons.';
+			fallbackEl.classList.remove('hidden');
+		}
+		return;
+	}
+
+	try {
+		kioskRecognition = new SpeechClass();
+		kioskRecognition.continuous = true;
+		kioskRecognition.interimResults = true;
+		kioskRecognition.lang = 'en-US';
+
+		kioskRecognition.onresult = (event) => {
+			resetKioskIdleTimer();
+			let finalPart = '';
+			let interimPart = '';
+			for (let i = 0; i < event.results.length; ++i) {
+				if (event.results[i].isFinal) {
+					finalPart += event.results[i][0].transcript + ' ';
+				} else {
+					interimPart += event.results[i][0].transcript;
+				}
+			}
+			kioskTranscript = (finalPart + interimPart).trim();
+			if (transcriptEl) {
+				transcriptEl.innerText = kioskTranscript;
+			}
+			if (kioskTranscript && statusTextEl) {
+				statusTextEl.classList.add('hidden');
+			}
+
+			// 8-second silence detector: auto-save once Mom speaks 4+ words and stops speaking
+			if (kioskSilenceTimer) clearTimeout(kioskSilenceTimer);
+			if (kioskTranscript.split(' ').length >= 4) {
+				kioskSilenceTimer = setTimeout(() => {
+					if (kioskVoiceActive) {
+						stopKioskVoiceCapture(true);
+					}
+				}, 8000);
+			}
+		};
+
+		kioskRecognition.onerror = (event) => {
+			console.warn('Kiosk speech recognition error:', event.error);
+			if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+				if (fallbackEl) {
+					fallbackEl.innerText = 'Microphone permission was not allowed. Tap Cancel to use the buttons.';
+					fallbackEl.classList.remove('hidden');
+				}
+			}
+		};
+
+		kioskRecognition.onend = () => {
+			if (kioskVoiceActive) {
+				try {
+					kioskRecognition.start();
+				} catch (e) {}
+			}
+		};
+
+		kioskRecognition.start();
+	} catch (e) {
+		console.warn('Could not start speech recognition:', e);
+		if (fallbackEl) {
+			fallbackEl.innerText = 'Could not access microphone. Tap Cancel to use the buttons.';
+			fallbackEl.classList.remove('hidden');
+		}
+	}
+
+	// Elapsed timer
+	if (kioskVoiceTimer) clearInterval(kioskVoiceTimer);
+	kioskVoiceTimer = setInterval(() => {
+		kioskVoiceSeconds++;
+		const mins = String(Math.floor(kioskVoiceSeconds / 60)).padStart(2, '0');
+		const secs = String(kioskVoiceSeconds % 60).padStart(2, '0');
+		if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+	}, 1000);
+}
+
+async function stopKioskVoiceCapture(shouldSave = true) {
+	kioskVoiceActive = false;
+	if (kioskSilenceTimer) clearTimeout(kioskSilenceTimer);
+	if (kioskVoiceTimer) clearInterval(kioskVoiceTimer);
+
+	if (kioskRecognition) {
+		try {
+			kioskRecognition.stop();
+		} catch (e) {}
+		kioskRecognition = null;
+	}
+
+	const rawWords = (kioskTranscript || '').trim();
+
+	if (shouldSave && rawWords) {
+		const statusTextEl = document.getElementById('disp-voice-status-text');
+		if (statusTextEl) {
+			statusTextEl.innerText = 'Saving your memory to your Memory Book...';
+			statusTextEl.classList.remove('hidden');
+		}
+
+		// Polish story
+		const polished = await polishMemoryStoryWithAI({
+			transcript: rawWords,
+			promptTopic: kioskCurrentPrompt,
+			source: 'kiosk_voice',
+		});
+
+		const todayStr = getTodayDateString();
+		const entry = {
+			dateStr: todayStr,
+			timestamp: Date.now(),
+			question: kioskCurrentPrompt,
+			answer: polished.story || rawWords,
+			rawTranscript: rawWords,
+			storyTitle: polished.title || "Mom's Memory",
+			notes: 'Spoken on Kiosk',
+			source: 'kiosk_voice',
+		};
+
+		await recordSeniorJournalEntry(entry);
+
+		const responsePayload = {
+			question: kioskCurrentPrompt,
+			answer: polished.title || 'Mom shared a spoken memory',
+			storyText: polished.story || rawWords,
+			isStory: true,
+			timestamp: Date.now(),
+			dateStr: todayStr,
+		};
+
+		try {
+			localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
+		} catch (e) {}
+
+		if (!latestBoardData) latestBoardData = {};
+		latestBoardData.seniorResponse = responsePayload;
+		checkinConversationState.turn = 1;
+		checkinConversationState.turn1Choice = null;
+		checkinConversationState.isEditing = false;
+
+		try {
+			database.ref('board/seniorResponse').set(responsePayload).catch(() => {});
+		} catch (err) {}
+
+		document.getElementById('disp-checkin-voice')?.classList.add('hidden');
+		renderSeniorCheckin(latestBoardData);
+		renderAiSummaryCard();
+		showToast("Story saved to Mom's Memory Book!");
+	} else {
+		cancelKioskVoiceCapture();
+	}
+}
+
+function cancelKioskVoiceCapture() {
+	kioskVoiceActive = false;
+	if (kioskSilenceTimer) clearTimeout(kioskSilenceTimer);
+	if (kioskVoiceTimer) clearInterval(kioskVoiceTimer);
+
+	if (kioskRecognition) {
+		try {
+			kioskRecognition.stop();
+		} catch (e) {}
+		kioskRecognition = null;
+	}
+
+	document.getElementById('disp-checkin-voice')?.classList.add('hidden');
+	renderSeniorCheckin(latestBoardData);
+}
+
+// ---------------- Option 2: Caregiver "Story Catcher" Mode in Admin ----------------
+
+let caregiverRecognition = null;
+let caregiverVoiceActive = false;
+let caregiverVoiceTimer = null;
+let caregiverVoiceSeconds = 0;
+let storyCatcherSparksIndex = 0;
+
+function openStoryCatcherModal() {
+	openMemoryJournalModal();
+	const container = document.getElementById('journal-story-catcher-container');
+	if (container) container.classList.remove('hidden');
+	document.getElementById('journal-add-entry-container')?.classList.add('hidden');
+	renderStoryCatcherSparks();
+	const dateInput = document.getElementById('input-story-catcher-date');
+	if (dateInput && !dateInput.value) {
+		dateInput.value = getTodayDateString();
+	}
+}
+
+function toggleStoryCatcherForm() {
+	const container = document.getElementById('journal-story-catcher-container');
+	if (!container) return;
+	const isHidden = container.classList.contains('hidden');
+	if (isHidden) {
+		container.classList.remove('hidden');
+		document.getElementById('journal-add-entry-container')?.classList.add('hidden');
+		renderStoryCatcherSparks();
+		const dateInput = document.getElementById('input-story-catcher-date');
+		if (dateInput && !dateInput.value) {
+			dateInput.value = getTodayDateString();
+		}
+	} else {
+		container.classList.add('hidden');
+		if (caregiverVoiceActive) {
+			stopCaregiverVoiceRecording();
+		}
+	}
+}
+
+function renderStoryCatcherSparks() {
+	const listEl = document.getElementById('story-catcher-sparks-list');
+	if (!listEl) return;
+
+	const sparks = [];
+	const total = REMINISCENCE_INTERVIEW_SPARKS.length;
+	for (let i = 0; i < 3; i++) {
+		const idx = (storyCatcherSparksIndex + i) % total;
+		sparks.push({ ...REMINISCENCE_INTERVIEW_SPARKS[idx], globalIndex: idx });
+	}
+
+	listEl.innerHTML = sparks
+		.map(
+			(s) => `
+		<button
+			type="button"
+			onclick="selectStoryCatcherSparkByIndex(${s.globalIndex})"
+			class="text-left p-2.5 bg-white hover:bg-indigo-50 active:bg-indigo-100 rounded-xl border border-indigo-200 shadow-2xs transition group cursor-pointer"
+		>
+			<span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block">${escapeHtml(s.category)}</span>
+			<span class="text-xs font-semibold text-slate-900 group-hover:text-indigo-950 block mt-0.5 leading-snug">"${escapeHtml(s.question)}"</span>
+		</button>
+	`
+		)
+		.join('');
+}
+
+function selectStoryCatcherSparkByIndex(index) {
+	const spark = REMINISCENCE_INTERVIEW_SPARKS[index];
+	if (spark) {
+		selectStoryCatcherSpark(spark.question);
+	}
+}
+
+function refreshStoryCatcherSparks() {
+	storyCatcherSparksIndex = (storyCatcherSparksIndex + 3) % REMINISCENCE_INTERVIEW_SPARKS.length;
+	renderStoryCatcherSparks();
+}
+
+function selectStoryCatcherSpark(promptText) {
+	const input = document.getElementById('input-story-catcher-topic');
+	if (input) {
+		input.value = promptText;
+		input.focus();
+	}
+}
+
+function toggleCaregiverVoiceRecording() {
+	if (caregiverVoiceActive) {
+		stopCaregiverVoiceRecording();
+	} else {
+		startCaregiverVoiceRecording();
+	}
+}
+
+function startCaregiverVoiceRecording() {
+	const SpeechClass = getSpeechRecognitionClass();
+	if (!SpeechClass) {
+		alert('Speech recognition is not supported in this browser. You can type or paste notes directly into the transcript box.');
+		return;
+	}
+
+	const btnText = document.getElementById('btn-story-catcher-record-text');
+	const btn = document.getElementById('btn-story-catcher-record');
+	const statusEl = document.getElementById('story-catcher-rec-status');
+	const indicatorEl = document.getElementById('story-catcher-rec-indicator');
+	const timerEl = document.getElementById('story-catcher-rec-timer');
+	const transcriptArea = document.getElementById('input-story-catcher-transcript');
+
+	caregiverVoiceActive = true;
+	caregiverVoiceSeconds = 0;
+
+	if (btnText) btnText.innerText = 'Stop Interview & Review';
+	if (btn) {
+		btn.classList.remove('bg-rose-600', 'hover:bg-rose-700');
+		btn.classList.add('bg-slate-800', 'hover:bg-slate-900');
+	}
+	if (statusEl) statusEl.innerText = 'Listening to conversation...';
+	if (indicatorEl) indicatorEl.classList.remove('hidden');
+
+	try {
+		caregiverRecognition = new SpeechClass();
+		caregiverRecognition.continuous = true;
+		caregiverRecognition.interimResults = true;
+		caregiverRecognition.lang = 'en-US';
+
+		let previousTranscript = transcriptArea ? transcriptArea.value : '';
+
+		caregiverRecognition.onresult = (event) => {
+			let finalPart = '';
+			let interimPart = '';
+			for (let i = 0; i < event.results.length; ++i) {
+				if (event.results[i].isFinal) {
+					finalPart += event.results[i][0].transcript + ' ';
+				} else {
+					interimPart += event.results[i][0].transcript;
+				}
+			}
+			const currentSession = (finalPart + interimPart).trim();
+			if (transcriptArea) {
+				transcriptArea.value = (previousTranscript ? previousTranscript + ' ' : '') + currentSession;
+			}
+		};
+
+		caregiverRecognition.onerror = (e) => {
+			console.warn('Caregiver recognition error:', e.error);
+			if (e.error === 'not-allowed') {
+				alert('Microphone permission was denied.');
+				stopCaregiverVoiceRecording();
+			}
+		};
+
+		caregiverRecognition.onend = () => {
+			if (caregiverVoiceActive) {
+				try {
+					caregiverRecognition.start();
+				} catch (e) {}
+			}
+		};
+
+		caregiverRecognition.start();
+	} catch (err) {
+		console.warn('Could not start caregiver recognition:', err);
+		stopCaregiverVoiceRecording();
+	}
+
+	if (caregiverVoiceTimer) clearInterval(caregiverVoiceTimer);
+	caregiverVoiceTimer = setInterval(() => {
+		caregiverVoiceSeconds++;
+		const mins = String(Math.floor(caregiverVoiceSeconds / 60)).padStart(2, '0');
+		const secs = String(caregiverVoiceSeconds % 60).padStart(2, '0');
+		if (timerEl) timerEl.innerText = `${mins}:${secs}`;
+	}, 1000);
+}
+
+function stopCaregiverVoiceRecording() {
+	caregiverVoiceActive = false;
+	if (caregiverVoiceTimer) clearInterval(caregiverVoiceTimer);
+
+	if (caregiverRecognition) {
+		try {
+			caregiverRecognition.stop();
+		} catch (e) {}
+		caregiverRecognition = null;
+	}
+
+	const btnText = document.getElementById('btn-story-catcher-record-text');
+	const btn = document.getElementById('btn-story-catcher-record');
+	const statusEl = document.getElementById('story-catcher-rec-status');
+	const indicatorEl = document.getElementById('story-catcher-rec-indicator');
+
+	if (btnText) btnText.innerText = 'Start Voice Interview';
+	if (btn) {
+		btn.classList.add('bg-rose-600', 'hover:bg-rose-700');
+		btn.classList.remove('bg-slate-800', 'hover:bg-slate-900');
+	}
+	if (statusEl) statusEl.innerText = 'Interview paused / finished';
+	if (indicatorEl) indicatorEl.classList.add('hidden');
+}
+
+function clearStoryCatcherTranscript() {
+	if (confirm('Clear the current interview transcript?')) {
+		const transcriptArea = document.getElementById('input-story-catcher-transcript');
+		const titleEl = document.getElementById('input-story-catcher-title');
+		const storyEl = document.getElementById('input-story-catcher-story');
+		if (transcriptArea) transcriptArea.value = '';
+		if (titleEl) titleEl.value = '';
+		if (storyEl) storyEl.value = '';
+	}
+}
+
+async function polishCaregiverStoryWithAI() {
+	const transcriptArea = document.getElementById('input-story-catcher-transcript');
+	const topicInput = document.getElementById('input-story-catcher-topic');
+	const titleInput = document.getElementById('input-story-catcher-title');
+	const storyArea = document.getElementById('input-story-catcher-story');
+	const polishBtn = document.getElementById('btn-format-story-ai');
+
+	const raw = (transcriptArea?.value || '').trim();
+	if (!raw) {
+		alert('Please record or type a conversation transcript first before formatting.');
+		return;
+	}
+
+	const topic = (topicInput?.value || '').trim() || 'Conversation with Mom';
+
+	if (polishBtn) {
+		polishBtn.disabled = true;
+		polishBtn.innerHTML = '<span>⏳</span> Formatting with AI...';
+	}
+
+	try {
+		const polished = await polishMemoryStoryWithAI({
+			transcript: raw,
+			promptTopic: topic,
+			source: 'caregiver_interview',
+		});
+
+		if (titleInput && (!titleInput.value || titleInput.value.trim().length === 0)) {
+			titleInput.value = polished.title || "Mom's Story";
+		}
+		if (storyArea) {
+			storyArea.value = polished.story || raw;
+		}
+		showToast('Story formatted! Review and save when ready.');
+	} catch (e) {
+		console.warn('Formatting error:', e);
+		if (storyArea && !storyArea.value) {
+			storyArea.value = raw;
+		}
+	} finally {
+		if (polishBtn) {
+			polishBtn.disabled = false;
+			polishBtn.innerHTML = '<span>✨</span> Format Story with AI';
+		}
+	}
+}
+
+async function saveCaregiverStoryInterview() {
+	const topicInput = document.getElementById('input-story-catcher-topic');
+	const dateInput = document.getElementById('input-story-catcher-date');
+	const transcriptArea = document.getElementById('input-story-catcher-transcript');
+	const titleInput = document.getElementById('input-story-catcher-title');
+	const storyArea = document.getElementById('input-story-catcher-story');
+
+	const storyText = (storyArea?.value || transcriptArea?.value || '').trim();
+	if (!storyText) {
+		alert('Please record or type a story before saving.');
+		return;
+	}
+
+	const dateStr = (dateInput?.value || '').trim() || getTodayDateString();
+	const prompt = (topicInput?.value || '').trim() || 'Conversation with Mom';
+	const rawTranscript = (transcriptArea?.value || '').trim();
+	const title = (titleInput?.value || '').trim() || 'Family Memory';
+
+	await recordSeniorJournalEntry({
+		dateStr,
+		question: prompt,
+		answer: storyText,
+		rawTranscript: rawTranscript,
+		storyTitle: title,
+		notes: 'Voice Interview with Family',
+		source: 'caregiver_interview',
+		timestamp: Date.now(),
+	});
+
+	if (transcriptArea) transcriptArea.value = '';
+	if (titleInput) titleInput.value = '';
+	if (storyArea) storyArea.value = '';
+	if (topicInput) topicInput.value = '';
+
+	toggleStoryCatcherForm();
+	renderMemoryJournalEntries();
+	showToast("Story saved to Mom's Memory Book!");
+}
+
 function openMemoryJournalModal() {
 	const modal = document.getElementById('modal-memory-journal');
 	if (modal) modal.classList.remove('hidden');
@@ -1479,15 +2195,24 @@ function openMemoryJournalModal() {
 function closeMemoryJournalModal() {
 	const modal = document.getElementById('modal-memory-journal');
 	if (modal) modal.classList.add('hidden');
+	if (caregiverVoiceActive) {
+		stopCaregiverVoiceRecording();
+	}
 }
 
 function toggleAddJournalEntryForm() {
 	const formContainer = document.getElementById('journal-add-entry-container');
 	if (!formContainer) return;
-	formContainer.classList.toggle('hidden');
-	const dateInput = document.getElementById('input-journal-date');
-	if (dateInput && !dateInput.value) {
-		dateInput.value = getTodayDateString();
+	const isHidden = formContainer.classList.contains('hidden');
+	if (isHidden) {
+		formContainer.classList.remove('hidden');
+		document.getElementById('journal-story-catcher-container')?.classList.add('hidden');
+		const dateInput = document.getElementById('input-journal-date');
+		if (dateInput && !dateInput.value) {
+			dateInput.value = getTodayDateString();
+		}
+	} else {
+		formContainer.classList.add('hidden');
 	}
 }
 
@@ -1508,6 +2233,7 @@ async function saveCaregiverJournalEntry() {
 		question: prompt,
 		answer: words,
 		notes: 'Added by Caregiver',
+		source: 'caregiver_note',
 		timestamp: Date.now(),
 	});
 
@@ -1532,6 +2258,11 @@ async function deleteJournalEntry(id) {
 	showToast('Memory entry removed.');
 }
 
+function toggleRawTranscript(id) {
+	const el = document.getElementById(`raw-transcript-${id}`);
+	if (el) el.classList.toggle('hidden');
+}
+
 function renderMemoryJournalEntries() {
 	const container = document.getElementById('journal-entries-container');
 	if (!container) return;
@@ -1544,8 +2275,7 @@ function renderMemoryJournalEntries() {
 		} catch (e) {}
 	}
 
-	const entries = Object.values(journalMap || {})
-		.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+	const entries = Object.values(journalMap || {}).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
 	updateAdminJournalCount();
 
@@ -1555,7 +2285,7 @@ function renderMemoryJournalEntries() {
 				<span class="text-4xl block">📖</span>
 				<h3 class="text-base font-bold text-slate-800">No Memories Recorded Yet</h3>
 				<p class="text-xs text-slate-500 max-w-sm mx-auto">
-					As Mom answers daily check-in questions on the board, her reflections and stories will be saved chronologically right here.
+					As Mom shares stories on the board or during voice interviews, her memories will be saved chronologically right here.
 				</p>
 			</div>
 		`;
@@ -1573,12 +2303,26 @@ function renderMemoryJournalEntries() {
 				  })
 				: entry.dateStr || 'Recorded Entry';
 
+			const sourceBadge =
+				entry.source === 'kiosk_voice'
+					? `<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 text-[10px] font-bold">🎙️ Spoken on Kiosk</span>`
+					: entry.source === 'caregiver_interview'
+					? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold">🎙️ Voice Interview</span>`
+					: entry.notes
+					? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">${escapeHtml(entry.notes)}</span>`
+					: '';
+
+			const hasRaw =
+				entry.rawTranscript &&
+				entry.rawTranscript.trim() &&
+				entry.rawTranscript.trim() !== (entry.answer || '').trim();
+
 			return `
-				<div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2.5 transition">
+				<div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-3 transition">
 					<div class="flex items-center justify-between border-b border-slate-100 pb-2">
 						<div class="flex items-center gap-2">
 							<span class="text-sm font-black text-blue-900">${escapeHtml(formattedDate)}</span>
-							${entry.notes ? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">${escapeHtml(entry.notes)}</span>` : ''}
+							${sourceBadge}
 						</div>
 						<button
 							type="button"
@@ -1589,12 +2333,18 @@ function renderMemoryJournalEntries() {
 							✕
 						</button>
 					</div>
-					<div class="space-y-1.5">
+
+					<div class="space-y-2">
+						${
+							entry.storyTitle
+								? `<h4 class="text-base sm:text-lg font-black text-indigo-950">${escapeHtml(entry.storyTitle)}</h4>`
+								: ''
+						}
 						<div class="text-xs font-semibold text-slate-500">
-							<strong>Question:</strong> <em>"${escapeHtml(entry.question)}"</em>
+							<strong>Topic:</strong> <em>"${escapeHtml(entry.question)}"</em>
 						</div>
-						<div class="text-base font-black text-slate-950 bg-blue-50/60 p-2.5 rounded-xl border border-blue-100">
-							Mom: "${escapeHtml(entry.answer)}"
+						<div class="text-sm sm:text-base font-bold text-slate-900 bg-blue-50/60 p-3 rounded-xl border border-blue-100 whitespace-pre-line leading-relaxed">
+							"${escapeHtml(entry.answer)}"
 						</div>
 						${
 							entry.followupAnswer
@@ -1602,6 +2352,24 @@ function renderMemoryJournalEntries() {
 							<div class="pl-3 border-l-2 border-indigo-200 space-y-1 mt-2">
 								<div class="text-xs text-slate-500 font-medium">Follow-up: <em>"${escapeHtml(entry.followupQuestion)}"</em></div>
 								<div class="text-sm font-bold text-indigo-950">Mom: "${escapeHtml(entry.followupAnswer)}"</div>
+							</div>
+						`
+								: ''
+						}
+						${
+							hasRaw
+								? `
+							<div class="pt-1">
+								<button
+									type="button"
+									onclick="toggleRawTranscript('${entry.id}')"
+									class="text-[11px] text-slate-500 hover:text-indigo-600 font-medium underline cursor-pointer"
+								>
+									View original spoken words
+								</button>
+								<div id="raw-transcript-${entry.id}" class="hidden mt-1.5 p-2.5 bg-slate-100 rounded-lg text-xs font-mono text-slate-700 leading-relaxed">
+									"${escapeHtml(entry.rawTranscript)}"
+								</div>
 							</div>
 						`
 								: ''
@@ -1614,11 +2382,12 @@ function renderMemoryJournalEntries() {
 }
 
 function downloadMemoryJournalMarkdown() {
-	const entries = Object.values(latestBoardData?.seniorJournal || {})
-		.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+	const entries = Object.values(latestBoardData?.seniorJournal || {}).sort(
+		(a, b) => (a.timestamp || 0) - (b.timestamp || 0)
+	);
 
 	let md = `# Mom's Memory Journal\n`;
-	md += `*A chronological keepsake diary of memories and reflections shared on the home message board.*\n`;
+	md += `*A chronological keepsake diary of memories, reflections, and stories shared on the home message board.*\n`;
 	md += `*Exported on ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}*\n\n`;
 	md += `---\n\n`;
 
@@ -1635,17 +2404,25 @@ function downloadMemoryJournalMarkdown() {
 				  })
 				: entry.dateStr || 'Recorded Entry';
 
-			md += `### ${formattedDate}\n`;
-			md += `* **Prompt:** ${entry.question}\n`;
-			md += `* **Mom's Words:** ${entry.answer}\n`;
-			if (entry.followupAnswer) {
-				md += `* **Follow-up:** ${entry.followupQuestion}\n`;
-				md += `* **Mom's Choice:** ${entry.followupAnswer}\n`;
-			}
-			if (entry.notes) {
+			const title = entry.storyTitle ? ` — ${entry.storyTitle}` : '';
+			md += `### ${formattedDate}${title}\n`;
+			md += `* **Topic / Question:** ${entry.question}\n`;
+			if (entry.source === 'kiosk_voice') {
+				md += `* **Recorded Via:** 🎙️ Spoken on Tablet Kiosk\n`;
+			} else if (entry.source === 'caregiver_interview') {
+				md += `* **Recorded Via:** 🎙️ Voice Interview with Family\n`;
+			} else if (entry.notes) {
 				md += `* **Family Note:** ${entry.notes}\n`;
 			}
-			md += `\n---\n\n`;
+			md += `\n**Mom's Story:**\n\n${entry.answer}\n\n`;
+			if (entry.followupAnswer) {
+				md += `* **Follow-up:** ${entry.followupQuestion}\n`;
+				md += `* **Choice:** ${entry.followupAnswer}\n\n`;
+			}
+			if (entry.rawTranscript && entry.rawTranscript !== entry.answer) {
+				md += `> *Spoken Transcript:* "${entry.rawTranscript}"\n\n`;
+			}
+			md += `---\n\n`;
 		});
 	}
 
@@ -1662,8 +2439,9 @@ function downloadMemoryJournalMarkdown() {
 }
 
 function printMemoryJournal() {
-	const entries = Object.values(latestBoardData?.seniorJournal || {})
-		.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+	const entries = Object.values(latestBoardData?.seniorJournal || {}).sort(
+		(a, b) => (a.timestamp || 0) - (b.timestamp || 0)
+	);
 
 	const printWin = window.open('', '_blank');
 	if (!printWin) {
@@ -1677,9 +2455,10 @@ function printMemoryJournal() {
 		h1 { font-size: 28px; margin-bottom: 4px; color: #0f172a; }
 		.subtitle { font-size: 14px; color: #64748b; margin-bottom: 30px; font-style: italic; }
 		.entry { border-bottom: 1px solid #e2e8f0; padding: 20px 0; page-break-inside: avoid; }
-		.date { font-size: 16px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
+		.date { font-size: 16px; font-weight: bold; color: #1e3a8a; margin-bottom: 4px; }
+		.title { font-size: 18px; font-weight: 900; color: #312e81; margin-bottom: 6px; }
 		.prompt { font-size: 14px; color: #475569; margin-bottom: 6px; }
-		.answer { font-size: 18px; font-weight: bold; color: #0f172a; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 8px; }
+		.answer { font-size: 16px; font-weight: 600; color: #0f172a; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 8px; white-space: pre-line; }
 		.followup { margin-left: 16px; font-size: 14px; color: #334155; }
 		.note { font-size: 12px; color: #b45309; margin-top: 6px; }
 		@media print { body { padding: 0; } }
@@ -1703,13 +2482,16 @@ function printMemoryJournal() {
 
 			html += `<div class="entry">`;
 			html += `<div class="date">${escapeHtml(formattedDate)}</div>`;
-			html += `<div class="prompt"><strong>Question:</strong> ${escapeHtml(e.question)}</div>`;
-			html += `<div class="answer">Mom: "${escapeHtml(e.answer)}"</div>`;
+			if (e.storyTitle) {
+				html += `<div class="title">${escapeHtml(e.storyTitle)}</div>`;
+			}
+			html += `<div class="prompt"><strong>Topic:</strong> ${escapeHtml(e.question)}</div>`;
+			html += `<div class="answer">${escapeHtml(e.answer)}</div>`;
 			if (e.followupAnswer) {
 				html += `<div class="followup"><strong>Follow-up:</strong> ${escapeHtml(e.followupQuestion)}<br><strong>Mom's Choice:</strong> "${escapeHtml(e.followupAnswer)}"</div>`;
 			}
 			if (e.notes) {
-				html += `<div class="note"><strong>Family Note:</strong> ${escapeHtml(e.notes)}</div>`;
+				html += `<div class="note"><strong>Note:</strong> ${escapeHtml(e.notes)}</div>`;
 			}
 			html += `</div>`;
 		});
@@ -3188,7 +3970,9 @@ function buildSmartRuleBasedPlan(boardData) {
 		const qLower = (seniorResp.question || '').toLowerCase();
 		const ansText = seniorResp.answer;
 		const isEscape = ansText.toLowerCase().includes('not sure') || ansText.toLowerCase().includes('none');
-		if (isEscape) {
+		if (seniorResp.isStory) {
+			todayPlan.push(`We loved hearing your story "${ansText}". **Enjoy some comforting music** this afternoon.`);
+		} else if (isEscape) {
 			todayPlan.push('Thank you for checking in this morning. **Take things easy today** and enjoy an unhurried afternoon.');
 		} else if (qLower.includes('dinner') || qLower.includes('eat') || qLower.includes('food')) {
 			todayPlan.push(`Dinner preference noted: ${ansText}. **Enjoy a comforting dinner** this evening.`);
@@ -3415,7 +4199,13 @@ async function generateAiActionPlan(options = {}) {
 			seniorJournalMemories: Object.values(latestBoardData?.seniorJournal || {})
 				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
 				.slice(0, 10)
-				.map((j) => ({ date: j.dateStr, prompt: j.question, reflection: j.answer, notes: j.notes || undefined })),
+				.map((j) => ({
+					date: j.dateStr,
+					title: j.storyTitle || undefined,
+					prompt: j.question,
+					reflection: j.answer,
+					notes: j.notes || undefined,
+				})),
 			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
 				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
 				.slice(0, 6)
