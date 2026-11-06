@@ -1559,18 +1559,44 @@ async function getAvailableGeminiModel(cleanKey) {
 
 		if (res.ok) {
 			const data = await res.json();
-			const supported = (data?.models || [])
-				.filter((m) => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
-				.map((m) => m.name.replace(/^models\//, ''));
-			console.log('Available Gemini models for this key:', supported);
+			const rawModels = data?.models || [];
+			console.log('Google ListModels returned:', rawModels);
 
-			const preferredList = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
+			const supported = rawModels
+				.filter((m) => {
+					const methods = m.supportedGenerationMethods || m.supported_generation_methods || [];
+					return Array.isArray(methods) ? methods.some((method) => method.toLowerCase().includes('generatecontent')) : true;
+				})
+				.map((m) => (m.name || '').replace(/^models\//, ''))
+				.filter(Boolean);
+
+			console.log('Supported generateContent models for this key:', supported);
+
+			// Preferred models in priority order
+			const preferredList = [
+				'gemini-3.8-flash',
+				'gemini-3.5-flash-lite',
+				'gemini-3.1-flash-lite',
+				'gemini-4-argon',
+				'gemini-2.5-flash',
+				'gemini-2.0-flash',
+				'gemini-1.5-flash',
+			];
+
 			for (const p of preferredList) {
 				if (supported.includes(p)) {
 					cachedGeminiModel = p;
 					return p;
 				}
 			}
+
+			// If no exact match from preferredList, check if any model includes 'flash'
+			const flashModel = supported.find((m) => m.toLowerCase().includes('flash'));
+			if (flashModel) {
+				cachedGeminiModel = flashModel;
+				return flashModel;
+			}
+
 			if (supported.length > 0) {
 				cachedGeminiModel = supported[0];
 				return supported[0];
@@ -1587,14 +1613,14 @@ async function getAvailableGeminiModel(cleanKey) {
 			throw e;
 		}
 	}
-	return 'gemini-2.5-flash';
+	return 'gemini-3.8-flash';
 }
 
-async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.5-flash') {
+async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.8-flash') {
 	const cleanKey = (apiKey || '').trim().replace(/^["']|["']$/g, '');
 	if (!cleanKey) throw new Error('No API key provided');
 
-	// Attempt to discover active model or validate key
+	// Attempt to discover active model from this key
 	let activeModel = preferredModel;
 	try {
 		activeModel = await getAvailableGeminiModel(cleanKey);
@@ -1602,7 +1628,7 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-2.
 		throw discoveryErr;
 	}
 
-	const modelsToTry = [activeModel, preferredModel, 'gemini-2.0-flash', 'gemini-1.5-flash'];
+	const modelsToTry = [activeModel, 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
 	const uniqueModels = [...new Set(modelsToTry)];
 
 	let lastError = null;
@@ -1685,7 +1711,7 @@ async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voic
 				},
 			};
 
-			const textOutput = await callGeminiApi(apiKey, requestPayload, 'gemini-2.5-flash');
+			const textOutput = await callGeminiApi(apiKey, requestPayload, 'gemini-3.8-flash');
 			const cleanJson = textOutput.replace(/```json\n?|\n?```/g, '').trim();
 			const parsed = JSON.parse(cleanJson);
 			if (parsed && (parsed.story || parsed.title)) {
@@ -4356,7 +4382,7 @@ async function generateAiActionPlan(options = {}) {
 			},
 		};
 
-		const rawJsonText = await callGeminiApi(apiKey, requestPayload, 'gemini-2.5-flash');
+		const rawJsonText = await callGeminiApi(apiKey, requestPayload, 'gemini-3.8-flash');
 		const cleanJson = rawJsonText.replace(/```json\n?|\n?```/g, '').trim();
 		const parsed = JSON.parse(cleanJson);
 		const finalTodayPlan =
