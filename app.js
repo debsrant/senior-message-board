@@ -452,6 +452,142 @@ function switchAdminTab(tab) {
 	});
 }
 
+// ================= KIOSK MULTI-PAGE NAVIGATION =================
+let currentKioskPage = 'today';
+let kioskIdleTimer = null;
+const KIOSK_IDLE_TIMEOUT_MS = 90 * 1000; // 90 seconds auto-return to Today for Alzheimer's accessibility
+
+function switchKioskPage(pageName) {
+	const validPages = ['today', 'meds', 'events', 'family'];
+	if (!validPages.includes(pageName)) pageName = 'today';
+	currentKioskPage = pageName;
+
+	validPages.forEach((p) => {
+		const pageEl = document.getElementById(`disp-page-${p}`);
+		const btnEl = document.getElementById(`btn-kiosk-page-${p}`);
+		if (pageEl) {
+			if (p === pageName) {
+				pageEl.classList.remove('hidden');
+			} else {
+				pageEl.classList.add('hidden');
+			}
+		}
+		if (btnEl) {
+			if (p === pageName) {
+				btnEl.className =
+					'py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-blue-600 text-white shadow-md';
+			} else {
+				btnEl.className =
+					'py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200';
+			}
+		}
+	});
+
+	window.scrollTo({ top: 0, behavior: 'smooth' });
+	resetKioskIdleTimer();
+}
+
+function resetKioskIdleTimer() {
+	if (kioskIdleTimer) {
+		clearTimeout(kioskIdleTimer);
+		kioskIdleTimer = null;
+	}
+	if (currentKioskPage !== 'today') {
+		kioskIdleTimer = setTimeout(() => {
+			console.log('Kiosk idle timeout reached, returning to Today page');
+			switchKioskPage('today');
+		}, KIOSK_IDLE_TIMEOUT_MS);
+	}
+}
+
+// User activity listeners to reset idle timer on touch or click
+if (typeof window !== 'undefined') {
+	['touchstart', 'mousedown', 'keydown', 'scroll'].forEach((evt) => {
+		window.addEventListener(
+			evt,
+			() => {
+				if (currentKioskPage !== 'today') {
+					resetKioskIdleTimer();
+				}
+			},
+			{ passive: true }
+		);
+	});
+}
+
+function updateKioskNavBadges(boardData) {
+	const data = boardData || latestBoardData || {};
+	const todayStr = getTodayDateString();
+
+	// 1. Medicine Nav Badge & Page Status
+	const medsBadge = document.getElementById('kiosk-nav-meds-badge');
+	const pageMedsStatusText = document.getElementById('page-meds-status-text');
+	const pageMedsBtn = document.getElementById('btn-take-meds-page');
+
+	if (data.medsTaken) {
+		if (medsBadge) {
+			medsBadge.innerText = '✅ Taken';
+			medsBadge.className =
+				'text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+			medsBadge.classList.remove('hidden');
+		}
+		if (pageMedsStatusText) {
+			if (data.medsTakenTime) {
+				const time = new Date(data.medsTakenTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+				pageMedsStatusText.innerText = `Morning medicine logged today at ${time}.`;
+			} else {
+				pageMedsStatusText.innerText = 'Morning medicine logged for today.';
+			}
+		}
+		if (pageMedsBtn) {
+			pageMedsBtn.className =
+				'w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl shadow-none text-xl sm:text-2xl transition cursor-default';
+			pageMedsBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
+		}
+	} else {
+		if (medsBadge) {
+			medsBadge.innerText = 'Pending';
+			medsBadge.className =
+				'text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200';
+			medsBadge.classList.remove('hidden');
+		}
+		if (pageMedsStatusText) {
+			pageMedsStatusText.innerText = 'Please take your morning medicine with breakfast and water.';
+		}
+		if (pageMedsBtn) {
+			pageMedsBtn.className =
+				'w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm text-xl sm:text-2xl transition cursor-pointer';
+			pageMedsBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
+		}
+	}
+
+	// 2. Events Nav Badge
+	const eventsBadge = document.getElementById('kiosk-nav-events-badge');
+	if (eventsBadge) {
+		const upcomingCount = Object.values(currentEventsMap || {}).filter((e) =>
+			isEventUpcomingOrActive(e, todayStr)
+		).length;
+		if (upcomingCount > 0) {
+			eventsBadge.innerText = `${upcomingCount}`;
+			eventsBadge.classList.remove('hidden');
+		} else {
+			eventsBadge.classList.add('hidden');
+		}
+	}
+
+	// 3. Family Messages Nav Badge
+	const familyBadge = document.getElementById('kiosk-nav-family-badge');
+	if (familyBadge) {
+		const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
+		if (activeMsgs.length > 0) {
+			familyBadge.innerText = `${activeMsgs.length} ${activeMsgs.length === 1 ? 'Note' : 'Notes'}`;
+			familyBadge.classList.remove('hidden');
+		} else {
+			familyBadge.classList.add('hidden');
+		}
+	}
+}
+
 function initBoard() {
 	console.log('Initializing Board...');
 	setupEventFormAutoDetect();
@@ -1766,13 +1902,13 @@ function renderMessagesCard(boardData) {
 		.map((msg) => {
 			const formattedDate = formatMessageDisplayDate(msg.createdAt);
 			return `
-				<div class="p-4 sm:p-5 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5 shadow-2xs">
-					<p class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug whitespace-pre-line">${escapeHtml(msg.text)}</p>
-					<div class="flex items-center justify-between text-sm sm:text-base text-slate-600 pt-2 border-t border-slate-200/80">
-						<span class="font-black text-blue-800 flex items-center gap-1.5">
-							<span class="text-slate-500 font-medium">From</span> ${escapeHtml(msg.author || 'Family')}
+				<div class="p-5 sm:p-6 bg-gradient-to-br from-blue-50/90 to-indigo-50/60 rounded-2xl border-2 border-blue-200 space-y-3 shadow-2xs">
+					<p class="text-2xl sm:text-3xl font-bold text-slate-950 leading-relaxed whitespace-pre-line">${escapeHtml(msg.text)}</p>
+					<div class="flex items-center justify-between text-base sm:text-lg text-slate-600 pt-3 border-t-2 border-blue-100 flex-wrap gap-2">
+						<span class="font-black text-blue-900 flex items-center gap-2">
+							<span>❤️</span> With love from ${escapeHtml(msg.author || 'Family')}
 						</span>
-						<span class="text-xs sm:text-sm font-semibold text-slate-500">${escapeHtml(formattedDate)}</span>
+						<span class="font-semibold text-slate-500">${escapeHtml(formattedDate)}</span>
 					</div>
 				</div>
 			`;
@@ -2049,18 +2185,18 @@ function renderMedicationsCard(boardData) {
 	container.innerHTML = medsList
 		.map(
 			(med) => `
-			<div class="p-3.5 sm:p-4 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-1.5">
-				<div class="flex items-center justify-between gap-2">
-					<span class="font-black text-xl sm:text-2xl text-slate-900">${escapeHtml(med.name)}</span>
+			<div class="p-5 sm:p-6 bg-purple-50/40 rounded-2xl border-2 border-purple-200 space-y-2">
+				<div class="flex items-center justify-between gap-3 flex-wrap">
+					<span class="font-black text-2xl sm:text-3xl text-slate-950">${escapeHtml(med.name)}</span>
 					${
 						med.time
-							? `<span class="text-sm sm:text-base font-black px-3 py-1 rounded-lg bg-purple-100 text-purple-900 border border-purple-300 shrink-0">${escapeHtml(med.time)}</span>`
-							: ''
+							? `<span class="text-base sm:text-lg font-black px-3.5 py-1 rounded-xl bg-purple-100 text-purple-950 border border-purple-300 shrink-0">${escapeHtml(med.time)}</span>`
+							: `<span class="text-base sm:text-lg font-black px-3.5 py-1 rounded-xl bg-purple-100 text-purple-950 border border-purple-300 shrink-0">Morning</span>`
 					}
 				</div>
 				${
 					med.notes
-						? `<p class="text-base sm:text-lg text-slate-700 leading-relaxed font-semibold pl-0.5">${escapeHtml(med.notes)}</p>`
+						? `<p class="text-xl sm:text-2xl text-slate-700 leading-relaxed font-bold pl-0.5">${escapeHtml(med.notes)}</p>`
 						: ''
 				}
 			</div>
@@ -2403,6 +2539,9 @@ function renderBoard(data) {
 	// Render AI Daily Action Plan & Prep Card
 	renderAiSummaryCard();
 
+	// Update Kiosk Navigation Badges & Page Status
+	updateKioskNavBadges(data);
+
 	// Auto-Reset Check
 	checkAutoReset(data.medsTaken, data.medsTakenTime);
 }
@@ -2426,6 +2565,11 @@ function checkAutoReset(isTaken, takenTime) {
 
 function markMedsTaken() {
 	console.log('Marking meds as taken...');
+	if (!latestBoardData) latestBoardData = {};
+	latestBoardData.medsTaken = true;
+	latestBoardData.medsTakenTime = Date.now();
+	renderBoard(latestBoardData);
+
 	database.ref('board').update(
 		{
 			medsTaken: true,
@@ -3016,7 +3160,21 @@ function buildSmartRuleBasedPlan(boardData) {
 		lookAheadParts.push(`${h.name} arrives ${whenStr} — look forward to catching up with family.`);
 	}
 
-	// Paragraph 4 (Optional): Proactive Prep or Senior Check-In Reflection
+	// Paragraph 4: Family Love Notes & Messages (Idea D)
+	const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
+	if (activeMsgs.length > 0) {
+		const latestMsg = activeMsgs[0];
+		const authorName = (latestMsg.author || 'Family').trim();
+		const msgText = (latestMsg.text || '').trim();
+		if (msgText) {
+			const cleanMsg = msgText.replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
+			todayPlan.push(
+				`${authorName} sent a loving note: "${cleanMsg}." **Enjoy hearing from family** today.`
+			);
+		}
+	}
+
+	// Paragraph 5 (Optional): Proactive Prep or Senior Check-In Reflection
 	if (prepAlerts.length > 0) {
 		let cleanAlert = prepAlerts[0].replace(/^[\p{Emoji}\s]+/u, '').trim();
 		if (!cleanAlert.includes('**')) {
@@ -3309,11 +3467,12 @@ async function generateAiActionPlan(options = {}) {
 					'- Avoid long paragraphs or dense text blocks. High visual spacing and short 1-2 sentence paragraphs prevent disorientation.\n' +
 					'- Zero emojis anywhere.\n\n' +
 					'CRITICAL RULES:\n' +
-					'1. `todayPlan` (AN ARRAY OF 2 TO 4 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
+					'1. `todayPlan` (AN ARRAY OF 2 TO 5 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
 					'   - PARAGRAPH 1 (WEATHER & MORNING OUTLOOK): Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. E.g. "Crisp, sunny weather today with cool afternoon air. **Put on a warm sweater** before sitting out on the porch."\n' +
 					'   - PARAGRAPH 2 (MEDICATION & HYDRATION): Note morning medication status and hydration advice with bold markdown **action text**, e.g. "**Take your morning medicine with breakfast** and drink a full glass of water."\n' +
 					'   - PARAGRAPH 3 (SCHEDULE & PACING): Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful quiet day at home).\n' +
-					'   - PARAGRAPH 4 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
+					'   - PARAGRAPH 4 (FAMILY LOVE NOTES - IDEA D): If family messages exist in `familyMessages`, warmly weave their loving words into a short paragraph, e.g. "Sarah sent a sweet note: \'[message text]\'. **Have a wonderful day** knowing your family is thinking of you."\n' +
+					'   - PARAGRAPH 5 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
 					'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
 					'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
 					'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
@@ -3333,7 +3492,7 @@ async function generateAiActionPlan(options = {}) {
 								type: 'array',
 								items: { type: 'string' },
 								description:
-									'An array of 2 to 4 short, warm paragraphs (1-2 sentences each). Each paragraph has bold markdown **action text** for any required action. The weather description MUST NOT contain any numbers, digits, degree symbols, or percentages. No bullet points or emojis.',
+									'An array of 2 to 5 short, warm paragraphs (1-2 sentences each). Each paragraph has bold markdown **action text** for any required action. The weather description MUST NOT contain any numbers, digits, degree symbols, or percentages. Weave family messages into a paragraph when present. No bullet points or emojis.',
 							},
 							prepAlerts: {
 								type: 'array',
@@ -3916,36 +4075,39 @@ function renderContacts() {
 				const bdayText = formatBirthdayDisplay(c.birthday);
 				const bdayToday = isBirthdayToday(c.birthday);
 				html += `
-					<div class="p-4 bg-slate-50 rounded-2xl border ${
+					<div class="p-5 bg-slate-50/90 rounded-2xl border ${
 						bdayToday ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200'
-					} space-y-1">
-						<div class="flex items-center justify-between gap-2 flex-wrap">
-							<div class="font-black text-slate-900 text-xl sm:text-2xl flex items-center gap-2 flex-wrap">
+					} space-y-2">
+						<div class="flex items-center justify-between gap-3 flex-wrap">
+							<div class="font-black text-slate-950 text-2xl sm:text-3xl flex items-center gap-3 flex-wrap">
 								<span>${escapeHtml(c.name)}</span>
 								${
 									c.relation
-										? `<span class="text-xs sm:text-sm font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${
+										? `<span class="text-base sm:text-lg font-bold px-3.5 py-1 rounded-xl ${
 												c.isUser
-													? 'bg-blue-50 text-blue-700 border border-blue-200'
-													: 'bg-white text-slate-600 border border-slate-200'
+													? 'bg-blue-100 text-blue-900 border border-blue-300'
+													: 'bg-white text-slate-700 border border-slate-300'
 										  }">${escapeHtml(c.relation)}</span>`
 										: ''
 								}
 							</div>
 							${
 								bdayText
-									? `<span class="text-sm sm:text-base font-bold px-3 py-1 rounded-md border flex items-center gap-1.5 ${
+									? `<span class="text-base sm:text-lg font-bold px-3.5 py-1 rounded-xl border flex items-center gap-2 ${
 											bdayToday
-												? 'bg-amber-100 text-amber-800 border-amber-300 font-bold'
-												: 'bg-white text-slate-600 border-slate-200'
+												? 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold'
+												: 'bg-white text-slate-700 border-slate-200'
 									  }">🎂 ${bdayText}${bdayToday ? ' (TODAY!)' : ''}</span>`
 									: ''
 							}
 						</div>
-						<div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-base sm:text-lg text-slate-900 font-bold">
-							${c.phone ? `<span>📞 ${escapeHtml(c.phone)}</span>` : ''}
-							${c.email ? `<span class="truncate">✉️ ${escapeHtml(c.email)}</span>` : ''}
-						</div>
+						${
+							c.phone
+								? `<div class="text-xl sm:text-2xl text-slate-800 font-bold pt-1">
+										<span class="text-slate-500 font-medium">Phone:</span> ${escapeHtml(c.phone)}
+								   </div>`
+								: ''
+						}
 					</div>
 				`;
 			});
