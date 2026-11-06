@@ -576,7 +576,7 @@
 				<!-- ==================== TAB 1: DAILY UPDATES (DEFAULT) ==================== -->
 				<div id="admin-tab-daily" class="space-y-5 sm:space-y-6">
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-						<!-- Left Column: Today's Message + Reminders & Medications -->
+						<!-- Left Column: Today's Message & Medications Focus -->
 						<div class="space-y-5 sm:space-y-6">
 							<!-- Card: Today's Announcement -->
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -611,96 +611,6 @@
 									>
 										Save Message
 									</button>
-								</div>
-							</div>
-
-							<!-- Card: Family Messages Manager -->
-							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-									<div>
-										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-											Family Messages
-										</h3>
-										<p class="text-xs text-slate-500 mt-0.5">
-											Post notes for the senior with sender name, post date, and optional expiration.
-										</p>
-									</div>
-									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
-										Admin &amp; Editor
-									</span>
-								</div>
-
-								
-								<!-- Add / Edit Message Form -->
-								<div id="message-form-container" class="p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors">
-									<div class="flex items-center justify-between">
-										<span id="message-form-heading" class="text-xs font-bold text-slate-700 uppercase tracking-wider">
-											Post a New Message
-										</span>
-										<span id="message-editing-badge" class="hidden text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-full">
-											Editing Mode
-										</span>
-									</div>
-
-									<div>
-										<label class="block text-xs font-semibold mb-1 text-slate-600">Message Text</label>
-										<textarea
-											id="input-message-text"
-											rows="2"
-											placeholder="e.g. Good morning Mom! Stopping by after lunch to bring you some fresh fruit."
-											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
-										></textarea>
-									</div>
-
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-										<div>
-											<label class="block text-xs font-semibold mb-1 text-slate-600">From / Your Name</label>
-											<input
-												type="text"
-												id="input-message-author"
-												placeholder="e.g. Sarah"
-												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
-											/>
-										</div>
-										<div>
-											<label class="block text-xs font-semibold mb-1 text-slate-600">
-												Expiration Date <span class="text-slate-400 font-normal">(Optional)</span>
-											</label>
-											<input
-												type="date"
-												id="input-message-expiration"
-												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
-											/>
-											<p class="text-[10px] text-slate-400 mt-0.5">Leaves display automatically after this date.</p>
-										</div>
-									</div>
-
-									<div class="flex items-center gap-2 pt-1">
-										<button
-											type="button"
-											id="btn-save-message"
-											onclick="saveMessageItem()"
-											class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-										>
-											<span id="btn-save-message-text">Post Message</span>
-										</button>
-										<button
-											type="button"
-											id="btn-cancel-edit-message"
-											onclick="cancelEditMessage()"
-											class="hidden px-3.5 py-2 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl text-xs sm:text-sm transition cursor-pointer"
-										>
-											Cancel
-										</button>
-									</div>
-								</div>
-
-								<!-- Current Messages List in Admin -->
-								<div class="space-y-1.5">
-									<label class="block text-xs font-semibold text-slate-700">Current Messages</label>
-									<div id="admin-messages-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
-										<div class="text-center py-4 text-xs text-slate-400 italic">No messages posted yet.</div>
-									</div>
 								</div>
 							</div>
 
@@ -849,21 +759,112 @@
 							</div>
 						</div>
 
-						<!-- Right Column: Appointments & Events -->
-						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-								<div>
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-										Appointments &amp; Events
-									</h3>
-									<p class="text-xs text-slate-500 mt-0.5">
-										Supports single-day and multi-day events with automatic cleanup.
-									</p>
+						<!-- Right Column: Family Messages + Appointments & Events -->
+						<div class="space-y-5 sm:space-y-6">
+							<!-- Card: Family Messages Manager -->
+							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<div>
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+											Family Messages
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Post notes for the senior with sender name, post date, and optional expiration.
+										</p>
+									</div>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+										Admin &amp; Editor
+									</span>
 								</div>
-								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
-									Admin &amp; Editor
-								</span>
+
+								<!-- Add / Edit Message Form -->
+								<div id="message-form-container" class="p-3 bg-white rounded-xl border border-slate-200 space-y-3 transition-colors">
+									<div class="flex items-center justify-between">
+										<span id="message-form-heading" class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+											Post a New Message
+										</span>
+										<span id="message-editing-badge" class="hidden text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-full">
+											Editing Mode
+										</span>
+									</div>
+
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Message Text</label>
+										<textarea
+											id="input-message-text"
+											rows="2"
+											placeholder="e.g. Good morning Mom! Stopping by after lunch to bring you some fresh fruit."
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+										></textarea>
+									</div>
+
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+										<div>
+											<label class="block text-xs font-semibold mb-1 text-slate-600">From / Your Name</label>
+											<input
+												type="text"
+												id="input-message-author"
+												placeholder="e.g. Sarah"
+												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+											/>
+										</div>
+										<div>
+											<label class="block text-xs font-semibold mb-1 text-slate-600">
+												Expiration Date <span class="text-slate-400 font-normal">(Optional)</span>
+											</label>
+											<input
+												type="date"
+												id="input-message-expiration"
+												class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
+											/>
+											<p class="text-[10px] text-slate-400 mt-0.5">Leaves display automatically after this date.</p>
+										</div>
+									</div>
+
+									<div class="flex items-center gap-2 pt-1">
+										<button
+											type="button"
+											id="btn-save-message"
+											onclick="saveMessageItem()"
+											class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+										>
+											<span id="btn-save-message-text">Post Message</span>
+										</button>
+										<button
+											type="button"
+											id="btn-cancel-edit-message"
+											onclick="cancelEditMessage()"
+											class="hidden px-3.5 py-2 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-semibold rounded-xl text-xs sm:text-sm transition cursor-pointer"
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+
+								<!-- Current Messages List in Admin -->
+								<div class="space-y-1.5">
+									<label class="block text-xs font-semibold text-slate-700">Current Messages</label>
+									<div id="admin-messages-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+										<div class="text-center py-4 text-xs text-slate-400 italic">No messages posted yet.</div>
+									</div>
+								</div>
 							</div>
+
+							<!-- Card: Appointments & Events -->
+							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<div>
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+											Appointments &amp; Events
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Supports single-day and multi-day events with automatic cleanup.
+										</p>
+									</div>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+										Admin &amp; Editor
+									</span>
+								</div>
 
 							<!-- Add Event Form -->
 							<div
@@ -993,6 +994,7 @@
 								</div>
 							</div>
 						</div>
+					</div>
 					</div>
 				</div>
 
@@ -1373,6 +1375,7 @@
 								<textarea
 									id="input-ai-rules"
 									rows="4"
+									oninput="saveCaregiverRulesLocal(this.value)"
 									placeholder="e.g. Infusion: Drink 2-3 extra glasses of water starting 3 days before a scheduled infusion."
 									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
 								></textarea>
@@ -1389,6 +1392,7 @@
 								<textarea
 									id="input-ai-feedback"
 									rows="3"
+									oninput="saveCaregiverNotesLocal(this.value)"
 									placeholder="e.g. She loves 1950s big band and Frank Sinatra. Grew up in Ohio baking pies. Avoid asking what she is doing or what is for dinner - ask about music memories, favorite treats, or birds at the feeder."
 									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
 								></textarea>
@@ -1397,7 +1401,7 @@
 								</p>
 							</div>
 
-							<div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+							<div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
 								<button
 									type="button"
 									id="btn-save-ai-rules"
@@ -1406,93 +1410,113 @@
 								>
 									Save Care Rules &amp; Notes
 								</button>
-							</div>
-
-							<!-- Admin-Only Gemini API Key Area -->
-							<div
-								id="section-gemini-api-key"
-								class="hidden p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200/80 space-y-2.5"
-							>
-								<div class="flex items-center justify-between">
-									<label class="block text-xs font-bold text-indigo-950 uppercase tracking-wider">
-										Gemini API Key
-									</label>
-									<span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full">
-										Admin Only
-									</span>
-								</div>
-								<input
-									type="password"
-									id="input-gemini-api-key"
-									onchange="saveGeminiApiKeyLocal(this.value)"
-									placeholder="AIza... (Leave blank to use built-in Smart Care Companion)"
-									class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
-								/>
-								<p class="text-[11px] text-slate-500">
-									Saved securely on this device only. Powers generative AI actions for the board.
-								</p>
-							</div>
-
-							<!-- Action Button: Refresh AI Summary Now -->
-							<div>
 								<button
 									type="button"
 									id="btn-generate-ai-plan"
 									onclick="generateAiActionPlan()"
-									class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+									class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer"
 								>
 									<span id="btn-generate-ai-text">Refresh AI Summary Now</span>
 								</button>
 							</div>
 						</div>
 
-						<!-- Right Column: Board Title & Weather Zipcode -->
-						<div id="section-maintenance" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+						<!-- Right Column: Board Title, Weather & Gemini API Key -->
+						<div class="space-y-5 sm:space-y-6">
+							<!-- Card 1: Board Title & Weather -->
+							<div id="section-maintenance" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+									<div>
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+											Board Title &amp; Weather
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Configure display name and weather location.
+										</p>
+									</div>
+									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+										Admin &amp; Editor
+									</span>
+								</div>
+
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Board Title (Display Name)</label>
+										<input
+											type="text"
+											id="input-board-title"
+											placeholder="e.g. Grandma's Daily Board"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+
+									<div>
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Zipcode (for Local Weather)</label>
+										<input
+											type="text"
+											id="input-zipcode"
+											placeholder="e.g. 90210"
+											class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+								</div>
+
+								<div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+									<button
+										type="button"
+										id="btn-save-display-settings"
+										onclick="saveDisplaySettingsOnly()"
+										class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+									>
+										Save Display Settings
+									</button>
+								</div>
+							</div>
+
+							<!-- Card 2: Dedicated Gemini API Key Card (Admin Only) -->
+							<div
+								id="section-gemini-api-key"
+								class="hidden bg-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4"
+							>
+								<div class="flex items-center justify-between border-b border-indigo-100 pb-2.5">
+									<div>
+										<h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider">
+											Gemini API Key
+										</h3>
+										<p class="text-xs text-slate-500 mt-0.5">
+											Enables advanced generative AI summaries and conversational story polishing.
+										</p>
+									</div>
+									<span class="text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full shrink-0">
+										Admin Only
+									</span>
+								</div>
+
 								<div>
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-										Board Title &amp; Weather
-									</h3>
-									<p class="text-xs text-slate-500 mt-0.5">
-										Configure display name and weather location.
+									<label class="block text-xs font-semibold mb-1 text-slate-700">
+										API Key
+									</label>
+									<input
+										type="password"
+										id="input-gemini-api-key"
+										placeholder="AIza... (Leave blank to use built-in Smart Care Companion)"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition font-mono"
+									/>
+									<p class="text-[11px] text-slate-500 mt-1">
+										Saved securely on this device only. Powers generative AI actions for the board.
 									</p>
 								</div>
-								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
-									Admin &amp; Editor
-								</span>
-							</div>
 
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Board Title (Display Name)</label>
-									<input
-										type="text"
-										id="input-board-title"
-										placeholder="e.g. Grandma's Daily Board"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									/>
+								<div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+									<button
+										type="button"
+										id="btn-save-gemini-key"
+										onclick="saveGeminiApiKeyFromInput()"
+										class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+									>
+										Save API Key
+									</button>
 								</div>
-
-								<div>
-									<label class="block text-xs font-semibold mb-1 text-slate-600">Zipcode (for Local Weather)</label>
-									<input
-										type="text"
-										id="input-zipcode"
-										placeholder="e.g. 90210"
-										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-									/>
-								</div>
-							</div>
-
-							<div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-								<button
-									type="button"
-									id="btn-save-display-settings"
-									onclick="saveDisplaySettingsOnly()"
-									class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-								>
-									Save Display Settings
-								</button>
 							</div>
 						</div>
 					</div>

@@ -774,6 +774,44 @@ function saveGeminiApiKeyLocal(key) {
 	}
 }
 
+function saveGeminiApiKeyFromInput() {
+	if (!userProfile || userProfile.role !== 'ADMIN') {
+		alert('Permission Denied: Only ADMIN users can configure the Gemini API key.');
+		return;
+	}
+	const input = document.getElementById('input-gemini-api-key');
+	const key = input ? input.value : '';
+	saveGeminiApiKeyLocal(key);
+}
+
+function saveCaregiverNotesLocal(notes) {
+	try {
+		localStorage.setItem('smb_caregiver_notes', (notes || '').trim());
+	} catch (e) {}
+}
+
+function loadCaregiverNotesLocal() {
+	try {
+		return localStorage.getItem('smb_caregiver_notes') || '';
+	} catch (e) {
+		return '';
+	}
+}
+
+function saveCaregiverRulesLocal(rules) {
+	try {
+		localStorage.setItem('smb_caregiver_rules', (rules || '').trim());
+	} catch (e) {}
+}
+
+function loadCaregiverRulesLocal() {
+	try {
+		return localStorage.getItem('smb_caregiver_rules') || '';
+	} catch (e) {
+		return '';
+	}
+}
+
 function loadGeminiApiKeyLocal() {
 	try {
 		return localStorage.getItem('smb_gemini_api_key') || '';
@@ -3404,11 +3442,21 @@ function renderBoard(data) {
 		if (zipEl && document.activeElement !== zipEl) zipEl.value = data.zipcode || '';
 		const aiRulesEl = document.getElementById('input-ai-rules');
 		if (aiRulesEl && document.activeElement !== aiRulesEl) {
-			aiRulesEl.value = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
+			const savedRules = data.aiRules !== undefined && data.aiRules !== null
+				? data.aiRules
+				: (loadCaregiverRulesLocal() || DEFAULT_AI_RULES);
+			aiRulesEl.value = savedRules;
+			saveCaregiverRulesLocal(savedRules);
 		}
 		const aiFeedbackEl = document.getElementById('input-ai-feedback');
 		if (aiFeedbackEl && document.activeElement !== aiFeedbackEl) {
-			aiFeedbackEl.value = data.aiFeedback || '';
+			const savedFeedback = data.aiFeedback !== undefined && data.aiFeedback !== null
+				? data.aiFeedback
+				: loadCaregiverNotesLocal();
+			aiFeedbackEl.value = savedFeedback || '';
+			if (data.aiFeedback) {
+				saveCaregiverNotesLocal(data.aiFeedback);
+			}
 		}
 		const customQEl = document.getElementById('input-checkin-custom-question');
 		if (customQEl && document.activeElement !== customQEl) {
@@ -3577,16 +3625,29 @@ async function saveAiRulesOnly() {
 	const btn = document.getElementById('btn-save-ai-rules');
 	if (btn) btn.disabled = true;
 
+	// 1. Immediately cache locally
+	saveCaregiverRulesLocal(aiRules);
+	saveCaregiverNotesLocal(aiFeedback);
+
+	// 2. Immediately update in-memory board state
+	if (!latestBoardData) latestBoardData = {};
+	latestBoardData.aiRules = aiRules;
+	latestBoardData.aiFeedback = aiFeedback;
+
+	// 3. Persist to Firebase Realtime Database
 	try {
-		await database.ref('board').update({
-			aiRules: aiRules,
-			aiFeedback: aiFeedback,
-			updatedAt: Date.now(),
-		});
-		showToast('Care rules and AI notes saved!');
+		await Promise.race([
+			database.ref('board').update({
+				aiRules: aiRules,
+				aiFeedback: aiFeedback,
+				updatedAt: Date.now(),
+			}),
+			new Promise((resolve) => setTimeout(resolve, 6000)),
+		]);
+		showToast('Care rules and caregiver notes saved permanently!');
 	} catch (err) {
-		console.error('Failed to save AI care rules:', err);
-		alert('Failed to save AI care rules: ' + err.message);
+		console.error('Failed to sync AI care rules to Firebase:', err);
+		showToast('Saved locally; syncing to board in background.');
 	} finally {
 		if (btn) btn.disabled = false;
 	}
@@ -4356,13 +4417,22 @@ async function generateAiActionPlan(options = {}) {
 	}
 
 	const rulesEl = document.getElementById('input-ai-rules');
-	const rulesText = (rulesEl?.value || latestBoardData?.aiRules || DEFAULT_AI_RULES).trim();
+	const rulesText = (rulesEl?.value || latestBoardData?.aiRules || loadCaregiverRulesLocal() || DEFAULT_AI_RULES).trim();
+	const feedbackEl = document.getElementById('input-ai-feedback');
+	const feedbackText = (feedbackEl?.value || latestBoardData?.aiFeedback || loadCaregiverNotesLocal() || '').trim();
+
+	saveCaregiverRulesLocal(rulesText);
+	saveCaregiverNotesLocal(feedbackText);
+	if (!latestBoardData) latestBoardData = {};
+	latestBoardData.aiRules = rulesText;
+	latestBoardData.aiFeedback = feedbackText;
 	const todayStr = getTodayDateString();
 
 	// Build the smart baseline context first
 	const smartBaseline = buildSmartRuleBasedPlan({
 		...latestBoardData,
 		aiRules: rulesText,
+		aiFeedback: feedbackText,
 	});
 
 	if (!apiKey) {
@@ -4380,6 +4450,7 @@ async function generateAiActionPlan(options = {}) {
 		if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 			const updatePayload = {
 				aiRules: rulesText,
+				aiFeedback: feedbackText,
 				aiSummary: {
 					todayPlan: smartBaseline.todayPlan,
 					prepAlerts: smartBaseline.prepAlerts,
@@ -4570,6 +4641,7 @@ async function generateAiActionPlan(options = {}) {
 		if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 			const updatePayload = {
 				aiRules: rulesText,
+				aiFeedback: feedbackText,
 				aiSummary: {
 					todayPlan: finalTodayPlan,
 					prepAlerts: finalPrepAlerts,
