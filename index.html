@@ -19,7 +19,6 @@
 			class="fixed top-4 left-4 right-4 sm:left-auto sm:right-5 sm:max-w-sm z-50 bg-slate-900 text-white px-4 py-3.5 rounded-xl shadow-lg flex items-center justify-between gap-3 transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none"
 		>
 			<div class="flex items-center gap-3">
-				<span class="text-2xl">💊</span>
 				<div>
 					<div class="font-bold text-sm">Board Notification</div>
 					<div id="toast-message" class="text-xs text-slate-300">Medications were logged as taken!</div>
@@ -66,7 +65,6 @@
 				</div>
 				<div class="flex items-center gap-2 sm:gap-3">
 					<div id="user-info-badge" class="hidden md:flex text-xs text-slate-600 font-medium px-2.5 py-1.5 bg-slate-100 rounded-lg border border-slate-200 items-center gap-1.5">
-						<span>👤</span>
 						<span id="user-info-text">User</span>
 					</div>
 					<div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
@@ -122,8 +120,8 @@
 						class="md:col-span-5 border-t-2 md:border-t-0 md:border-l-2 border-slate-200/80 pt-5 md:pt-0 md:pl-8 flex flex-col justify-center gap-2"
 					>
 						<div class="flex items-center justify-between gap-2">
-							<span class="text-base sm:text-lg font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-								<span>💊</span> Medication Check-In
+							<span class="text-base sm:text-lg font-black uppercase tracking-wider text-slate-800">
+								Medication Check-In
 							</span>
 							<span
 								id="meds-status-badge"
@@ -136,9 +134,9 @@
 						<button
 							id="btn-take-meds"
 							onclick="markMedsTaken()"
-							class="w-full px-6 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl lg:text-4xl cursor-pointer"
+							class="w-full px-6 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl cursor-pointer"
 						>
-							<span>💊 I TOOK MY MEDS</span>
+							<span>I TOOK MY MEDS</span>
 						</button>
 
 						<p
@@ -160,17 +158,17 @@
 						type="button"
 						id="btn-kiosk-page-today"
 						onclick="switchKioskPage('today')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-blue-600 text-white shadow-md"
+						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center transition cursor-pointer bg-blue-600 text-white shadow-md text-center"
 					>
-						<span>☀️</span> Today
+						Today
 					</button>
 					<button
 						type="button"
 						id="btn-kiosk-page-meds"
 						onclick="switchKioskPage('meds')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
 					>
-						<span>💊</span> Medicine
+						Medicine
 						<span
 							id="kiosk-nav-meds-badge"
 							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200"
@@ -180,9 +178,9 @@
 						type="button"
 						id="btn-kiosk-page-events"
 						onclick="switchKioskPage('events')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
 					>
-						<span>📅</span> Calendar
+						Calendar
 						<span
 							id="kiosk-nav-events-badge"
 							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200"
@@ -192,9 +190,9 @@
 						type="button"
 						id="btn-kiosk-page-family"
 						onclick="switchKioskPage('family')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
 					>
-						<span>👥</span> Family &amp; Friends
+						Family &amp; Friends
 						<span
 							id="kiosk-nav-family-badge"
 							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-200"
@@ -211,8 +209,8 @@
 					>
 						<!-- Today's Important Hero Message (Across Top, Spanning Full Width, Hidden if empty) -->
 						<div id="disp-announcement-container" class="space-y-2 pb-5 border-b-2 border-blue-200/80 hidden">
-							<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
-								<span>📢</span> Today's Important Message
+							<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg">
+								Today's Important Message
 							</h2>
 							<p
 								id="disp-announcement"
@@ -224,8 +222,8 @@
 						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
 							<!-- Left Column: Morning Briefing & Notes (Short, Spaced Paragraphs with Bold Action Anchors) -->
 							<div id="disp-ai-today-section" class="flex flex-col space-y-3">
-								<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
-									<span>☀️</span> Morning Briefing
+								<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
+									Morning Briefing
 								</h3>
 								<div
 									id="disp-ai-today-plan"
@@ -240,8 +238,8 @@
 							<!-- Right Column: Senior Daily Check-In & Conversation (Interactive, Multi-turn, No Emojis) -->
 							<div id="disp-senior-checkin-section" class="flex flex-col space-y-3 lg:border-l-2 lg:border-blue-200/80 lg:pl-8">
 								<div class="flex items-center justify-between">
-									<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg flex items-center gap-2">
-										<span>💬</span> Daily Check-In
+									<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
+										Daily Check-In
 									</h3>
 									<span id="disp-checkin-status-badge" class="hidden text-sm sm:text-base font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border-2 border-emerald-300">
 										Logged
@@ -261,18 +259,17 @@
 											type="button"
 											id="btn-kiosk-start-voice"
 											onclick="startKioskVoiceCapture()"
-											class="flex-1 py-3.5 px-4 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:from-purple-900 active:to-indigo-900 text-white rounded-2xl text-lg sm:text-xl font-black shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer"
+											class="flex-1 py-3.5 px-4 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:from-purple-900 active:to-indigo-900 text-white rounded-2xl text-lg sm:text-xl font-black shadow-sm transition flex items-center justify-center cursor-pointer text-center"
 										>
-											<span class="text-2xl">🎙️</span>
-											<span>Tap & Speak Your Story</span>
+											Tap &amp; Speak Your Story
 										</button>
 										<button
 											type="button"
 											id="btn-ask-another-question"
 											onclick="cycleNextCheckinQuestion()"
-											class="px-4 py-3.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-950 rounded-2xl text-base sm:text-lg font-bold border-2 border-blue-200 transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+											class="px-5 py-3.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-950 rounded-2xl text-base sm:text-lg font-bold border-2 border-blue-200 transition flex items-center justify-center cursor-pointer shadow-2xs text-center"
 										>
-											<span>🔄</span> Another Question
+											Another Question
 										</button>
 									</div>
 								</div>
@@ -292,9 +289,9 @@
 										<button
 											type="button"
 											onclick="startKioskVoiceCapture(true)"
-											class="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-950 rounded-xl text-base sm:text-lg font-bold border-2 border-purple-200 transition flex items-center justify-center gap-2 cursor-pointer"
+											class="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-950 rounded-xl text-base sm:text-lg font-bold border-2 border-purple-200 transition flex items-center justify-center cursor-pointer text-center"
 										>
-											<span>🎙️</span> Tap & Speak More About This
+											Tap &amp; Speak More About This
 										</button>
 									</div>
 								</div>
@@ -302,8 +299,7 @@
 								<!-- Voice Recording Container: Tap & Speak Story for Mom -->
 								<div id="disp-checkin-voice" class="hidden p-5 sm:p-6 bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl border-2 border-indigo-300 space-y-4 shadow-sm">
 									<div class="flex items-center justify-between">
-										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900 flex items-center gap-2">
-											<span class="inline-block w-3.5 h-3.5 rounded-full bg-rose-500 animate-pulse"></span>
+										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900">
 											Listening to Your Story
 										</span>
 										<span id="disp-voice-timer" class="text-sm sm:text-base font-mono font-bold text-indigo-800 bg-white px-3 py-1 rounded-lg border border-indigo-200">00:00</span>
@@ -325,15 +321,15 @@
 											type="button"
 											id="btn-voice-finish"
 											onclick="stopKioskVoiceCapture(true)"
-											class="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-black text-xl sm:text-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+											class="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-black text-xl sm:text-2xl shadow-md transition flex items-center justify-center cursor-pointer text-center"
 										>
-											<span>✅</span> I'm Finished Speaking
+											Finished Speaking
 										</button>
 										<button
 											type="button"
 											id="btn-voice-cancel"
 											onclick="cancelKioskVoiceCapture()"
-											class="py-3 px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-base sm:text-lg transition cursor-pointer"
+											class="py-3 px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-base sm:text-lg transition cursor-pointer text-center"
 										>
 											Cancel
 										</button>
@@ -383,8 +379,8 @@
 					<div id="card-medications" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-purple-200 shadow-sm space-y-6">
 						<div class="flex items-center justify-between border-b-2 border-purple-100 pb-4 flex-wrap gap-3">
 							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 flex items-center gap-3">
-									<span>💊</span> Mom's Morning Medicine
+								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+									Mom's Morning Medicine
 								</h2>
 								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
 									Daily morning medication schedule and notes
@@ -410,7 +406,7 @@
 								onclick="markMedsTaken()"
 								class="w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm text-xl sm:text-2xl transition cursor-pointer"
 							>
-								<span>💊 I TOOK MY MEDS</span>
+								<span>I TOOK MY MEDS</span>
 							</button>
 						</div>
 
@@ -435,8 +431,8 @@
 					<div id="card-events" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-blue-200 shadow-sm space-y-6">
 						<div class="flex items-center justify-between border-b-2 border-blue-100 pb-4 flex-wrap gap-3">
 							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 flex items-center gap-3">
-									<span>📅</span> Appointments &amp; Events
+								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+									Appointments &amp; Events
 								</h2>
 								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
 									Upcoming doctor visits, family get-togethers, and holidays
@@ -453,9 +449,8 @@
 						<!-- Dynamic Events & Holidays List Container -->
 						<div id="disp-events-list" class="space-y-4">
 							<div class="w-full p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
-								<div class="text-3xl">🌿</div>
 								<div class="text-2xl sm:text-3xl font-black text-slate-800">No appointments scheduled</div>
-								<div class="text-base text-slate-500">Relax and enjoy your day! ☀️</div>
+								<div class="text-base text-slate-500">Relax and enjoy your day!</div>
 							</div>
 						</div>
 					</div>
@@ -467,8 +462,8 @@
 					<div id="card-messages" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-rose-200 shadow-sm space-y-5">
 						<div class="flex items-center justify-between border-b-2 border-rose-100 pb-4 flex-wrap gap-3">
 							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 flex items-center gap-3">
-									<span>💌</span> Love Notes from Family
+								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+									Love Notes from Family
 								</h2>
 								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
 									Warm messages sent to you from your loved ones
@@ -492,8 +487,8 @@
 					<div id="card-contacts" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-5">
 						<div class="flex items-center justify-between border-b-2 border-emerald-100 pb-4 flex-wrap gap-3">
 							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 flex items-center gap-3">
-									<span>👥</span> Family &amp; Friends
+								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+									Family &amp; Friends
 								</h2>
 								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
 									People who love and care about you
@@ -541,31 +536,39 @@
 						</span>
 					</div>
 
-					<!-- 3-Tab Switcher Bar -->
-					<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200/80">
+					<!-- 4-Tab Switcher Bar -->
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-slate-100 rounded-xl border border-slate-200/80">
 						<button
 							type="button"
 							id="btn-admin-tab-daily"
 							onclick="switchAdminTab('daily')"
-							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200/80"
+							class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center bg-white text-blue-700 shadow-sm border border-slate-200/80 text-center"
 						>
-							<span>📅</span> Daily Updates
+							Daily Updates
+						</button>
+						<button
+							type="button"
+							id="btn-admin-tab-checkin"
+							onclick="switchAdminTab('checkin')"
+							class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center text-slate-600 hover:text-slate-900 text-center"
+						>
+							Check-In &amp; Memories
 						</button>
 						<button
 							type="button"
 							id="btn-admin-tab-settings"
 							onclick="switchAdminTab('settings')"
-							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900"
+							class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center text-slate-600 hover:text-slate-900 text-center"
 						>
-							<span>🤖</span> AI &amp; Board Settings
+							AI &amp; Board Settings
 						</button>
 						<button
 							type="button"
 							id="btn-admin-tab-people"
 							onclick="switchAdminTab('people')"
-							class="py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900"
+							class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center text-slate-600 hover:text-slate-900 text-center"
 						>
-							<span>👥</span> Contacts, Profile &amp; Users
+							Contacts &amp; Users
 						</button>
 					</div>
 				</div>
@@ -578,8 +581,8 @@
 							<!-- Card: Today's Announcement -->
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-								<span>&#128227;</span> Today's Important Message
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Today's Important Message
 									</h3>
 									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
 										Admin &amp; Editor
@@ -603,8 +606,8 @@
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 									<div>
-										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-											<span>💬</span> Family Messages
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+											Family Messages
 										</h3>
 										<p class="text-xs text-slate-500 mt-0.5">
 											Post notes for the senior with sender name, post date, and optional expiration.
@@ -692,21 +695,20 @@
 							<!-- Card: Medications & Health -->
 							<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-								<span>&#128172;</span> Daily Check-In
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Medications &amp; Health
 									</h3>
 									<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
 										Admin &amp; Editor
 									</span>
 								</div>
 
-								
 								<!-- Medications Manager (Structured Add / Edit / Delete + Senior Notes) -->
 								<div class="p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3.5">
 									<div class="flex items-center justify-between border-b border-slate-200 pb-2">
 										<div>
-											<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-												<span>💊</span> Medications List &amp; Instructions
+											<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+												Medications List &amp; Instructions
 											</h4>
 											<p class="text-xs text-slate-500 mt-0.5">
 												Manage individual medications and notes shown to the senior.
@@ -818,99 +820,10 @@
 									</p>
 								</div>
 
-																<!-- Senior Daily Check-In Settings & Latest Response -->
-								<div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-									<div class="flex items-center justify-between">
-										<div>
-											<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
-												Senior Daily Check-In
-											</h4>
-											<p class="text-xs text-slate-500 mt-0.5">
-												Interactive 1-tap question displayed on the kiosk.
-											</p>
-										</div>
-										<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 shrink-0">
-											Interactive
-										</span>
-									</div>
-
-									<!-- Senior's Latest Response -->
-									<div class="p-2.5 bg-white rounded-lg border border-slate-200 text-xs">
-										<span class="font-semibold text-slate-600 block">Senior's Latest Response:</span>
-										<div id="admin-checkin-response-text" class="text-slate-900 font-bold mt-0.5">
-											No response logged yet today.
-										</div>
-										<div id="admin-active-question-info" class="text-[11px] text-blue-700 font-medium mt-1"></div>
-										<div id="admin-checkin-history" class="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500"></div>
-										<div class="mt-3 pt-2.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-											<div class="flex items-center gap-2">
-												<button
-													type="button"
-													onclick="openMemoryJournalModal()"
-													class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-												>
-													<span>📖</span> View Memory Journal
-													<span id="admin-journal-count-badge" class="px-2 py-0.5 rounded-full bg-indigo-800 text-[10px] font-bold">0 entries</span>
-												</button>
-												<button
-													type="button"
-													onclick="openStoryCatcherModal()"
-													class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
-												>
-													<span>🎙️</span> Story Catcher Interview
-												</button>
-											</div>
-											<button
-												type="button"
-												id="btn-admin-clear-checkin"
-												onclick="adminClearSeniorResponse()"
-												class="hidden text-xs text-rose-600 hover:text-rose-800 font-semibold underline cursor-pointer"
-											>
-												Clear Today's Response
-											</button>
-										</div>
-									</div>
-
-									<!-- Custom Question & Choices Override -->
-									<div class="space-y-2 pt-1 border-t border-slate-200">
-										<div class="flex items-center justify-between">
-											<label class="block text-xs font-semibold text-slate-700">
-												Custom Question (Optional Override)
-											</label>
-											<button
-												type="button"
-												onclick="suggestCreativeCheckinQuestion()"
-												class="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer"
-												title="Click to cycle through creative nostalgic and music ideas"
-											>
-												<span>✨</span> Suggest Ideas
-											</button>
-										</div>
-										<input
-											type="text"
-											id="input-checkin-custom-question"
-											placeholder="Leave blank for creative daily questions (music, memories, daydreams)"
-											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
-										/>
-										<label class="block text-xs font-semibold text-slate-700 mt-2">
-											Custom Choices (Comma-separated)
-										</label>
-										<input
-											type="text"
-											id="input-checkin-custom-choices"
-											placeholder="e.g. Big band or swing, Classic country, Piano classical, Golden oldies"
-											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
-										/>
-										<p class="text-[11px] text-slate-500">
-											When blank, the AI creates dynamic daily questions learning from the senior's recent answers and schedule.
-										</p>
-									</div>
-								</div>
-
 								<button
 									onclick="saveData()"
 									id="btn-publish-data"
-									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-xl text-base sm:text-lg shadow-sm transition"
+									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-xl text-base sm:text-lg shadow-sm transition cursor-pointer"
 								>
 									Publish Changes Instantly
 								</button>
@@ -921,8 +834,8 @@
 						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>📅</span> Appointments &amp; Events
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Appointments &amp; Events
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
 										Supports single-day and multi-day events with automatic cleanup.
@@ -968,11 +881,11 @@
 											id="input-event-category"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-medium"
 										>
-											<option value="medical">&#129658; Doctor / Medical</option>
-											<option value="family">&#127969; Family &amp; Friends Visit</option>
-											<option value="errand">&#128663; Errand / Outing</option>
-											<option value="service">&#128295; Home Service / Delivery</option>
-											<option value="other">&#11088; Other Activity</option>
+											<option value="medical">Doctor / Medical</option>
+											<option value="family">Family &amp; Friends Visit</option>
+											<option value="errand">Errand / Outing</option>
+											<option value="service">Home Service / Delivery</option>
+											<option value="other">Other Activity</option>
 										</select>
 									</div>
 									<div class="sm:col-span-3">
@@ -981,8 +894,8 @@
 											id="input-event-location"
 											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition font-medium"
 										>
-											<option value="outing">&#128663; Leaving Home (Outing)</option>
-											<option value="home">&#127969; At Home (Guests / Service visiting)</option>
+											<option value="outing">Leaving Home (Outing)</option>
+											<option value="home">At Home (Guests / Service visiting)</option>
 										</select>
 									</div>
 									<div class="sm:col-span-2">
@@ -1064,15 +977,440 @@
 					</div>
 				</div>
 
-				<!-- ==================== TAB 2: AI & BOARD SETTINGS ==================== -->
+				<!-- ==================== TAB 2: CHECK-IN & MEMORIES ==================== -->
+				<div id="admin-tab-checkin" class="hidden space-y-5 sm:space-y-6">
+					<!-- Top Grid: Today's Senior Check-In Status & Question Controls -->
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
+						<!-- Card: Senior's Today Response -->
+						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3.5">
+							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+								<div>
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Senior's Today Response
+									</h3>
+									<p class="text-xs text-slate-500 mt-0.5">
+										Real-time status of mom's daily check-in answer.
+									</p>
+								</div>
+								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
+									Interactive
+								</span>
+							</div>
+
+							<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+								<div class="flex items-center justify-between">
+									<span class="font-bold text-slate-600">Answer Status:</span>
+									<button
+										type="button"
+										id="btn-admin-clear-checkin"
+										onclick="adminClearSeniorResponse()"
+										class="hidden text-xs text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
+									>
+										Clear Today's Response
+									</button>
+								</div>
+								<div id="admin-checkin-response-text" class="text-slate-900 font-bold text-sm bg-white p-3 rounded-lg border border-slate-200">
+									No response logged yet today.
+								</div>
+								<div id="admin-active-question-info" class="text-[11px] text-blue-700 font-semibold"></div>
+								<div id="admin-checkin-history" class="pt-2 border-t border-slate-200 text-[11px] text-slate-500"></div>
+							</div>
+						</div>
+
+						<!-- Card: Check-In Question Settings & Creative Bank -->
+						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3.5">
+							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+								<div>
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Check-In Question Settings
+									</h3>
+									<p class="text-xs text-slate-500 mt-0.5">
+										Customize or suggest interactive questions for the kiosk.
+									</p>
+								</div>
+								<button
+									type="button"
+									onclick="suggestCreativeCheckinQuestion()"
+									class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+									title="Cycle through creative nostalgic and music ideas"
+								>
+									Suggest Ideas
+								</button>
+							</div>
+
+							<div class="space-y-2.5">
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-700">
+										Custom Question (Optional Override)
+									</label>
+									<input
+										type="text"
+										id="input-checkin-custom-question"
+										placeholder="Leave blank for creative daily questions (music, memories, daydreams)"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+									/>
+								</div>
+								<div>
+									<label class="block text-xs font-semibold mb-1 text-slate-700">
+										Custom Choices (Comma-separated)
+									</label>
+									<input
+										type="text"
+										id="input-checkin-custom-choices"
+										placeholder="e.g. Big band or swing, Classic country, Piano classical, Golden oldies"
+										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+									/>
+									<p class="text-[11px] text-slate-500 mt-1">
+										When blank, the AI creates dynamic daily questions learning from the senior's recent answers and schedule.
+									</p>
+								</div>
+
+								<button
+									type="button"
+									onclick="saveData()"
+									class="w-full mt-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2.5 rounded-xl text-sm shadow-sm transition cursor-pointer"
+								>
+									Publish Question Changes
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- In-Page Card: Caregiver Story Catcher Interview -->
+					<div id="journal-story-catcher-container" class="bg-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
+						<div class="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+							<div>
+								<h3 class="text-base sm:text-lg font-black text-indigo-950">
+									Caregiver Story Catcher Interview
+								</h3>
+								<p class="text-xs text-indigo-800/80 mt-0.5">
+									Sit with Mom, pick a conversation spark or type a topic, and record. Speak naturally together — AI transcribes and weaves her words into a lasting keepsake story.
+								</p>
+							</div>
+							<button
+								type="button"
+								onclick="refreshStoryCatcherSparks()"
+								class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition cursor-pointer"
+							>
+								Fresh Sparks
+							</button>
+						</div>
+
+						<!-- AI Conversation Sparks (Click to ask Mom) -->
+						<div class="space-y-1.5">
+							<span class="text-[11px] font-bold text-indigo-900 uppercase tracking-wider block">
+								Conversation Sparks (Click to ask Mom):
+							</span>
+							<div id="story-catcher-sparks-list" class="grid grid-cols-1 md:grid-cols-3 gap-2">
+								<!-- Populated dynamically with 3 interactive spark cards -->
+							</div>
+						</div>
+
+						<!-- Interview Details & Controls -->
+						<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+							<div class="sm:col-span-2">
+								<label class="block text-[11px] font-bold text-slate-700 mb-1">Interview Topic / Memory Question</label>
+								<input
+									type="text"
+									id="input-story-catcher-topic"
+									placeholder="e.g. Favorite childhood pet, Sunday dinner traditions"
+									class="w-full bg-slate-50 border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 font-semibold focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+								/>
+							</div>
+							<div>
+								<label class="block text-[11px] font-bold text-slate-700 mb-1">Date</label>
+								<input
+									type="date"
+									id="input-story-catcher-date"
+									class="w-full bg-slate-50 border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+								/>
+							</div>
+						</div>
+
+						<!-- Voice Interview Recorder Box -->
+						<div class="p-4 bg-slate-50 rounded-2xl border border-indigo-200 space-y-3">
+							<div class="flex items-center justify-between">
+								<div class="flex items-center gap-2">
+									<span id="story-catcher-rec-indicator" class="hidden w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+									<span id="story-catcher-rec-status" class="text-xs font-bold text-slate-700">Ready to record</span>
+								</div>
+								<span id="story-catcher-rec-timer" class="font-mono text-xs font-bold text-indigo-700 bg-white px-2.5 py-0.5 rounded-md border border-indigo-200">00:00</span>
+							</div>
+
+							<div class="flex flex-wrap items-center gap-2">
+								<button
+									type="button"
+									id="btn-story-catcher-record"
+									onclick="toggleCaregiverVoiceRecording()"
+									class="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+								>
+									<span id="btn-story-catcher-record-text">Start Voice Interview</span>
+								</button>
+								<button
+									type="button"
+									id="btn-story-catcher-clear"
+									onclick="clearStoryCatcherTranscript()"
+									class="px-3 py-2 bg-white hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs border border-slate-200 transition cursor-pointer"
+								>
+									Clear
+								</button>
+							</div>
+
+							<!-- Live / Editable Transcript -->
+							<div>
+								<label class="block text-[11px] font-bold text-slate-600 mb-1">Conversation Transcript (Spoken or typed)</label>
+								<textarea
+									id="input-story-catcher-transcript"
+									rows="3"
+									placeholder="Spoken words will appear here in real-time as you and Mom chat, or you can type/paste notes here..."
+									class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none transition"
+								></textarea>
+							</div>
+						</div>
+
+						<!-- AI Story Polishing & Finalization -->
+						<div class="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-3">
+							<div class="flex flex-wrap items-center justify-between gap-2">
+								<span class="text-xs font-bold text-purple-950 uppercase tracking-wider">AI Story Polishing</span>
+								<button
+									type="button"
+									id="btn-format-story-ai"
+									onclick="polishCaregiverStoryWithAI()"
+									class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer"
+								>
+									Format Story with AI
+								</button>
+							</div>
+
+							<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+								<div class="sm:col-span-1">
+									<label class="block text-[11px] font-bold text-slate-700 mb-1">Story Title</label>
+									<input
+										type="text"
+										id="input-story-catcher-title"
+										placeholder="e.g. Baking Peach Pies"
+										class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs text-slate-900 font-bold focus:ring-2 focus:ring-purple-500 outline-none"
+									/>
+								</div>
+								<div class="sm:col-span-2">
+									<label class="block text-[11px] font-bold text-slate-700 mb-1">Polished Keepsake Story (Mom's Voice)</label>
+									<textarea
+										id="input-story-catcher-story"
+										rows="3"
+										placeholder="Click 'Format Story with AI' to turn the raw conversation above into a heartwarming first-person memory story..."
+										class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none"
+									></textarea>
+								</div>
+							</div>
+
+							<div class="flex items-center justify-end gap-2 pt-1 border-t border-purple-100">
+								<button
+									type="button"
+									id="btn-save-story-catcher"
+									onclick="saveCaregiverStoryInterview()"
+									class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+								>
+									Save to Mom's Memory Book
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- In-Page Card: Mom's Memory Journal & Keepsake Diary -->
+					<div id="admin-memory-journal-section" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+						<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+							<div>
+								<div class="flex items-center gap-2">
+									<h3 class="text-base sm:text-lg font-black text-slate-900">
+										Mom's Memory Journal
+									</h3>
+									<span id="admin-journal-count-badge" class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold">
+										0 entries
+									</span>
+								</div>
+								<p class="text-xs text-slate-500 mt-0.5">
+									Chronological keepsake diary of memories, reflections, and thoughts captured from the kiosk and interviews.
+								</p>
+							</div>
+							<div class="flex flex-wrap items-center gap-2">
+								<button
+									type="button"
+									onclick="downloadMemoryJournalMarkdown()"
+									class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs border border-slate-200 transition cursor-pointer"
+									title="Download this journal as a Markdown (.md) file"
+								>
+									Download Markdown
+								</button>
+								<button
+									type="button"
+									onclick="printMemoryJournal()"
+									class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs border border-slate-200 transition cursor-pointer"
+									title="Print or save as PDF"
+								>
+									Print / PDF
+								</button>
+								<button
+									type="button"
+									id="btn-toggle-quick-note"
+									onclick="toggleAddJournalEntryForm()"
+									class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm transition cursor-pointer"
+								>
+									+ Quick Text Note
+								</button>
+							</div>
+						</div>
+
+						<!-- Action Sub-bar with total count -->
+						<div class="flex items-center justify-between text-xs text-slate-600 font-medium">
+							<span id="journal-total-count-text">0 Memories Recorded</span>
+						</div>
+
+						<!-- Optional Caregiver Add Quick Note Form (collapsible) -->
+						<div
+							id="journal-add-entry-container"
+							class="hidden p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"
+						>
+							<h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Add a Memory or Note to Mom's Journal</h4>
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+								<div>
+									<label class="block text-[11px] font-bold text-slate-700 mb-1">Date</label>
+									<input
+										type="date"
+										id="input-journal-date"
+										class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
+									/>
+								</div>
+								<div>
+									<label class="block text-[11px] font-bold text-slate-700 mb-1">Topic / Question (Optional)</label>
+									<input
+										type="text"
+										id="input-journal-prompt"
+										placeholder="e.g. Favorite song, High school memory"
+										class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
+									/>
+								</div>
+							</div>
+							<div>
+								<label class="block text-[11px] font-bold text-slate-700 mb-1">Mom's Memory / Words</label>
+								<textarea
+									id="input-journal-words"
+									rows="2"
+									placeholder="e.g. She smiled and talked about her blue 1957 Chevy and dancing to Glenn Miller."
+									class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
+								></textarea>
+							</div>
+							<div class="flex items-center justify-end gap-2">
+								<button
+									type="button"
+									onclick="toggleAddJournalEntryForm()"
+									class="px-3 py-1.5 bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg cursor-pointer"
+								>
+									Cancel
+								</button>
+								<button
+									type="button"
+									onclick="saveCaregiverJournalEntry()"
+									class="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 cursor-pointer"
+								>
+									Save to Journal
+								</button>
+							</div>
+						</div>
+
+						<!-- Chronological Entries Container -->
+						<div id="journal-entries-container" class="space-y-3.5">
+							<!-- Populated dynamically as beautiful chronological diary cards -->
+						</div>
+					</div>
+				</div>
+									<div class="sm:col-span-2">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Start Date</label>
+										<input
+											type="date"
+											id="input-event-date"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-2">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">End Date (Optional)</label>
+										<input
+											type="date"
+											id="input-event-end-date"
+											title="Leave blank for a single-day event"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-2">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Time (Optional)</label>
+										<input
+											type="time"
+											id="input-event-time"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-6">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">Notes / Driver (Optional)</label>
+										<input
+											type="text"
+											id="input-event-notes"
+											placeholder="e.g. Sarah is driving, or staying for dinner"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+									<div class="sm:col-span-6">
+										<label class="block text-xs font-semibold mb-1 text-slate-600">
+											Event Reminders / Prep Advice (Used for AI Summary &amp; Display)
+										</label>
+										<input
+											type="text"
+											id="input-event-reminder"
+											placeholder="e.g. Drink extra water 2 days before, bring sunglasses, or bake cookies"
+											class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+										/>
+									</div>
+								</div>
+								<div class="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
+									<button
+										type="button"
+										id="btn-cancel-edit-event"
+										onclick="cancelEditCalendarEvent()"
+										class="hidden w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-sm transition"
+									>
+										Cancel
+									</button>
+									<button
+										type="button"
+										id="btn-submit-event"
+										onclick="addCalendarEvent()"
+										class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
+									>
+										<span id="btn-submit-event-text">+ Add Appointment</span>
+									</button>
+								</div>
+							</div>
+
+							<!-- Current Scheduled Appointments List in Panel -->
+							<div class="space-y-2">
+								<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Scheduled List</div>
+								<div id="admin-events-list" class="space-y-2 max-h-80 overflow-y-auto">
+									<div class="p-3 text-center text-xs text-slate-400 italic bg-slate-50 rounded-xl border border-slate-200">
+										No upcoming appointments.
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ==================== TAB 3: AI & BOARD SETTINGS ==================== -->
 				<div id="admin-tab-settings" class="hidden space-y-5 sm:space-y-6">
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
 						<!-- Left Column: AI Daily Action Plan & Care Rules -->
 						<div id="section-ai-summary" class="bg-white p-4 sm:p-6 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
-									<h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
-										<span>✨</span> AI Daily Companion &amp; Prep Rules
+									<h3 class="text-sm font-bold text-indigo-900 uppercase tracking-wider">
+										AI Daily Companion &amp; Prep Rules
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
 										Automatically generates concise daily suggestions from weather, appointments, event reminders, and the rules below.
@@ -1135,7 +1473,6 @@
 									onclick="generateAiActionPlan()"
 									class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5"
 								>
-									<span>✨</span>
 									<span id="btn-generate-ai-text">Refresh AI Summary Now</span>
 								</button>
 							</div>
@@ -1144,8 +1481,8 @@
 						<!-- Right Column: Board Title, Weather Zipcode & Card Order -->
 						<div id="section-maintenance" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-									<span>⚙️</span> Board Title, Weather &amp; Layout
+								<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+									Board Title, Weather &amp; Layout
 								</h3>
 								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200">
 									Admin &amp; Editor
@@ -1180,8 +1517,8 @@
 								class="hidden pt-3 border-t border-slate-100 space-y-2.5"
 							>
 								<div class="flex items-center justify-between">
-									<h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-										<span>🔢</span> Display Card Order
+									<h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+										Display Card Order
 									</h4>
 									<span class="text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-md">
 										Admin Only
@@ -1193,7 +1530,7 @@
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-messages" class="block text-xs font-semibold text-slate-700">
-											💬 Messages
+											Messages
 										</label>
 										<select
 											id="select-pos-messages"
@@ -1208,7 +1545,7 @@
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-medications" class="block text-xs font-semibold text-slate-700">
-											💊 Medications
+											Medications
 										</label>
 										<select
 											id="select-pos-medications"
@@ -1223,7 +1560,7 @@
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-events" class="block text-xs font-semibold text-slate-700">
-											📅 Appointments &amp; Events
+											Appointments &amp; Events
 										</label>
 										<select
 											id="select-pos-events"
@@ -1238,7 +1575,7 @@
 									</div>
 									<div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
 										<label for="select-pos-contacts" class="block text-xs font-semibold text-slate-700">
-											📇 Contacts List
+											Contacts List
 										</label>
 										<select
 											id="select-pos-contacts"
@@ -1258,7 +1595,7 @@
 								<button
 									type="button"
 									onclick="saveData()"
-									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-xl text-sm shadow-sm transition"
+									class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3.5 rounded-xl text-sm shadow-sm transition cursor-pointer"
 								>
 									Save Board &amp; AI Settings
 								</button>
@@ -1267,15 +1604,15 @@
 					</div>
 				</div>
 
-				<!-- ==================== TAB 3: CONTACTS, PROFILE & USERS ==================== -->
+				<!-- ==================== TAB 4: CONTACTS & USERS ==================== -->
 				<div id="admin-tab-people" class="hidden space-y-5 sm:space-y-6">
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
 						<!-- Left Column: Contacts & Birthdays -->
 						<div id="section-contacts" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>📇</span> Contacts &amp; Birthdays
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										Contacts &amp; Birthdays
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
 										Active users are included automatically. Add additional family, doctors, or neighbors below.
@@ -1380,8 +1717,8 @@
 							<!-- Card: User Profile -->
 							<div id="section-profile" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-										<span>👤</span> My Profile
+									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+										My Profile
 									</h3>
 									<span
 										id="profile-role-badge"
@@ -1471,7 +1808,7 @@
 										Save Profile
 									</button>
 									<span id="profile-save-status" class="text-xs text-emerald-600 font-bold hidden">
-										✓ Profile updated!
+										Profile updated!
 									</span>
 								</div>
 							</div>
@@ -1480,8 +1817,8 @@
 							<div id="section-admin-only" class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 								<div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2.5">
 									<div>
-										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-											<span>👥</span> User Management
+										<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+											User Management
 										</h3>
 										<p class="text-xs text-slate-500 mt-0.5">
 											Manage caregiver roles and account access.
@@ -1560,306 +1897,6 @@
 				</div>
 			</div>
 		</main>
-
-		<!-- Senior Memory Journal Web Page Modal -->
-		<div
-			id="modal-memory-journal"
-			class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
-		>
-			<div
-				class="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]"
-			>
-				<!-- Modal Header -->
-				<div
-					class="p-5 sm:p-6 bg-gradient-to-r from-blue-900 to-indigo-900 text-white flex items-start justify-between gap-4"
-				>
-					<div>
-						<div class="flex items-center gap-2.5">
-							<span class="text-2xl">📖</span>
-							<h2 class="text-2xl sm:text-3xl font-black tracking-tight">Mom's Memory Journal</h2>
-						</div>
-						<p class="text-xs sm:text-sm text-blue-200 mt-1 max-w-xl">
-							A chronological keepsake diary of memories, reflections, and thoughts shared on the message board.
-						</p>
-					</div>
-					<div class="flex items-center gap-2">
-						<button
-							type="button"
-							onclick="downloadMemoryJournalMarkdown()"
-							class="px-3 py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white font-bold rounded-xl text-xs sm:text-sm border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
-							title="Download this journal as a Markdown (.md) file"
-						>
-							<span>📥</span> Download Markdown
-						</button>
-						<button
-							type="button"
-							onclick="printMemoryJournal()"
-							class="px-3 py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white font-bold rounded-xl text-xs sm:text-sm border border-white/20 transition flex items-center gap-1.5 cursor-pointer"
-							title="Print or save as PDF"
-						>
-							<span>🖨️</span> Print / PDF
-						</button>
-						<button
-							type="button"
-							onclick="closeMemoryJournalModal()"
-							class="p-2 text-white/80 hover:text-white rounded-xl hover:bg-white/10 text-xl font-bold transition cursor-pointer"
-							aria-label="Close"
-						>
-							✕
-						</button>
-					</div>
-				</div>
-
-				<!-- Action Sub-bar -->
-				<div
-					class="px-5 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"
-				>
-					<div class="flex items-center gap-2">
-						<span id="journal-total-count-text" class="text-xs font-bold text-slate-700">0 Memories Recorded</span>
-					</div>
-					<div class="flex items-center gap-2">
-						<button
-							type="button"
-							id="btn-toggle-story-catcher"
-							onclick="toggleStoryCatcherForm()"
-							class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-						>
-							<span>🎙️</span> Story Catcher Interview
-						</button>
-						<button
-							type="button"
-							id="btn-toggle-quick-note"
-							onclick="toggleAddJournalEntryForm()"
-							class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer"
-						>
-							<span>➕</span> Quick Text Note
-						</button>
-					</div>
-				</div>
-
-				<!-- Caregiver Story Catcher Mode Container (Collapsible) -->
-				<div
-					id="journal-story-catcher-container"
-					class="hidden p-5 bg-gradient-to-br from-indigo-50/90 via-purple-50/70 to-pink-50/60 border-b border-indigo-200 space-y-4"
-				>
-					<div class="flex items-start justify-between gap-3">
-						<div>
-							<h3 class="text-sm font-black text-indigo-950 flex items-center gap-2">
-								<span class="text-lg">🎙️</span> Caregiver Story Catcher Interview
-							</h3>
-							<p class="text-xs text-indigo-800/80 mt-0.5">
-								Sit with Mom, pick an evocative spark below, and tap Record. Speak naturally together — our AI will transcribe the conversation and weave her authentic words into a lasting keepsake story.
-							</p>
-						</div>
-						<button
-							type="button"
-							onclick="toggleStoryCatcherForm()"
-							class="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer"
-						>
-							✕
-						</button>
-					</div>
-
-					<!-- AI Conversation Sparks (Click to set topic) -->
-					<div class="space-y-1.5">
-						<div class="flex items-center justify-between">
-							<span class="text-[11px] font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
-								<span>💡</span> Conversation Sparks (Click to ask Mom):
-							</span>
-							<button
-								type="button"
-								onclick="refreshStoryCatcherSparks()"
-								class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-							>
-								<span>🔄</span> Fresh Sparks
-							</button>
-						</div>
-						<div id="story-catcher-sparks-list" class="grid grid-cols-1 md:grid-cols-3 gap-2">
-							<!-- Populated dynamically with 3 interactive spark cards -->
-						</div>
-					</div>
-
-					<!-- Interview Details & Controls -->
-					<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-						<div class="sm:col-span-2">
-							<label class="block text-[11px] font-bold text-slate-700 mb-1">Interview Topic / Memory Question</label>
-							<input
-								type="text"
-								id="input-story-catcher-topic"
-								placeholder="e.g. Favorite childhood pet, Sunday dinner traditions"
-								class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
-							/>
-						</div>
-						<div>
-							<label class="block text-[11px] font-bold text-slate-700 mb-1">Date</label>
-							<input
-								type="date"
-								id="input-story-catcher-date"
-								class="w-full bg-white border border-indigo-200 rounded-xl p-2.5 text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 outline-none"
-							/>
-						</div>
-					</div>
-
-					<!-- Voice Interview Recorder Box -->
-					<div class="p-4 bg-white rounded-2xl border-2 border-indigo-200 shadow-2xs space-y-3">
-						<div class="flex items-center justify-between">
-							<div class="flex items-center gap-2">
-								<span id="story-catcher-rec-indicator" class="hidden w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
-								<span id="story-catcher-rec-status" class="text-xs font-bold text-slate-700">Ready to record</span>
-							</div>
-							<span id="story-catcher-rec-timer" class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">00:00</span>
-						</div>
-
-						<div class="flex flex-wrap items-center gap-2">
-							<button
-								type="button"
-								id="btn-story-catcher-record"
-								onclick="toggleCaregiverVoiceRecording()"
-								class="px-4 py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
-							>
-								<span>🎙️</span> <span id="btn-story-catcher-record-text">Start Voice Interview</span>
-							</button>
-							<button
-								type="button"
-								id="btn-story-catcher-clear"
-								onclick="clearStoryCatcherTranscript()"
-								class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer"
-							>
-								Clear
-							</button>
-						</div>
-
-						<!-- Live / Editable Transcript -->
-						<div>
-							<label class="block text-[11px] font-bold text-slate-600 mb-1">Conversation Transcript (Spoken or typed)</label>
-							<textarea
-								id="input-story-catcher-transcript"
-								rows="3"
-								placeholder="Spoken words will appear here in real-time as you and Mom chat, or you can type/paste notes here..."
-								class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-							></textarea>
-						</div>
-					</div>
-
-					<!-- AI Story Polishing & Finalization -->
-					<div class="p-4 bg-white/90 rounded-2xl border border-purple-200 shadow-2xs space-y-3">
-						<div class="flex flex-wrap items-center justify-between gap-2">
-							<div class="flex items-center gap-1.5">
-								<span class="text-sm">✨</span>
-								<span class="text-xs font-bold text-purple-950">AI Story Polishing</span>
-							</div>
-							<button
-								type="button"
-								id="btn-format-story-ai"
-								onclick="polishCaregiverStoryWithAI()"
-								class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:from-purple-800 active:to-indigo-800 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-							>
-								<span>✨</span> Format Story with AI
-							</button>
-						</div>
-
-						<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-							<div class="sm:col-span-1">
-								<label class="block text-[11px] font-bold text-slate-700 mb-1">Story Title</label>
-								<input
-									type="text"
-									id="input-story-catcher-title"
-									placeholder="e.g. Baking Peach Pies"
-									class="w-full bg-white border border-slate-300 rounded-xl p-2 text-xs text-slate-900 font-bold focus:ring-2 focus:ring-purple-500 outline-none"
-								/>
-							</div>
-							<div class="sm:col-span-2">
-								<label class="block text-[11px] font-bold text-slate-700 mb-1">Polished Keepsake Story (Mom's Voice)</label>
-								<textarea
-									id="input-story-catcher-story"
-									rows="3"
-									placeholder="Click 'Format Story with AI' to turn the raw conversation above into a heartwarming first-person memory story..."
-									class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none"
-								></textarea>
-							</div>
-						</div>
-
-						<div class="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
-							<button
-								type="button"
-								onclick="toggleStoryCatcherForm()"
-								class="px-3.5 py-2 bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs cursor-pointer"
-							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								id="btn-save-story-catcher"
-								onclick="saveCaregiverStoryInterview()"
-								class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-							>
-								<span>💾</span> Save to Mom's Memory Book
-							</button>
-						</div>
-					</div>
-				</div>
-
-				<!-- Optional Caregiver Add Memory Form (collapsible) -->
-				<div
-					id="journal-add-entry-container"
-					class="hidden p-4 sm:p-5 bg-blue-50/70 border-b border-blue-200 space-y-3"
-				>
-					<h3 class="text-xs font-bold text-blue-950 uppercase tracking-wider">Add a Memory or Story to Mom's Journal</h3>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						<div>
-							<label class="block text-[11px] font-bold text-slate-700 mb-1">Date</label>
-							<input
-								type="date"
-								id="input-journal-date"
-								class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
-							/>
-						</div>
-						<div>
-							<label class="block text-[11px] font-bold text-slate-700 mb-1">Topic / Question (Optional)</label>
-							<input
-								type="text"
-								id="input-journal-prompt"
-								placeholder="e.g. Favorite song, High school memory"
-								class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
-							/>
-						</div>
-					</div>
-					<div>
-						<label class="block text-[11px] font-bold text-slate-700 mb-1">Mom's Memory / Words</label>
-						<textarea
-							id="input-journal-words"
-							rows="2"
-							placeholder="e.g. She smiled and talked about her blue 1957 Chevy and dancing to Glenn Miller."
-							class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900"
-						></textarea>
-					</div>
-					<div class="flex items-center justify-end gap-2">
-						<button
-							type="button"
-							onclick="toggleAddJournalEntryForm()"
-							class="px-3 py-1.5 bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg cursor-pointer"
-						>
-							Cancel
-						</button>
-						<button
-							type="button"
-							onclick="saveCaregiverJournalEntry()"
-							class="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 cursor-pointer"
-						>
-							Save to Journal
-						</button>
-					</div>
-				</div>
-
-				<!-- Scrollable Memory Journal Web Page Body -->
-				<div
-					id="journal-entries-container"
-					class="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 bg-slate-50/50"
-				>
-					<!-- Populated dynamically as beautiful chronological diary cards -->
-				</div>
-			</div>
-		</div>
 
 		<!-- JavaScript Application Logic -->
 		<script src="app.js"></script>

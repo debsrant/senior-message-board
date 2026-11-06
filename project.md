@@ -211,22 +211,30 @@ Example rules:
 ```
 
 ### E. Operating the Views
-- **3-Tab Admin & Editor Panel Layout (Eliminating Scroll Fatigue)**:
-  - **Tab 1: `📅 Daily Updates` (Default Tab)**:
+- **Zero Icons / Emojis Policy**:
+  - All icons, emojis, and pictorial glyphs are removed project-wide to maximize screen real estate for senior typography (large 24-32px text) and eliminate mobile button clipping.
+- **4-Tab Admin & Editor Panel Layout (Eliminating Modal Popups & Scroll Fatigue)**:
+  - **Tab 1: `Daily Updates` (Default Tab)**:
     1. **Today's Important Message / Announcement**: Enter a personalized message displayed at the top of the board.
     2. **Family Messages Manager**:
        - Post, edit, and delete messages for the senior.
        - Each message displays the author/user name (prefilled by default with the logged-in user's profile name) and post date/time.
        - Caregivers can specify an optional expiration date; messages past their expiration date are automatically hidden from the kiosk display while remaining visible in the admin list with an "Expired" indicator.
-    3. **Medications & Senior Daily Check-In**:
+    3. **Medications & Health**:
        - **General Medication Instructions & Notes**: Provide a general note/instruction (e.g., pillbox location or organizer details) displayed prominently at the top of the senior's medication card.
        - **Individual Medications Manager**: Add, edit, and delete individual medications with specific name/dosage, schedule/timing badge (e.g. "Morning (8:00 AM)", "With Breakfast"), and a dedicated instructions/notes textarea shown clearly to the senior.
-       - **Senior Daily Check-In & Memory Journal**: View the senior's latest check-in response, access the **Senior Memory Journal** web page viewer modal (with entry count badge, 1-click Markdown export, and Print/Save as PDF), launch the **🎙️ Story Catcher Voice Interview** mode to interview Mom during visits with dynamic AI conversation sparks, add caregiver memory notes, configure custom check-in questions or allow the AI to generate dynamic nostalgic questions learning from the senior's memory diary, and reset the "Medications Taken Today" check-off status, with a prominent **Publish Changes Instantly** button right below.
+       - **Medications Taken Today Checkbox**: Reset the "Taken" status on the display and publish.
+       - **Publish Changes Instantly**: Saves announcements, messages, and medication schedules directly to Firebase.
     4. **Appointments & Events**: Schedule single-day or optional multi-day doctor visits, therapy, and family events with title, start date (`date`), optional end date (`endDate`), time, driver/notes, and an **Event Reminders / Prep Advice** field (`reminder`, displayed on event cards and automatically incorporated into the AI Daily Companion summaries). Edit existing appointments inline or delete canceled events.
-  - **Tab 2: `🤖 AI & Board Settings`**:
+  - **Tab 2: `Check-In & Memories` (Dedicated Check-In & In-Page Journal Tab)**:
+    1. **Senior's Today Response**: Real-time status of Mom's daily check-in answer, active question details, recent answer history, and a 1-click **Clear Today's Response** button.
+    2. **Check-In Question Settings & Creative Bank**: Override daily question and choices, cycle through nostalgic ideas using **Suggest Ideas**, and save question settings. When blank, dynamic questions are generated automatically.
+    3. **Caregiver Story Catcher Interview (In-Page, No Modal)**: Sit with Mom, pick from the interactive **AI Conversation Sparks** deck (Sunday recipes, favorite pets, school dances, etc.), and tap **Start Voice Interview**. AI polishes the conversation into a lasting keepsake story in Mom's authentic voice, generates a title, and saves directly to the journal.
+    4. **Mom's Memory Journal (In-Page, No Modal)**: Chronological diary of memories, reflections, and thoughts captured from the kiosk and interviews. Includes 1-click **Download Markdown (.md)** export, clean **Print / Save as PDF** stylesheet, and **+ Quick Text Note** toggle form.
+  - **Tab 3: `AI & Board Settings`**:
     1. **AI Daily Companion, Prep Rules & Caregiver Tone/Feedback (Admin & Editor)**: Configure caregiver `Keyword: Instruction` preparation rules (e.g., *"Infusion: Drink 2-3 extra glasses of water each day starting 3 days before a scheduled infusion"*), provide direct feedback on AI tone, senior likes/dislikes (e.g. prefers decaf coffee, likes jigsaw puzzles, dislikes frequent walking tips), and optionally provide a Gemini API key (saved locally on the caregiver's device) to synthesize the board using **Gemini 3.8 Flash (`gemini-3.8-flash`)** via the Gemini Interactions API, or use the built-in Smart Care Companion engine. Summaries update automatically whenever the board changes.
     2. **Board Title, Weather & Layout**: Update the board title, weather ZIP code, and **Display Card Order (Admin Only)** so `ADMIN` users can position **Messages**, **Medications**, **Appointments & Events**, and **Contacts List** into Position 1 through Position 4.
-  - **Tab 3: `👥 Contacts, Profile & Users`**:
+  - **Tab 4: `Contacts & Users`**:
     1. **Contacts & Birthdays (Admin & Editor)**: Add, edit, or delete additional contacts who are not registered users (with name, relationship/role, phone number, and birthday). Active registered users are automatically included on the Contacts List card.
     2. **My Profile (Admin & Editor)**: Display name, phone number, relationship/label, birthday, Firebase email, assigned role badge, and toggle for medication alerts.
     3. **User Management & Role Assignment (Admin Only)**: View registered users in real time, assign roles (`ADMIN`, `EDITOR`, `VIEWER`), set or update user birthdays, pre-assign new users (including birthday), and toggle users **Active / Inactive** to instantly revoke or restore access without deleting account data.
@@ -234,20 +242,20 @@ Example rules:
 - **Display View (Tablet & Phone — Multi-Page Kiosk Architecture)**:
   1. Sign in with the `VIEWER` credentials on the tablet.
   2. Both Admin and Editor management buttons are hidden.
-  3. **Clock & Morning Action Header**: 60/40 tablet split containing Date & Time on the left (60% column) and **Medication Check-In** on the right (40% column, tactile "💊 I TOOK MY MEDS" button that transforms into "✅ Meds Logged"). Visual weather widget removed from header to declutter kiosk, with live weather fed into the AI Morning Briefing.
+  3. **Clock & Morning Action Header**: 60/40 tablet split containing Date & Time on the left (60% column) and **Medication Check-In** on the right (40% column, tactile "I TOOK MY MEDS" button that transforms into "MEDS LOGGED"). Visual weather widget removed from header to declutter kiosk, with live weather fed into the AI Morning Briefing.
   4. **Kiosk Navigation Bar (`#kiosk-nav-bar`)**: Extra-large, tactile navigation tabs placed directly below the header allowing Mom to switch between full-screen pages:
-     - `☀️ Today` (`#btn-kiosk-page-today`)
-     - `💊 Medicine` (`#btn-kiosk-page-meds` with status badge)
-     - `📅 Calendar` (`#btn-kiosk-page-events` with upcoming events count badge)
-     - `👥 Family & Friends` (`#btn-kiosk-page-family` with active messages count badge)
+     - `Today` (`#btn-kiosk-page-today`)
+     - `Medicine` (`#btn-kiosk-page-meds` with status badge)
+     - `Calendar` (`#btn-kiosk-page-events` with upcoming events count badge)
+     - `Family & Friends` (`#btn-kiosk-page-family` with active messages count badge)
   5. **90-Second Alzheimer's Safety Idle Timer**: If Mom navigates to Medicine, Calendar, or Family & Friends, the system tracks touch and interaction. If no touch or movement occurs for 90 seconds, the kiosk automatically transitions back to the main **Today** page so the clock and morning briefing remain front and center without caregiver intervention.
   6. **Dedicated Full-Screen Pages**:
-     - **☀️ Today Page (`#disp-page-today`)**: Uncluttered home screen featuring the Date/Time & Meds Header, Hero Announcement (`#card-announcement`), Morning Briefing (`#disp-ai-today-plan`), and Conversational Daily Check-In with **Option 1 "Tap & Talk" Voice Journaling** (`#disp-senior-checkin-section` & `#disp-checkin-voice`). Mom can tap choices or tap **"🎙️ Tap & Speak Your Story"** to speak her memories naturally into the tablet microphone, complete with an 8-second silence auto-save detector and AI story polishing.
-     - **💊 Dedicated Morning Medicine Page (`#disp-page-meds`)**: "Mom's Morning Medicine" view tailored specifically for morning pills (no confusing afternoon/evening/bedtime groupings). Includes a status banner, a full-width secondary **"💊 I TOOK MY MEDS"** button (`#btn-take-meds-page`), general storage instructions callout box (`#disp-medications-general-notes`), and morning pill cards with dosages and instructions (`#disp-medications`).
-     - **📅 Dedicated Calendar & Appointments Page (`#disp-page-events`)**: Full agenda view (`#disp-events-list`) with appointments, driver notes, and preparation advice woven with upcoming US holidays.
-     - **👥 Unified Family & Friends Page (`#disp-page-family`) (Idea C)**: Dedicated family hub placing **Love Notes from Family (`#disp-messages`) ABOVE the Family & Friends Directory (`#disp-contacts-list`)**. Formatted in beautiful, warm postcard styles. To accommodate Mom's tablet without a SIM card and avoid confusion, all call buttons (`tel:`), email links, and messaging interfaces have been removed; phone numbers remain visible as plain text for caregiver reference.
+     - **Today Page (`#disp-page-today`)**: Uncluttered home screen featuring the Date/Time & Meds Header, Hero Announcement (`#card-announcement`), Morning Briefing (`#disp-ai-today-plan`), and Conversational Daily Check-In with **Option 1 "Tap & Talk" Voice Journaling** (`#disp-senior-checkin-section` & `#disp-checkin-voice`). Mom can tap choices or tap **"Tap & Speak Your Story"** to speak her memories naturally into the tablet microphone, complete with an 8-second silence auto-save detector and AI story polishing.
+     - **Dedicated Morning Medicine Page (`#disp-page-meds`)**: "Mom's Morning Medicine" view tailored specifically for morning pills (no confusing afternoon/evening/bedtime groupings). Includes a status banner, a full-width secondary **"I TOOK MY MEDS"** button (`#btn-take-meds-page`), general storage instructions callout box (`#disp-medications-general-notes`), and morning pill cards with dosages and instructions (`#disp-medications`).
+     - **Dedicated Calendar & Appointments Page (`#disp-page-events`)**: Full agenda view (`#disp-events-list`) with appointments, driver notes, and preparation advice woven with upcoming US holidays.
+     - **Unified Family & Friends Page (`#disp-page-family`) (Idea C)**: Dedicated family hub placing **Love Notes from Family (`#disp-messages`) ABOVE the Family & Friends Directory (`#disp-contacts-list`)**. Formatted in beautiful, warm postcard styles. To accommodate Mom's tablet without a SIM card and avoid confusion, all call buttons (`tel:`), email links, and messaging interfaces have been removed; phone numbers remain visible as plain text for caregiver reference.
   7. **Morning Briefing & Family Message Integration (Idea D)**: The Morning Briefing on the Today page formats content into 2 to 5 short, spaced paragraphs (1–2 sentences) with generous vertical whitespace (`space-y-4 sm:space-y-5`) instead of a checklist. Features natural weather descriptions without numbers, bold action anchors (`<strong class="font-black text-slate-950">`), and seamlessly weaves active family messages into the briefing paragraphs (e.g. *Sarah sent a loving note: "Thinking of you Mom." **Enjoy hearing from family** today.*).
-  8. Senior taps **"💊 I TOOK MY MEDS"** in either the top header or the dedicated Medicine page to log medication, updating Firebase and notifying subscribed caregivers.
+  8. Senior taps **"I TOOK MY MEDS"** in either the top header or the dedicated Medicine page to log medication, updating Firebase and notifying subscribed caregivers.
 
 ---
 

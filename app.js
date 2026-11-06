@@ -290,25 +290,6 @@ async function updateWeather(zip) {
 				bestWindow = `${startH}:00 ${startAmpm} \u2013 ${endH}:00 ${endAmpm} (around ${bestTemp}\u00B0F)`;
 			}
 
-			const weatherIcons = {
-				0: '☀️',
-				1: '🌤️',
-				2: '⛅',
-				3: '☁️',
-				45: '🌫️',
-				48: '🌫️',
-				51: '🌦️',
-				53: '🌦️',
-				55: '🌦️',
-				61: '🌧️',
-				63: '🌧️',
-				65: '🌧️',
-				71: '❄️',
-				73: '❄️',
-				75: '❄️',
-				95: '⛈️',
-			};
-
 			const cityEl = document.getElementById('weather-city');
 			if (cityEl) {
 				cityEl.innerText = city;
@@ -327,7 +308,7 @@ async function updateWeather(zip) {
 			const rangeEl = document.getElementById('weather-range');
 			if (rangeEl) rangeEl.innerText = `High: ${high}\u00B0 | Low: ${low}\u00B0`;
 			const iconEl = document.getElementById('weather-icon');
-			if (iconEl) iconEl.innerText = weatherIcons[code] || '\u{1F324}\uFE0F';
+			if (iconEl) iconEl.innerText = '';
 			const descEl = document.getElementById('weather-desc');
 			if (descEl) descEl.innerText = desc;
 			const widgetEl = document.getElementById('weather-widget');
@@ -339,7 +320,7 @@ async function updateWeather(zip) {
 				high,
 				low,
 				code,
-				icon: weatherIcons[code] || '🌤️',
+				icon: '',
 				desc,
 				suggestion,
 				rainChanceMax,
@@ -429,7 +410,7 @@ function switchView(view) {
 }
 
 function switchAdminTab(tab) {
-	const tabs = ['daily', 'settings', 'people'];
+	const tabs = ['daily', 'checkin', 'settings', 'people'];
 	tabs.forEach((t) => {
 		const panel = document.getElementById(`admin-tab-${t}`);
 		const btn = document.getElementById(`btn-admin-tab-${t}`);
@@ -443,13 +424,17 @@ function switchAdminTab(tab) {
 		if (btn) {
 			if (t === tab) {
 				btn.className =
-					'py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 bg-white text-blue-700 shadow-sm border border-slate-200/80';
+					'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center bg-white text-blue-700 shadow-sm border border-slate-200/80 text-center';
 			} else {
 				btn.className =
-					'py-2.5 px-4 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900';
+					'py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center text-slate-600 hover:text-slate-900 text-center';
 			}
 		}
 	});
+	if (tab === 'checkin') {
+		renderMemoryJournalEntries();
+		renderStoryCatcherSparks();
+	}
 }
 
 // ================= KIOSK MULTI-PAGE NAVIGATION =================
@@ -526,7 +511,7 @@ function updateKioskNavBadges(boardData) {
 
 	if (data.medsTaken) {
 		if (medsBadge) {
-			medsBadge.innerText = '✅ Taken';
+			medsBadge.innerText = 'Taken';
 			medsBadge.className =
 				'text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
 			medsBadge.classList.remove('hidden');
@@ -542,7 +527,7 @@ function updateKioskNavBadges(boardData) {
 		if (pageMedsBtn) {
 			pageMedsBtn.className =
 				'w-full sm:w-auto px-8 py-4 bg-emerald-50 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl shadow-none text-xl sm:text-2xl transition cursor-default';
-			pageMedsBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
+			pageMedsBtn.innerHTML = '<span>MEDS LOGGED</span>';
 		}
 	} else {
 		if (medsBadge) {
@@ -557,7 +542,7 @@ function updateKioskNavBadges(boardData) {
 		if (pageMedsBtn) {
 			pageMedsBtn.className =
 				'w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm text-xl sm:text-2xl transition cursor-pointer';
-			pageMedsBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
+			pageMedsBtn.innerHTML = '<span>I TOOK MY MEDS</span>';
 		}
 	}
 
@@ -1344,7 +1329,7 @@ function renderSeniorCheckin(boardData) {
 		const confirmTitleEl = document.getElementById('disp-checkin-confirm-title');
 		if (resp.isStory) {
 			if (confirmTitleEl) confirmTitleEl.innerText = "Mom's Memory Recorded";
-			if (answerTextEl) answerTextEl.innerText = `📖 "${resp.answer}"`;
+			if (answerTextEl) answerTextEl.innerText = `"${resp.answer}"`;
 			if (followupAnswerTextEl) {
 				if (resp.storyText) {
 					const preview = resp.storyText.length > 140 ? resp.storyText.slice(0, 137) + '...' : resp.storyText;
@@ -1898,9 +1883,13 @@ let caregiverVoiceSeconds = 0;
 let storyCatcherSparksIndex = 0;
 
 function openStoryCatcherModal() {
-	openMemoryJournalModal();
+	switchView('admin');
+	switchAdminTab('checkin');
 	const container = document.getElementById('journal-story-catcher-container');
-	if (container) container.classList.remove('hidden');
+	if (container) {
+		container.classList.remove('hidden');
+		container.scrollIntoView({ behavior: 'smooth' });
+	}
 	document.getElementById('journal-add-entry-container')?.classList.add('hidden');
 	renderStoryCatcherSparks();
 	const dateInput = document.getElementById('input-story-catcher-date');
@@ -2142,7 +2131,7 @@ async function polishCaregiverStoryWithAI() {
 	} finally {
 		if (polishBtn) {
 			polishBtn.disabled = false;
-			polishBtn.innerHTML = '<span>✨</span> Format Story with AI';
+			polishBtn.innerHTML = 'Format Story with AI';
 		}
 	}
 }
@@ -2187,14 +2176,14 @@ async function saveCaregiverStoryInterview() {
 }
 
 function openMemoryJournalModal() {
-	const modal = document.getElementById('modal-memory-journal');
-	if (modal) modal.classList.remove('hidden');
+	switchView('admin');
+	switchAdminTab('checkin');
 	renderMemoryJournalEntries();
+	const journalEl = document.getElementById('admin-memory-journal-section');
+	if (journalEl) journalEl.scrollIntoView({ behavior: 'smooth' });
 }
 
 function closeMemoryJournalModal() {
-	const modal = document.getElementById('modal-memory-journal');
-	if (modal) modal.classList.add('hidden');
 	if (caregiverVoiceActive) {
 		stopCaregiverVoiceRecording();
 	}
@@ -2282,7 +2271,6 @@ function renderMemoryJournalEntries() {
 	if (entries.length === 0) {
 		container.innerHTML = `
 			<div class="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
-				<span class="text-4xl block">📖</span>
 				<h3 class="text-base font-bold text-slate-800">No Memories Recorded Yet</h3>
 				<p class="text-xs text-slate-500 max-w-sm mx-auto">
 					As Mom shares stories on the board or during voice interviews, her memories will be saved chronologically right here.
@@ -2305,9 +2293,9 @@ function renderMemoryJournalEntries() {
 
 			const sourceBadge =
 				entry.source === 'kiosk_voice'
-					? `<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 text-[10px] font-bold">🎙️ Spoken on Kiosk</span>`
+					? `<span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200 text-[10px] font-bold">Spoken on Kiosk</span>`
 					: entry.source === 'caregiver_interview'
-					? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold">🎙️ Voice Interview</span>`
+					? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 text-[10px] font-bold">Voice Interview</span>`
 					: entry.notes
 					? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">${escapeHtml(entry.notes)}</span>`
 					: '';
@@ -2330,7 +2318,7 @@ function renderMemoryJournalEntries() {
 							class="text-slate-400 hover:text-rose-600 text-xs font-semibold p-1 cursor-pointer"
 							title="Delete entry"
 						>
-							✕
+							Delete
 						</button>
 					</div>
 
@@ -2408,9 +2396,9 @@ function downloadMemoryJournalMarkdown() {
 			md += `### ${formattedDate}${title}\n`;
 			md += `* **Topic / Question:** ${entry.question}\n`;
 			if (entry.source === 'kiosk_voice') {
-				md += `* **Recorded Via:** 🎙️ Spoken on Tablet Kiosk\n`;
+				md += `* **Recorded Via:** Spoken on Tablet Kiosk\n`;
 			} else if (entry.source === 'caregiver_interview') {
-				md += `* **Recorded Via:** 🎙️ Voice Interview with Family\n`;
+				md += `* **Recorded Via:** Voice Interview with Family\n`;
 			} else if (entry.notes) {
 				md += `* **Family Note:** ${entry.notes}\n`;
 			}
@@ -2672,7 +2660,6 @@ function renderMessagesCard(boardData) {
 	if (activeMessages.length === 0) {
 		container.innerHTML = `
 			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
-				<div class="text-3xl text-slate-300">💬</div>
 				<div class="text-xl sm:text-2xl font-black text-slate-800">No messages yet</div>
 				<div class="text-sm sm:text-base font-semibold text-slate-500">Family can post messages from their phones or computers.</div>
 			</div>
@@ -2688,7 +2675,7 @@ function renderMessagesCard(boardData) {
 					<p class="text-2xl sm:text-3xl font-bold text-slate-950 leading-relaxed whitespace-pre-line">${escapeHtml(msg.text)}</p>
 					<div class="flex items-center justify-between text-base sm:text-lg text-slate-600 pt-3 border-t-2 border-blue-100 flex-wrap gap-2">
 						<span class="font-black text-blue-900 flex items-center gap-2">
-							<span>❤️</span> With love from ${escapeHtml(msg.author || 'Family')}
+							With love from ${escapeHtml(msg.author || 'Family')}
 						</span>
 						<span class="font-semibold text-slate-500">${escapeHtml(formattedDate)}</span>
 					</div>
@@ -2956,7 +2943,6 @@ function renderMedicationsCard(boardData) {
 	if (medsList.length === 0) {
 		container.innerHTML = `
 			<div class="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-1">
-				<div class="text-3xl text-slate-300">💊</div>
 				<div class="text-xl sm:text-2xl font-black text-slate-800">No medications listed</div>
 				<div class="text-sm sm:text-base font-semibold text-slate-500">Add medications in the caregiver panel.</div>
 			</div>
@@ -3217,7 +3203,7 @@ function renderBoard(data) {
 		if (medBtn) {
 			medBtn.className =
 				'w-full px-6 py-4 sm:py-5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-black rounded-2xl transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl lg:text-4xl shadow-none';
-			medBtn.innerHTML = '<span>✅ MEDS LOGGED</span>';
+			medBtn.innerHTML = '<span>MEDS LOGGED</span>';
 		}
 		if (medBadge) medBadge.classList.remove('hidden');
 		if (medTime) {
@@ -3239,7 +3225,7 @@ function renderBoard(data) {
 		if (medBtn) {
 			medBtn.className =
 				'w-full px-6 py-4 sm:py-5 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-2xl sm:text-3xl lg:text-4xl cursor-pointer';
-			medBtn.innerHTML = '<span>💊 I TOOK MY MEDS</span>';
+			medBtn.innerHTML = '<span>I TOOK MY MEDS</span>';
 		}
 		if (medBadge) medBadge.classList.add('hidden');
 		if (medTime) medTime.classList.add('hidden');
@@ -4603,7 +4589,6 @@ function renderUsersTable(usersData) {
 
 				<div class="flex flex-wrap items-center gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/70">
 					<div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1" title="User Birthday">
-						<span class="text-xs">🎂</span>
 						<input
 							type="date"
 							value="${escapeHtml(birthday)}"
@@ -4616,7 +4601,7 @@ function renderUsersTable(usersData) {
 					</div>
 					${
 						hasMedsAlert
-							? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">🔔 Alerts On</span>'
+							? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg">Alerts On</span>'
 							: '<span class="text-slate-400 text-[11px] px-1.5">Alerts Off</span>'
 					}
 					<select
@@ -4633,7 +4618,7 @@ function renderUsersTable(usersData) {
 
 					${
 						isSelf
-							? '<span class="text-emerald-700 text-xs font-semibold px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-200">● Active</span>'
+							? '<span class="text-emerald-700 text-xs font-semibold px-2.5 py-1 bg-emerald-50 rounded-lg border border-emerald-200">Active</span>'
 							: `
 							<div class="flex items-center gap-1.5 ml-auto sm:ml-0">
 								<button
@@ -4646,15 +4631,15 @@ function renderUsersTable(usersData) {
 									}"
 									title="${isActive ? 'Click to deactivate user' : 'Click to activate user'}"
 								>
-									<span>${isActive ? '● Active' : '○ Inactive'}</span>
+									<span>${isActive ? 'Active' : 'Inactive'}</span>
 								</button>
 								<button
 									type="button"
 									onclick="deleteUserProfile('${uid}', '${displayName || email}')"
-									class="text-slate-400 hover:text-rose-600 text-xs p-1.5 rounded-lg hover:bg-rose-50 transition"
+									class="text-slate-400 hover:text-rose-600 text-xs font-semibold px-2 py-1.5 rounded-lg hover:bg-rose-50 transition"
 									title="Permanently remove database record"
 								>
-									🗑️
+									Delete
 								</button>
 							</div>
 						`
@@ -4854,7 +4839,6 @@ function renderContacts() {
 		if (allContacts.length === 0) {
 			dispContainer.innerHTML = `
 				<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
-					<div class="text-2xl">📇</div>
 					<div class="text-xl sm:text-2xl font-black text-slate-800">No contacts listed</div>
 					<div class="text-sm sm:text-base font-semibold text-slate-500">Add family or contacts in the panel.</div>
 				</div>
@@ -4887,7 +4871,7 @@ function renderContacts() {
 											bdayToday
 												? 'bg-amber-100 text-amber-900 border-amber-300 font-extrabold'
 												: 'bg-white text-slate-700 border-slate-200'
-									  }">🎂 ${bdayText}${bdayToday ? ' (TODAY!)' : ''}</span>`
+									  }">${bdayText}${bdayToday ? ' (TODAY!)' : ''}</span>`
 									: ''
 							}
 						</div>
@@ -4941,7 +4925,7 @@ function renderContacts() {
 								}
 								${
 									bdayText
-										? `<span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">🎂 ${bdayText}</span>`
+										? `<span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">${bdayText}</span>`
 										: ''
 								}
 								${
@@ -4951,7 +4935,7 @@ function renderContacts() {
 								}
 							</div>
 							<div class="text-xs text-slate-500 truncate">
-								${[c.phone ? `📞 ${escapeHtml(c.phone)}` : '', c.email ? `✉️ ${escapeHtml(c.email)}` : '']
+								${[c.phone ? `Phone: ${escapeHtml(c.phone)}` : '', c.email ? `Email: ${escapeHtml(c.email)}` : '']
 									.filter(Boolean)
 									.join(' • ') || 'No phone or email listed'}
 							</div>
@@ -5281,20 +5265,7 @@ function getBuiltInMajorUSHolidays(year) {
 }
 
 function getHolidayEmoji(name) {
-	const n = (name || '').toLowerCase();
-	if (n.includes('new year')) return '🎉';
-	if (n.includes('valentine')) return '❤️';
-	if (n.includes('patrick')) return '🍀';
-	if (n.includes('easter')) return '🌷';
-	if (n.includes('mother')) return '💐';
-	if (n.includes('father')) return '👔';
-	if (n.includes('independence') || n.includes('july')) return '🎆';
-	if (n.includes('halloween')) return '🎃';
-	if (n.includes('thanksgiving')) return '🦃';
-	if (n.includes('christmas')) return '🎄';
-	if (n.includes('memorial') || n.includes('veterans') || n.includes('president')) return '🇺🇸';
-	if (n.includes('labor')) return '🛠️';
-	return '🌟';
+	return '';
 }
 
 async function fetchUpcomingUSHolidays() {
@@ -5397,7 +5368,6 @@ function renderTodayColumn() {
 	if (todayTotal === 0) {
 		todayList.innerHTML = `
 			<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-				<div class="text-lg">🌿</div>
 				<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
 				<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
 			</div>
@@ -5409,10 +5379,8 @@ function renderTodayColumn() {
 
 	// 1. Render any US Holiday falling on today
 	todaysHolidays.forEach((h) => {
-		const emoji = getHolidayEmoji(h.name);
 		todayHtml += `
 			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
-				<span class="text-2xl shrink-0">${emoji}</span>
 				<div>
 					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
 						Holiday Today
@@ -5429,7 +5397,6 @@ function renderTodayColumn() {
 	todaysBirthdays.forEach((c) => {
 		todayHtml += `
 			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
-				<span class="text-2xl shrink-0">🎂</span>
 				<div>
 					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
 						Birthday Today!
@@ -5458,14 +5425,14 @@ function renderTodayColumn() {
 					</span>
 					${
 						isMultiDay && rangeLabel
-							? `<span class="text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">📅 ${escapeHtml(
+							? `<span class="text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">${escapeHtml(
 									rangeLabel
 							  )}</span>`
 							: ''
 					}
 					${
 						time
-							? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">⏰ ${time}</span>`
+							? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">${time}</span>`
 							: ''
 					}
 				</div>
@@ -5474,14 +5441,14 @@ function renderTodayColumn() {
 				</div>
 				${
 					evt.notes
-						? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2"><span class="text-lg">🚗</span> ${escapeHtml(
+						? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2">${escapeHtml(
 								evt.notes
 						  )}</div>`
 						: ''
 				}
 				${
 					evt.reminder
-						? `<div class="text-base sm:text-lg text-indigo-800 font-bold flex items-center gap-2 pt-0.5"><span class="text-lg">💡</span> ${escapeHtml(
+						? `<div class="text-base sm:text-lg text-indigo-800 font-bold flex items-center gap-2 pt-0.5">${escapeHtml(
 								evt.reminder
 						  )}</div>`
 						: ''
@@ -5565,9 +5532,8 @@ function renderEvents(eventsObj) {
 		if (combinedDisplayItems.length === 0) {
 			dispContainer.innerHTML = `
 				<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
-					<div class="text-2xl">🌿</div>
 					<div class="text-base font-bold text-slate-700">No appointments scheduled</div>
-					<div class="text-xs text-slate-500">Relax and enjoy your day! ☀️</div>
+					<div class="text-xs text-slate-500">Relax and enjoy your day!</div>
 				</div>
 			`;
 		} else {
@@ -5575,12 +5541,10 @@ function renderEvents(eventsObj) {
 			combinedDisplayItems.forEach((item) => {
 				if (item.itemType === 'holiday') {
 					const h = item.holiday;
-					const emoji = getHolidayEmoji(h.name);
 					const { formattedDate, countdown, badgeClass } = formatHolidayCountdown(h.date);
 					html += `
 						<div class="w-full bg-amber-50/50 p-4 sm:p-5 rounded-2xl border border-amber-200 flex items-center justify-between gap-3">
 							<div class="flex items-center gap-3 min-w-0">
-								<span class="text-2xl shrink-0">${emoji}</span>
 								<div class="min-w-0">
 									<div class="flex items-center gap-1.5 flex-wrap">
 										<span class="text-xs sm:text-sm font-black uppercase tracking-wider px-2.5 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300">
@@ -5610,7 +5574,7 @@ function renderEvents(eventsObj) {
 									</span>
 									${
 										time
-											? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">⏰ ${time}</span>`
+											? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">${time}</span>`
 											: ''
 									}
 								</div>
@@ -5619,14 +5583,14 @@ function renderEvents(eventsObj) {
 								</div>
 								${
 									evt.notes
-										? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2 pt-0.5"><span class="text-lg">🚗</span> ${escapeHtml(
+										? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2 pt-0.5">${escapeHtml(
 												evt.notes
 										  )}</div>`
 										: ''
 								}
 								${
 									evt.reminder
-										? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5"><span class="text-sm">💡</span> ${escapeHtml(
+										? `<div class="text-xs sm:text-sm text-indigo-700 font-semibold flex items-center gap-1.5 pt-0.5">${escapeHtml(
 												evt.reminder
 										  )}</div>`
 										: ''
@@ -5665,7 +5629,7 @@ function renderEvents(eventsObj) {
 					time ? '• ' + time : ''
 				} • ${(() => {
 					const c = getEventContext(evt);
-					const map = { medical: '🩺 Medical', family: '🏡 Visit', errand: '🚗 Errand', service: '🔧 Service', other: '⭐ Other' };
+					const map = { medical: 'Medical', family: 'Visit', errand: 'Errand', service: 'Service', other: 'Other' };
 					return map[c.category] || 'Event';
 				})()}</span>
 								<span class="font-bold text-slate-800 text-sm truncate">${escapeHtml(evt.title)}</span>
@@ -5682,7 +5646,7 @@ function renderEvents(eventsObj) {
 							}
 							${
 								evt.reminder
-									? `<div class="text-xs text-indigo-600 font-medium truncate pl-0.5">💡 Reminder: ${escapeHtml(evt.reminder)}</div>`
+									? `<div class="text-xs text-indigo-600 font-medium truncate pl-0.5">Reminder: ${escapeHtml(evt.reminder)}</div>`
 									: ''
 							}
 						</div>
@@ -5929,7 +5893,7 @@ function notifyMedicationTaken(time) {
 
 	if ('Notification' in window && Notification.permission === 'granted') {
 		try {
-			new Notification('💊 Medication Logged', {
+			new Notification('Medication Logged', {
 				body: `Medications were recorded as taken at ${timeStr}.`,
 				icon: 'https://cdn-icons-png.flaticon.com/512/883/883360.png',
 			});
