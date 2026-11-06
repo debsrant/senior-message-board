@@ -658,250 +658,308 @@ function loadGeminiApiKeyLocal() {
 
 // ================= SENIOR DAILY CHECK-IN (INTERACTIVE, NO EMOJIS) =================
 
-// A rich, creative question bank rotating daily across nostalgia, music, simple comforts, daydreams, and gratitude.
-// Avoids repetitive cliches like "what are you doing" or "what's for dinner" and sparks delightful, mood-boosting interaction.
-const CREATIVE_FALLBACK_CHECKIN_QUESTIONS = [
-	{
-		id: 'favorite_sweet',
-		category: 'nostalgia',
-		question: 'What was your all-time favorite homemade sweet treat growing up?',
-		choices: [
-			'Warm fruit pie or cobbler',
-			'Fresh baked cookies',
-			'Rich cake or brownies',
-			'Ice cream with hot fudge',
-		],
-	},
+// ================= CONVERSATIONAL SENIOR CHECK-IN & MEMORY JOURNAL =================
+// A gentle, multi-turn conversational bank tailored for seniors with early-stage Alzheimer's.
+// Features:
+// 1. Zero performance pressure: Every prompt offers comforting agency ("Not sure today", "None of these").
+// 2. Interactive pivot: "Ask me another question" immediately swaps questions right on screen.
+// 3. Multi-turn follow-up: Tapping an answer triggers a warm, validating reaction + a gentle 2nd-turn question.
+// 4. Senior Memory Journal: Every response and reflection is saved chronologically in Firebase.
+
+const CONVERSATIONAL_CHECKIN_TOPICS = [
 	{
 		id: 'music_mood',
-		category: 'music',
 		question: 'What kind of music always puts you in the best mood?',
 		choices: [
 			'Big band and swing',
 			'Classic country and folk',
 			'Gentle piano or classical',
-			'Golden oldies on the radio',
+			'Not sure today',
 		],
+		followups: {
+			'Big band and swing': {
+				reaction: 'Big band and swing has such wonderful energy!',
+				question: 'Did you like dancing with friends, or listening on the radio?',
+				choices: ['Dancing with friends', 'Listening on the radio', 'Both were wonderful', "I'm all done for now"],
+			},
+			'Classic country and folk': {
+				reaction: 'Classic country melodies tell such heartwarming stories.',
+				question: 'Do you enjoy lively acoustic fiddles, or gentle sweet ballads?',
+				choices: ['Lively acoustic fiddles', 'Sweet gentle ballads', 'Singing along to both', "I'm all done for now"],
+			},
+			'Gentle piano or classical': {
+				reaction: 'Gentle piano music brings such peace and calm to the home.',
+				question: 'Does soft piano feel best in a quiet morning, or relaxing in the afternoon?',
+				choices: ['Quiet morning with coffee', 'Peaceful afternoon rest', 'Anytime of day', "I'm all done for now"],
+			},
+		},
+	},
+	{
+		id: 'favorite_sweet',
+		question: 'What was your all-time favorite homemade sweet treat growing up?',
+		choices: [
+			'Warm fruit pie or cobbler',
+			'Fresh baked cookies',
+			'Rich cake or brownies',
+			'None of these',
+		],
+		followups: {
+			'Warm fruit pie or cobbler': {
+				reaction: 'Warm pie straight out of the oven is the best treat in the world!',
+				question: 'Did you like apple pie, peach cobbler, or berry pie best?',
+				choices: ['Cinnamon apple pie', 'Sweet peach cobbler', 'Warm berry pie', "I'm all done for now"],
+			},
+			'Fresh baked cookies': {
+				reaction: 'Nothing beats the smell of warm cookies baking in the oven.',
+				question: 'Were you a fan of chocolate chip, oatmeal, or sugar cookies?',
+				choices: ['Warm chocolate chip', 'Oatmeal with cinnamon', 'Sweet sugar cookies', "I'm all done for now"],
+			},
+			'Rich cake or brownies': {
+				reaction: 'Chocolate cake and warm brownies always hit the spot.',
+				question: 'Did you enjoy having a tall cold glass of milk with it?',
+				choices: ['Cold glass of milk', 'Warm cup of coffee', 'A scoop of ice cream', "I'm all done for now"],
+			},
+		},
+	},
+	{
+		id: 'kitchen_aroma',
+		question: 'What aroma from the kitchen brings back the warmest memories?',
+		choices: [
+			'Fresh bread in the oven',
+			'Warm cinnamon and spice',
+			'A simmering pot of soup',
+			'Not sure today',
+		],
+		followups: {
+			'Fresh bread in the oven': {
+				reaction: 'There is nothing quite like homemade bread baking in the oven.',
+				question: 'Did you like putting melting butter or sweet jam on warm bread?',
+				choices: ['Melting fresh butter', 'Sweet homemade jam', 'Both together', "I'm all done for now"],
+			},
+			'Warm cinnamon and spice': {
+				reaction: 'Cinnamon and spices make any home feel cozy and welcoming.',
+				question: 'Does that aroma remind you of holiday baking with family?',
+				choices: ['Family holiday baking', 'Autumn kitchen days', 'Hot spiced cider', "I'm all done for now"],
+			},
+			'A simmering pot of soup': {
+				reaction: 'A warm pot of simmering soup warms the heart on a quiet day.',
+				question: 'Did your family have a favorite homemade soup recipe?',
+				choices: ['Chicken noodle soup', 'Hearty vegetable stew', 'Potato or corn chowder', "I'm all done for now"],
+			},
+		},
 	},
 	{
 		id: 'cozy_spot',
-		category: 'comfort',
 		question: 'What is your favorite spot to sit and unwind during the day?',
 		choices: [
 			'By a sunny window',
 			'In a comfy living room chair',
 			'Out on the porch or patio',
-			'At the cozy kitchen table',
+			'None of these',
 		],
-	},
-	{
-		id: 'scenic_trip',
-		category: 'daydream',
-		question: 'If you were taking a scenic train ride today, what view would you choose?',
-		choices: [
-			'Majestic green mountains',
-			'Peaceful ocean coastline',
-			'Quiet country farmland',
-			'Lakes and pine forests',
-		],
-	},
-	{
-		id: 'comfort_aroma',
-		category: 'nostalgia',
-		question: 'What kitchen aroma brings back the warmest memories for you?',
-		choices: [
-			'Fresh bread baking',
-			'Warm cinnamon and spice',
-			'A simmering pot of soup',
-			'Fresh morning coffee brewing',
-		],
-	},
-	{
-		id: 'relaxing_habit',
-		category: 'comfort',
-		question: 'What sounds like the most relaxing way to pass an hour today?',
-		choices: [
-			'Listening to classic music',
-			'Reading a wonderful book',
-			'Working on cards or puzzles',
-			'Resting with peaceful sounds',
-		],
-	},
-	{
-		id: 'favorite_season',
-		category: 'nature',
-		question: 'Which season of the year brings you the most happiness?',
-		choices: [
-			'Warm sunny summertime',
-			'Crisp colorful autumn',
-			'Fresh blooming springtime',
-			'Cozy peaceful winter',
-		],
+		followups: {
+			'By a sunny window': {
+				reaction: 'Sitting in warm natural sunshine is so soothing.',
+				question: 'Do you like watching the birds outside, or resting with eyes closed?',
+				choices: ['Watching birds outside', 'Resting with eyes closed', 'Just feeling the warm sun', "I'm all done for now"],
+			},
+			'In a comfy living room chair': {
+				reaction: 'A comfortable armchair is the perfect place to relax.',
+				question: 'Do you like having a soft warm blanket over your lap?',
+				choices: ['A cozy warm blanket', 'Soft music playing', 'A warm drink in hand', "I'm all done for now"],
+			},
+			'Out on the porch or patio': {
+				reaction: 'Fresh air and gentle outdoor sounds are wonderful for the spirit.',
+				question: 'Do you enjoy the gentle breeze, or waving to passing neighbors?',
+				choices: ['The gentle fresh breeze', 'Waving to neighbors', 'Listening to nature', "I'm all done for now"],
+			},
+		},
 	},
 	{
 		id: 'childhood_pastime',
-		category: 'nostalgia',
 		question: 'Which pastime was your favorite as a youngster?',
 		choices: [
 			'Playing outdoors with friends',
 			'Board games with family',
 			'Riding bicycles around town',
-			'Getting lost in a good book',
+			'Not sure today',
 		],
-	},
-	{
-		id: 'nature_sights',
-		category: 'nature',
-		question: 'What is your favorite sight to watch right outside your window?',
-		choices: [
-			'Birds visiting the feeder',
-			'Breeze moving the tree leaves',
-			'Fluffy clouds floating past',
-			'Warm sunlight across the yard',
-		],
+		followups: {
+			'Playing outdoors with friends': {
+				reaction: 'Playing outside until the streetlights came on was magical.',
+				question: 'Did you play tag, hide and seek, or yard games with friends?',
+				choices: ['Hide and seek', 'Yard games and tag', 'Roller skating or hopscotch', "I'm all done for now"],
+			},
+			'Board games with family': {
+				reaction: 'Gathering around the table for games brings back so much laughter.',
+				question: 'Did your family play card games or classic board games?',
+				choices: ['Card games with family', 'Classic board games', 'Puzzles together', "I'm all done for now"],
+			},
+			'Riding bicycles around town': {
+				reaction: 'The feeling of freedom on a bicycle is unforgettable.',
+				question: 'Did you ride around neighborhood sidewalks or down to the park?',
+				choices: ['Neighborhood sidewalks', 'Down to the local park', 'Riding with school friends', "I'm all done for now"],
+			},
+		},
 	},
 	{
 		id: 'comfort_drink',
-		category: 'comfort',
 		question: 'What comforting warm drink feels best in your hands on a quiet day?',
 		choices: [
 			'Rich hot cocoa',
 			'Sweet herbal or black tea',
 			'Fresh brewed coffee',
-			'Warm spiced cider',
+			'None of these',
 		],
+		followups: {
+			'Rich hot cocoa': {
+				reaction: 'Hot cocoa is a timeless comfort on a quiet morning.',
+				question: 'Do you like marshmallows on top, or whipped cream?',
+				choices: ['Fluffy marshmallows', 'Sweet whipped cream', 'Just smooth and hot', "I'm all done for now"],
+			},
+			'Sweet herbal or black tea': {
+				reaction: 'A warm mug of tea is soothing from the very first sip.',
+				question: 'Do you like putting a spoonful of honey or a splash of milk in it?',
+				choices: ['Sweet golden honey', 'A splash of milk', 'Just plain and warm', "I'm all done for now"],
+			},
+			'Fresh brewed coffee': {
+				reaction: 'The morning aroma of coffee is always uplifting.',
+				question: 'Do you like your coffee with sweet cream, or black and simple?',
+				choices: ['Sweet cream and sugar', 'A splash of milk', 'Black and simple', "I'm all done for now"],
+			},
+		},
 	},
 	{
 		id: 'smile_spark',
-		category: 'gratitude',
 		question: 'What is something small that always brings a smile to your heart?',
 		choices: [
 			'A sweet note or call from family',
-			'A funny joke or memory',
-			'A warm hug or handshake',
-			'Seeing beloved family photos',
+			'Watching birds at the feeder',
+			'Looking at old family photos',
+			'Not sure today',
 		],
-	},
-	{
-		id: 'radio_memory',
-		category: 'music',
-		question: 'If you could tune into any classic radio broadcast right now, what would it be?',
-		choices: [
-			'Old-time radio dramas & comedy',
-			'Big band live ballroom music',
-			'Folk ballads and storytelling',
-			'Quiet instrumental harmonies',
-		],
+		followups: {
+			'A sweet note or call from family': {
+				reaction: 'Hearing from loved ones is the greatest gift of all.',
+				question: 'Do you love keeping family cards and letters nearby to see?',
+				choices: ['Keeping cards on display', 'Hearing voices on the phone', 'Warm hugs in person', "I'm all done for now"],
+			},
+			'Watching birds at the feeder': {
+				reaction: 'Birds bring so much color and cheerfulness to the yard.',
+				question: 'Is your favorite bird the bright red cardinal, or little chickadees?',
+				choices: ['Bright red cardinals', 'Playful chickadees', 'Goldfinches and blue jays', "I'm all done for now"],
+			},
+			'Looking at old family photos': {
+				reaction: 'Family photo albums hold so many precious stories.',
+				question: 'Do you like seeing pictures of children growing up, or old wedding days?',
+				choices: ['Children growing up', 'Old childhood pictures', 'Wedding and holiday photos', "I'm all done for now"],
+			},
+		},
 	},
 	{
 		id: 'hometown_memory',
-		category: 'nostalgia',
 		question: 'What do you remember most fondly about your hometown growing up?',
 		choices: [
 			'Friendly neighborhood streets',
-			'The local ice cream or diner',
-			'Parades and county fairs',
-			'Summer evenings on the porch',
+			'The local soda fountain or diner',
+			'Summer fairs and parades',
+			'None of these',
 		],
+		followups: {
+			'Friendly neighborhood streets': {
+				reaction: 'Those quiet neighborhood streets felt so safe and welcoming.',
+				question: 'Did everyone sit out on front porches in the evening?',
+				choices: ['Porch chats with neighbors', 'Walking under tall trees', 'Playing until dusk', "I'm all done for now"],
+			},
+			'The local soda fountain or diner': {
+				reaction: 'Stopping by the soda counter for an ice cream float was a true treat.',
+				question: 'Did you like root beer floats, or ice cream milkshakes best?',
+				choices: ['Classic root beer float', 'Chocolate malt or shake', 'An ice cream sundae', "I'm all done for now"],
+			},
+			'Summer fairs and parades': {
+				reaction: 'The sights and sounds of a hometown parade are unforgettable.',
+				question: 'Did you love the marching bands, or the carnival treats and games?',
+				choices: ['Marching bands & music', 'Cotton candy and treats', 'Fun games and prizes', "I'm all done for now"],
+			},
+		},
 	},
 	{
-		id: 'favorite_weather',
-		category: 'nature',
-		question: 'What kind of weather feels most peaceful to experience from indoors?',
+		id: 'scenic_trip',
+		question: 'If you were taking a scenic train ride today, what view would you choose?',
 		choices: [
-			'Gentle patter of rain',
-			'Bright morning sunshine',
-			'A crisp cool autumn breeze',
-			'Quiet softly falling snow',
+			'Majestic green mountains',
+			'Peaceful ocean coastline',
+			'Quiet country farmland',
+			'Not sure today',
 		],
+		followups: {
+			'Majestic green mountains': {
+				reaction: 'Mountain views with tall trees and peaks are breathtaking.',
+				question: 'Would you like watching from a comfortable window seat in the observation car?',
+				choices: ['Window seat with coffee', 'Observation car view', 'Resting and glancing out', "I'm all done for now"],
+			},
+			'Peaceful ocean coastline': {
+				reaction: 'Watching rolling waves and blue water brings instant calm.',
+				question: 'Do you love the look of sandy beaches or rocky lighthouses?',
+				choices: ['Warm sandy beaches', 'Historic lighthouses', 'Watching ocean sunsets', "I'm all done for now"],
+			},
+			'Quiet country farmland': {
+				reaction: 'Rolling green pastures and red barns are so peaceful.',
+				question: 'Does the countryside remind you of childhood Sunday road trips?',
+				choices: ['Family Sunday drives', 'Visiting relatives on farms', 'Wide open blue skies', "I'm all done for now"],
+			},
+		},
 	},
 	{
-		id: 'singalong_song',
-		category: 'music',
-		question: 'When a good tune comes on, what do you enjoy doing most?',
+		id: 'favorite_season',
+		question: 'Which season of the year brings you the most happiness?',
 		choices: [
-			'Humming or singing along',
-			'Tapping feet to the rhythm',
-			'Closing eyes and listening',
-			'Remembering the good old days',
+			'Warm sunny summertime',
+			'Crisp colorful autumn',
+			'Fresh blooming springtime',
+			'None of these',
 		],
-	},
-	{
-		id: 'dream_destination',
-		category: 'daydream',
-		question: 'If you could visit any tranquil place for an afternoon, where would you go?',
-		choices: [
-			'A sunny sandy seashore',
-			'A quiet botanical garden',
-			'A cozy cabin by a mountain lake',
-			'A charming historic town',
-		],
-	},
-	{
-		id: 'kitchen_helper',
-		category: 'nostalgia',
-		question: 'What was your favorite holiday food to prepare or taste growing up?',
-		choices: [
-			'Holiday stuffing and gravy',
-			'Sweet potato casserole',
-			'Decorating holiday cookies',
-			'Warm fruit pies and rolls',
-		],
-	},
-	{
-		id: 'simple_joy',
-		category: 'gratitude',
-		question: 'What brings you a feeling of deep peace and contentment?',
-		choices: [
-			'A quiet, slow morning',
-			'Catching up with family',
-			'Looking at blooming flowers',
-			'Finishing a favorite project',
-		],
-	},
-	{
-		id: 'bedtime_comfort',
-		category: 'comfort',
-		question: 'What helps you feel most cozy and relaxed when evening comes?',
-		choices: [
-			'A soft, warm blanket',
-			'A calm chat before resting',
-			'Soft music or peaceful sounds',
-			'A warm drink and dim lights',
-		],
-	},
-	{
-		id: 'classic_performer',
-		category: 'music',
-		question: 'Which style of classic singer was always a joy to hear?',
-		choices: [
-			'Smooth crooners and vocalists',
-			'Country storytellers',
-			'Energetic rock and roll',
-			'Acoustic folk harmonies',
-		],
-	},
-	{
-		id: 'family_tradition',
-		category: 'nostalgia',
-		question: 'What kind of family tradition was always your favorite?',
-		choices: [
-			'Sunday dinners together',
-			'Holiday baking and gift sharing',
-			'Summer picnics and reunions',
-			'Singing songs or telling stories',
-		],
+		followups: {
+			'Warm sunny summertime': {
+				reaction: 'Summer brings long sunny days and blooming flowers.',
+				question: 'Did you love outdoor family picnics or evening porch sitting?',
+				choices: ['Outdoor family picnics', 'Warm evening porch sitting', 'Cooling off with ice cream', "I'm all done for now"],
+			},
+			'Crisp colorful autumn': {
+				reaction: 'Autumn with colorful leaves and cool air is so refreshing.',
+				question: 'Do you enjoy hot spiced cider or watching the leaves change color?',
+				choices: ['Watching colorful leaves', 'Warm cups of spiced cider', 'Wearing a cozy sweater', "I'm all done for now"],
+			},
+			'Fresh blooming springtime': {
+				reaction: 'Springtime brings the world back to life with green shoots.',
+				question: 'Do you love hearing songbirds return, or seeing flowers bloom?',
+				choices: ['Songbirds singing in morning', 'Tulips and daffodils blooming', 'Opening windows for air', "I'm all done for now"],
+			},
+		},
 	},
 ];
 
-// Compatibility alias
-const DEFAULT_ROTATING_CHECKIN_QUESTIONS = CREATIVE_FALLBACK_CHECKIN_QUESTIONS;
+// Compatibility aliases
+const CREATIVE_FALLBACK_CHECKIN_QUESTIONS = CONVERSATIONAL_CHECKIN_TOPICS;
+const DEFAULT_ROTATING_CHECKIN_QUESTIONS = CONVERSATIONAL_CHECKIN_TOPICS;
+
+let checkinConversationState = {
+	turn: 1,
+	topicIndex: 0,
+	turn1Choice: null,
+	isEditing: false,
+};
 
 function getDayOfYear(date = new Date()) {
 	const start = new Date(date.getFullYear(), 0, 0);
 	const diff = date - start + (start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
 	return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
+
+// Initialize topic index based on calendar day
+try {
+	checkinConversationState.topicIndex = getDayOfYear() % CONVERSATIONAL_CHECKIN_TOPICS.length;
+} catch (e) {}
 
 function isRepetitiveLegacyQuestion(questionText) {
 	if (!questionText || typeof questionText !== 'string') return false;
@@ -916,78 +974,12 @@ function isRepetitiveLegacyQuestion(questionText) {
 	);
 }
 
-function generateSmartFallbackQuestion(boardData) {
-	const data = boardData || latestBoardData || {};
-	const todayStr = getTodayDateString();
-	const allEvents = Object.values(data.events || {}).filter(
-		(e) => isEventUpcomingOrActive(e, todayStr) && getEventDaysFromToday(e) === 0
-	);
-
-	// Event-based context
-	if (allEvents.length > 0) {
-		const first = allEvents[0];
-		const ctx = getEventContext(first);
-		if (ctx.category === 'family') {
-			return {
-				question: `${first.title} is coming up today - what sounds nicest to enjoy together?`,
-				choices: [
-					'Chat over a fresh drink',
-					'Share a favorite treat',
-					'Sit together on the porch',
-					'Just relax and catch up',
-				],
-			};
-		}
-		if (ctx.category === 'medical') {
-			return {
-				question: `You have ${first.title} today - how are you feeling before heading out?`,
-				choices: [
-					'Ready and prepared',
-					'Taking things slow and steady',
-					'A bit tired or rushed',
-					'Looking forward to getting it done',
-				],
-			};
-		}
-	}
-
-	// Weather-based context
-	if (lastWeatherData) {
-		const rainChance = lastWeatherData.rainChanceMax || 0;
-		const high = lastWeatherData.high || 70;
-		if (rainChance >= 60) {
-			return {
-				question: 'It looks rainy today - what sounds most comforting to enjoy indoors?',
-				choices: [
-					'A warm drink and a good book',
-					'Working on a favorite puzzle',
-					'Watching a classic movie',
-					'Taking an afternoon rest',
-				],
-			};
-		}
-		if (high >= 65 && high <= 82) {
-			return {
-				question: 'The weather looks pleasant today - would you like to enjoy some fresh air?',
-				choices: [
-					'Sit on the porch or patio',
-					'Take a short stroll',
-					'Open windows for fresh air',
-					'Stay cozy inside',
-				],
-			};
-		}
-	}
-
-	return null;
-}
-
-function getActiveCheckinQuestion(boardData) {
+function getActiveCheckinTopic(boardData) {
 	const data = boardData || latestBoardData || {};
 	// 1. Explicit Admin custom question override
 	if (data.customCheckinQuestion && data.customCheckinQuestion.trim()) {
 		const qText = data.customCheckinQuestion.trim();
-		let choices = ['Yes', 'No', 'Not sure'];
+		let choices = ['Yes', 'No', 'Not sure today'];
 		if (data.customCheckinChoices && data.customCheckinChoices.trim()) {
 			const parsed = data.customCheckinChoices
 				.split(',')
@@ -995,54 +987,198 @@ function getActiveCheckinQuestion(boardData) {
 				.filter(Boolean);
 			if (parsed.length > 0) choices = parsed;
 		}
-		return { question: qText, choices, source: 'Custom' };
-	}
-
-	// 2. AI-generated dynamic question for today (ignores legacy repetitive questions)
-	const todayStr = getTodayDateString();
-	if (
-		data.aiQuestion &&
-		data.aiQuestion.question &&
-		!isRepetitiveLegacyQuestion(data.aiQuestion.question) &&
-		Array.isArray(data.aiQuestion.choices) &&
-		data.aiQuestion.choices.length >= 2 &&
-		data.aiQuestion.generatedDate === todayStr
-	) {
+		if (!choices.some((c) => c.toLowerCase().includes('not sure') || c.toLowerCase().includes('none'))) {
+			choices.push('Not sure today');
+		}
 		return {
-			question: data.aiQuestion.question.trim(),
-			choices: data.aiQuestion.choices.map((c) => c.trim()).filter(Boolean),
-			source: 'AI Generated',
+			id: 'custom_admin',
+			question: qText,
+			choices: choices,
+			source: 'Custom',
 		};
 	}
 
-	// 3. Fallback smart context-aware question based on today's events or weather
-	const smartQ = generateSmartFallbackQuestion(data);
-	if (smartQ) {
-		return { ...smartQ, source: 'Smart Dynamic' };
+	// 2. Select from the conversational topic bank
+	const idx = Math.abs(checkinConversationState.topicIndex) % CONVERSATIONAL_CHECKIN_TOPICS.length;
+	return CONVERSATIONAL_CHECKIN_TOPICS[idx] || CONVERSATIONAL_CHECKIN_TOPICS[0];
+}
+
+function getActiveCheckinQuestion(boardData) {
+	const topic = getActiveCheckinTopic(boardData);
+	return {
+		question: topic.question,
+		choices: topic.choices,
+		source: topic.source || 'Conversation Bank',
+	};
+}
+
+function cycleNextCheckinQuestion() {
+	checkinConversationState.topicIndex =
+		(checkinConversationState.topicIndex + 1) % CONVERSATIONAL_CHECKIN_TOPICS.length;
+	checkinConversationState.turn = 1;
+	checkinConversationState.turn1Choice = null;
+	renderSeniorCheckin(latestBoardData);
+	showToast('Switched to another question!');
+}
+
+async function selectCheckinTurn1Choice(choice) {
+	const todayStr = getTodayDateString();
+	const activeTopic = getActiveCheckinTopic(latestBoardData);
+
+	const isEscape =
+		choice.toLowerCase().includes('not sure') ||
+		choice.toLowerCase().includes('none');
+
+	if (isEscape) {
+		const entry = {
+			dateStr: todayStr,
+			timestamp: Date.now(),
+			question: activeTopic.question,
+			answer: choice,
+			notes: 'Mom checked in (Not sure / None of these)',
+		};
+		await recordSeniorJournalEntry(entry);
+
+		const responsePayload = {
+			question: activeTopic.question,
+			answer: choice,
+			timestamp: Date.now(),
+			dateStr: todayStr,
+		};
+		try {
+			localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
+		} catch (e) {}
+
+		if (!latestBoardData) latestBoardData = {};
+		latestBoardData.seniorResponse = responsePayload;
+		checkinConversationState.turn = 1;
+		checkinConversationState.turn1Choice = null;
+		checkinConversationState.isEditing = false;
+		renderSeniorCheckin(latestBoardData);
+
+		try {
+			database.ref('board/seniorResponse').set(responsePayload).catch(() => {});
+		} catch (err) {}
+		renderAiSummaryCard();
+		return;
 	}
 
-	// 4. Default rotating creative question bank (changes daily by day of year so each day is fresh)
-	const dayOfYear = getDayOfYear();
-	const active =
-		CREATIVE_FALLBACK_CHECKIN_QUESTIONS[dayOfYear % CREATIVE_FALLBACK_CHECKIN_QUESTIONS.length];
+	// Check if follow-up exists for this choice
+	const followup = activeTopic.followups && activeTopic.followups[choice];
+	if (followup) {
+		checkinConversationState.turn = 2;
+		checkinConversationState.turn1Choice = choice;
+		renderSeniorCheckin(latestBoardData);
+	} else {
+		// Single turn completion
+		const entry = {
+			dateStr: todayStr,
+			timestamp: Date.now(),
+			question: activeTopic.question,
+			answer: choice,
+		};
+		await recordSeniorJournalEntry(entry);
 
-	return { question: active.question, choices: active.choices, source: 'Creative Bank' };
+		const responsePayload = {
+			question: activeTopic.question,
+			answer: choice,
+			timestamp: Date.now(),
+			dateStr: todayStr,
+		};
+		try {
+			localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
+		} catch (e) {}
+
+		if (!latestBoardData) latestBoardData = {};
+		latestBoardData.seniorResponse = responsePayload;
+		checkinConversationState.turn = 1;
+		checkinConversationState.turn1Choice = null;
+		checkinConversationState.isEditing = false;
+		renderSeniorCheckin(latestBoardData);
+
+		try {
+			database.ref('board/seniorResponse').set(responsePayload).catch(() => {});
+		} catch (err) {}
+		renderAiSummaryCard();
+	}
+}
+
+async function selectCheckinTurn2Choice(followupChoice) {
+	const todayStr = getTodayDateString();
+	const activeTopic = getActiveCheckinTopic(latestBoardData);
+	const turn1Choice = checkinConversationState.turn1Choice;
+	const followupObj = activeTopic.followups && activeTopic.followups[turn1Choice];
+
+	const isDone = followupChoice === "I'm all done for now";
+	const entry = {
+		dateStr: todayStr,
+		timestamp: Date.now(),
+		question: activeTopic.question,
+		answer: turn1Choice,
+		followupQuestion: !isDone && followupObj ? followupObj.question : undefined,
+		followupAnswer: !isDone ? followupChoice : undefined,
+		notes: isDone ? 'Wrapped up at Turn 1' : undefined,
+	};
+	await recordSeniorJournalEntry(entry);
+
+	const responsePayload = {
+		question: activeTopic.question,
+		answer: turn1Choice,
+		followupQuestion: !isDone && followupObj ? followupObj.question : undefined,
+		followupAnswer: !isDone ? followupChoice : undefined,
+		timestamp: Date.now(),
+		dateStr: todayStr,
+	};
+
+	try {
+		localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
+	} catch (e) {}
+
+	if (!latestBoardData) latestBoardData = {};
+	latestBoardData.seniorResponse = responsePayload;
+	checkinConversationState.turn = 1;
+	checkinConversationState.turn1Choice = null;
+	checkinConversationState.isEditing = false;
+
+	renderSeniorCheckin(latestBoardData);
+
+	try {
+		database.ref('board/seniorResponse').set(responsePayload).catch(() => {});
+	} catch (err) {}
+
+	renderAiSummaryCard();
+}
+
+// Alias for compatibility
+function submitSeniorCheckin(choice) {
+	return selectCheckinTurn1Choice(choice);
+}
+
+function resetSeniorCheckinChoice() {
+	checkinConversationState.turn = 1;
+	checkinConversationState.turn1Choice = null;
+	checkinConversationState.isEditing = true;
+
+	renderSeniorCheckin(latestBoardData);
 }
 
 function renderSeniorCheckin(boardData) {
 	const data = boardData || latestBoardData || {};
 	const sectionEl = document.getElementById('disp-senior-checkin-section');
+	const turn1El = document.getElementById('disp-checkin-turn1');
+	const turn2El = document.getElementById('disp-checkin-turn2');
+	const confirmEl = document.getElementById('disp-checkin-confirmation');
 	const qEl = document.getElementById('disp-checkin-question');
 	const optionsEl = document.getElementById('disp-checkin-options');
-	const confirmEl = document.getElementById('disp-checkin-confirmation');
+	const reactionEl = document.getElementById('disp-checkin-reaction');
+	const followupQEl = document.getElementById('disp-checkin-followup-question');
+	const followupOptionsEl = document.getElementById('disp-checkin-followup-options');
 	const answerTextEl = document.getElementById('disp-checkin-answer-text');
+	const followupAnswerTextEl = document.getElementById('disp-checkin-followup-answer-text');
 	const timeTextEl = document.getElementById('disp-checkin-time-text');
 	const badgeEl = document.getElementById('disp-checkin-status-badge');
 
-	if (!sectionEl || !qEl || !optionsEl || !confirmEl) return;
-
-	const { question, choices } = getActiveCheckinQuestion(data);
-	qEl.innerText = question;
+	if (!sectionEl || !confirmEl) return;
 
 	const todayStr = getTodayDateString();
 	let resp = data.seniorResponse;
@@ -1059,28 +1195,30 @@ function renderSeniorCheckin(boardData) {
 		} catch (e) {}
 	}
 
-	const hasAnsweredToday = resp && resp.dateStr === todayStr && resp.answer;
-
-	// Always render the buttons into optionsEl so they are guaranteed present in the DOM
-	optionsEl.innerHTML = choices
-		.map(
-			(choice) => `
-			<button
-				type="button"
-				onclick="submitSeniorCheckin('${escapeHtml(choice).replace(/'/g, "\\'")}')"
-				class="w-full text-left px-5 py-4 bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white rounded-2xl border-2 border-blue-300 hover:border-blue-500 text-slate-950 font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
-			>
-				${escapeHtml(choice)}
-			</button>
-		`
-		)
-		.join('');
+	const hasAnsweredToday =
+		resp && resp.dateStr === todayStr && resp.answer && !checkinConversationState.isEditing;
 
 	if (hasAnsweredToday) {
-		optionsEl.classList.add('hidden');
+		if (turn1El) turn1El.classList.add('hidden');
+		if (turn2El) turn2El.classList.add('hidden');
 		confirmEl.classList.remove('hidden');
 		if (badgeEl) badgeEl.classList.remove('hidden');
-		if (answerTextEl) answerTextEl.innerText = resp.answer;
+
+		if (answerTextEl) {
+			if (resp.answer.toLowerCase().includes('not sure') || resp.answer.toLowerCase().includes('none')) {
+				answerTextEl.innerText = `${resp.answer} — and that is completely fine!`;
+			} else {
+				answerTextEl.innerText = resp.answer;
+			}
+		}
+		if (followupAnswerTextEl) {
+			if (resp.followupAnswer && resp.followupAnswer !== "I'm all done for now") {
+				followupAnswerTextEl.innerText = `Mom: "${resp.followupAnswer}"`;
+				followupAnswerTextEl.classList.remove('hidden');
+			} else {
+				followupAnswerTextEl.classList.add('hidden');
+			}
+		}
 		if (timeTextEl) {
 			const timeStr = resp.timestamp
 				? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
@@ -1089,75 +1227,367 @@ function renderSeniorCheckin(boardData) {
 		}
 	} else {
 		confirmEl.classList.add('hidden');
-		optionsEl.classList.remove('hidden');
 		if (badgeEl) badgeEl.classList.add('hidden');
+
+		const activeTopic = getActiveCheckinTopic(data);
+
+		if (checkinConversationState.turn === 2 && checkinConversationState.turn1Choice) {
+			// Turn 2 Followup
+			if (turn1El) turn1El.classList.add('hidden');
+			if (turn2El) turn2El.classList.remove('hidden');
+
+			const choice = checkinConversationState.turn1Choice;
+			const followup = activeTopic.followups && activeTopic.followups[choice];
+
+			if (followup && reactionEl && followupQEl && followupOptionsEl) {
+				reactionEl.innerText = followup.reaction || 'Thank you for sharing that!';
+				followupQEl.innerText = followup.question;
+				followupOptionsEl.innerHTML = followup.choices
+					.map(
+						(c) => `
+						<button
+							type="button"
+							onclick="selectCheckinTurn2Choice('${escapeHtml(c).replace(/'/g, "\\'")}')"
+							class="w-full text-left px-5 py-4 ${
+								c.includes('all done')
+									? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-2 border-slate-300'
+									: 'bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white text-slate-950 border-2 border-blue-300 hover:border-blue-500'
+							} rounded-2xl font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
+						>
+							${escapeHtml(c)}
+						</button>
+					`
+					)
+					.join('');
+			}
+		} else {
+			// Turn 1 Opening
+			if (turn2El) turn2El.classList.add('hidden');
+			if (turn1El) turn1El.classList.remove('hidden');
+
+			if (qEl) qEl.innerText = activeTopic.question;
+			if (optionsEl) {
+				optionsEl.innerHTML = activeTopic.choices
+					.map(
+						(choice) => `
+						<button
+							type="button"
+							onclick="selectCheckinTurn1Choice('${escapeHtml(choice).replace(/'/g, "\\'")}')"
+							class="w-full text-left px-5 py-4 ${
+								choice.toLowerCase().includes('not sure') || choice.toLowerCase().includes('none')
+									? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-300'
+									: 'bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white text-slate-950 border-2 border-blue-300 hover:border-blue-500'
+							} rounded-2xl font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
+						>
+							${escapeHtml(choice)}
+						</button>
+					`
+					)
+					.join('');
+			}
+		}
 	}
 
 	renderAdminCheckinResponse(resp, todayStr);
 }
 
-async function submitSeniorCheckin(choice) {
+// ================= SENIOR MEMORY JOURNAL (PERSISTENT & CHRONOLOGICAL) =================
+
+async function recordSeniorJournalEntry(entry) {
 	const todayStr = getTodayDateString();
-	const { question } = getActiveCheckinQuestion(latestBoardData);
-	const responsePayload = {
-		question: question,
-		answer: choice,
-		timestamp: Date.now(),
-		dateStr: todayStr,
+	const id = `journal_${Date.now()}`;
+	const payload = {
+		id: id,
+		dateStr: entry.dateStr || todayStr,
+		timestamp: entry.timestamp || Date.now(),
+		question: entry.question || '',
+		answer: entry.answer || '',
+		followupQuestion: entry.followupQuestion || '',
+		followupAnswer: entry.followupAnswer || '',
+		notes: entry.notes || '',
 	};
 
-	try {
-		localStorage.setItem('smb_local_senior_response', JSON.stringify(responsePayload));
-	} catch (e) {}
-
 	if (!latestBoardData) latestBoardData = {};
-	latestBoardData.seniorResponse = responsePayload;
-	if (!latestBoardData.seniorHistory) latestBoardData.seniorHistory = {};
-	const histKey = `resp_${Date.now()}`;
-	latestBoardData.seniorHistory[histKey] = responsePayload;
+	if (!latestBoardData.seniorJournal) latestBoardData.seniorJournal = {};
+	latestBoardData.seniorJournal[id] = payload;
 
 	try {
-		localStorage.setItem('smb_local_senior_history', JSON.stringify(latestBoardData.seniorHistory));
+		localStorage.setItem('smb_local_senior_journal', JSON.stringify(latestBoardData.seniorJournal));
 	} catch (e) {}
 
-	renderSeniorCheckin(latestBoardData);
-
 	try {
-		await database.ref('board/seniorResponse').set(responsePayload);
-		await database.ref(`board/seniorHistory/${histKey}`).set(responsePayload);
-		console.log('Senior check-in response and history synced to Firebase');
-	} catch (err) {
-		console.warn('Firebase sync of senior check-in failed (check database rules):', err);
-	}
+		database.ref(`board/seniorJournal/${id}`).set(payload).catch((err) => {
+			console.warn('Firebase sync of journal entry failed:', err);
+		});
+	} catch (err) {}
 
-	renderAiSummaryCard();
+	updateAdminJournalCount();
 }
 
-function resetSeniorCheckinChoice() {
-	const data = latestBoardData || {};
-	const { choices } = getActiveCheckinQuestion(data);
-	const optionsEl = document.getElementById('disp-checkin-options');
-	const confirmEl = document.getElementById('disp-checkin-confirmation');
-	const badgeEl = document.getElementById('disp-checkin-status-badge');
+function updateAdminJournalCount() {
+	const countBadge = document.getElementById('admin-journal-count-badge');
+	const totalText = document.getElementById('journal-total-count-text');
+	const entries = Object.values(latestBoardData?.seniorJournal || {});
+	const count = entries.length;
+	const label = count === 1 ? '1 entry' : `${count} entries`;
+	if (countBadge) countBadge.innerText = label;
+	if (totalText) totalText.innerText = count === 1 ? '1 Memory Recorded' : `${count} Memories Recorded`;
+}
 
-	if (optionsEl) {
-		optionsEl.innerHTML = choices
-			.map(
-				(choice) => `
-				<button
-					type="button"
-					onclick="submitSeniorCheckin('${escapeHtml(choice).replace(/'/g, "\\'")}')"
-					class="w-full text-left px-5 py-4 bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white rounded-2xl border-2 border-blue-300 hover:border-blue-500 text-slate-950 font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
-				>
-					${escapeHtml(choice)}
-				</button>
-			`
-			)
-			.join('');
-		optionsEl.classList.remove('hidden');
+function openMemoryJournalModal() {
+	const modal = document.getElementById('modal-memory-journal');
+	if (modal) modal.classList.remove('hidden');
+	renderMemoryJournalEntries();
+}
+
+function closeMemoryJournalModal() {
+	const modal = document.getElementById('modal-memory-journal');
+	if (modal) modal.classList.add('hidden');
+}
+
+function toggleAddJournalEntryForm() {
+	const formContainer = document.getElementById('journal-add-entry-container');
+	if (!formContainer) return;
+	formContainer.classList.toggle('hidden');
+	const dateInput = document.getElementById('input-journal-date');
+	if (dateInput && !dateInput.value) {
+		dateInput.value = getTodayDateString();
 	}
-	if (confirmEl) confirmEl.classList.add('hidden');
-	if (badgeEl) badgeEl.classList.add('hidden');
+}
+
+async function saveCaregiverJournalEntry() {
+	const dateEl = document.getElementById('input-journal-date');
+	const promptEl = document.getElementById('input-journal-prompt');
+	const wordsEl = document.getElementById('input-journal-words');
+	const words = (wordsEl?.value || '').trim();
+	if (!words) {
+		alert('Please enter a memory or words to save.');
+		return;
+	}
+	const dateStr = (dateEl?.value || '').trim() || getTodayDateString();
+	const prompt = (promptEl?.value || '').trim() || 'Family Memory Note';
+
+	await recordSeniorJournalEntry({
+		dateStr,
+		question: prompt,
+		answer: words,
+		notes: 'Added by Caregiver',
+		timestamp: Date.now(),
+	});
+
+	if (wordsEl) wordsEl.value = '';
+	if (promptEl) promptEl.value = '';
+	toggleAddJournalEntryForm();
+	renderMemoryJournalEntries();
+	showToast('Memory saved to journal!');
+}
+
+async function deleteJournalEntry(id) {
+	if (!confirm('Are you sure you want to remove this memory entry?')) return;
+	if (latestBoardData?.seniorJournal && latestBoardData.seniorJournal[id]) {
+		delete latestBoardData.seniorJournal[id];
+	}
+	try {
+		localStorage.setItem('smb_local_senior_journal', JSON.stringify(latestBoardData.seniorJournal || {}));
+		await database.ref(`board/seniorJournal/${id}`).remove();
+	} catch (e) {}
+	updateAdminJournalCount();
+	renderMemoryJournalEntries();
+	showToast('Memory entry removed.');
+}
+
+function renderMemoryJournalEntries() {
+	const container = document.getElementById('journal-entries-container');
+	if (!container) return;
+
+	let journalMap = latestBoardData?.seniorJournal;
+	if (!journalMap) {
+		try {
+			const raw = localStorage.getItem('smb_local_senior_journal');
+			if (raw) journalMap = JSON.parse(raw);
+		} catch (e) {}
+	}
+
+	const entries = Object.values(journalMap || {})
+		.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+	updateAdminJournalCount();
+
+	if (entries.length === 0) {
+		container.innerHTML = `
+			<div class="p-8 text-center bg-white rounded-2xl border border-slate-200 space-y-2">
+				<span class="text-4xl block">📖</span>
+				<h3 class="text-base font-bold text-slate-800">No Memories Recorded Yet</h3>
+				<p class="text-xs text-slate-500 max-w-sm mx-auto">
+					As Mom answers daily check-in questions on the board, her reflections and stories will be saved chronologically right here.
+				</p>
+			</div>
+		`;
+		return;
+	}
+
+	container.innerHTML = entries
+		.map((entry) => {
+			const formattedDate = entry.timestamp
+				? new Date(entry.timestamp).toLocaleDateString('en-US', {
+						weekday: 'long',
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+				  })
+				: entry.dateStr || 'Recorded Entry';
+
+			return `
+				<div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2.5 transition">
+					<div class="flex items-center justify-between border-b border-slate-100 pb-2">
+						<div class="flex items-center gap-2">
+							<span class="text-sm font-black text-blue-900">${escapeHtml(formattedDate)}</span>
+							${entry.notes ? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">${escapeHtml(entry.notes)}</span>` : ''}
+						</div>
+						<button
+							type="button"
+							onclick="deleteJournalEntry('${entry.id}')"
+							class="text-slate-400 hover:text-rose-600 text-xs font-semibold p-1 cursor-pointer"
+							title="Delete entry"
+						>
+							✕
+						</button>
+					</div>
+					<div class="space-y-1.5">
+						<div class="text-xs font-semibold text-slate-500">
+							<strong>Question:</strong> <em>"${escapeHtml(entry.question)}"</em>
+						</div>
+						<div class="text-base font-black text-slate-950 bg-blue-50/60 p-2.5 rounded-xl border border-blue-100">
+							Mom: "${escapeHtml(entry.answer)}"
+						</div>
+						${
+							entry.followupAnswer
+								? `
+							<div class="pl-3 border-l-2 border-indigo-200 space-y-1 mt-2">
+								<div class="text-xs text-slate-500 font-medium">Follow-up: <em>"${escapeHtml(entry.followupQuestion)}"</em></div>
+								<div class="text-sm font-bold text-indigo-950">Mom: "${escapeHtml(entry.followupAnswer)}"</div>
+							</div>
+						`
+								: ''
+						}
+					</div>
+				</div>
+			`;
+		})
+		.join('');
+}
+
+function downloadMemoryJournalMarkdown() {
+	const entries = Object.values(latestBoardData?.seniorJournal || {})
+		.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+	let md = `# Mom's Memory Journal\n`;
+	md += `*A chronological keepsake diary of memories and reflections shared on the home message board.*\n`;
+	md += `*Exported on ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}*\n\n`;
+	md += `---\n\n`;
+
+	if (entries.length === 0) {
+		md += `*No memories recorded yet.*\n`;
+	} else {
+		entries.forEach((entry) => {
+			const formattedDate = entry.timestamp
+				? new Date(entry.timestamp).toLocaleDateString('en-US', {
+						weekday: 'long',
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+				  })
+				: entry.dateStr || 'Recorded Entry';
+
+			md += `### ${formattedDate}\n`;
+			md += `* **Prompt:** ${entry.question}\n`;
+			md += `* **Mom's Words:** ${entry.answer}\n`;
+			if (entry.followupAnswer) {
+				md += `* **Follow-up:** ${entry.followupQuestion}\n`;
+				md += `* **Mom's Choice:** ${entry.followupAnswer}\n`;
+			}
+			if (entry.notes) {
+				md += `* **Family Note:** ${entry.notes}\n`;
+			}
+			md += `\n---\n\n`;
+		});
+	}
+
+	const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = `Mom-Memory-Journal-${getTodayDateString()}.md`;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+	showToast('Markdown Memory Journal downloaded!');
+}
+
+function printMemoryJournal() {
+	const entries = Object.values(latestBoardData?.seniorJournal || {})
+		.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+	const printWin = window.open('', '_blank');
+	if (!printWin) {
+		alert('Please allow popups to print the Memory Journal.');
+		return;
+	}
+
+	let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mom's Memory Journal</title>`;
+	html += `<style>
+		body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; padding: 40px; max-width: 800px; margin: 0 auto; }
+		h1 { font-size: 28px; margin-bottom: 4px; color: #0f172a; }
+		.subtitle { font-size: 14px; color: #64748b; margin-bottom: 30px; font-style: italic; }
+		.entry { border-bottom: 1px solid #e2e8f0; padding: 20px 0; page-break-inside: avoid; }
+		.date { font-size: 16px; font-weight: bold; color: #1e3a8a; margin-bottom: 8px; }
+		.prompt { font-size: 14px; color: #475569; margin-bottom: 6px; }
+		.answer { font-size: 18px; font-weight: bold; color: #0f172a; background: #f8fafc; padding: 10px 14px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 8px; }
+		.followup { margin-left: 16px; font-size: 14px; color: #334155; }
+		.note { font-size: 12px; color: #b45309; margin-top: 6px; }
+		@media print { body { padding: 0; } }
+	</style></head><body>`;
+
+	html += `<h1>Mom's Memory Journal</h1>`;
+	html += `<div class="subtitle">A keepsake record of thoughts and memories shared on the home message board &bull; Printed ${new Date().toLocaleDateString()}</div>`;
+
+	if (entries.length === 0) {
+		html += `<p><em>No memories recorded yet.</em></p>`;
+	} else {
+		entries.forEach((e) => {
+			const formattedDate = e.timestamp
+				? new Date(e.timestamp).toLocaleDateString('en-US', {
+						weekday: 'long',
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+				  })
+				: e.dateStr;
+
+			html += `<div class="entry">`;
+			html += `<div class="date">${escapeHtml(formattedDate)}</div>`;
+			html += `<div class="prompt"><strong>Question:</strong> ${escapeHtml(e.question)}</div>`;
+			html += `<div class="answer">Mom: "${escapeHtml(e.answer)}"</div>`;
+			if (e.followupAnswer) {
+				html += `<div class="followup"><strong>Follow-up:</strong> ${escapeHtml(e.followupQuestion)}<br><strong>Mom's Choice:</strong> "${escapeHtml(e.followupAnswer)}"</div>`;
+			}
+			if (e.notes) {
+				html += `<div class="note"><strong>Family Note:</strong> ${escapeHtml(e.notes)}</div>`;
+			}
+			html += `</div>`;
+		});
+	}
+
+	html += `</body></html>`;
+
+	printWin.document.open();
+	printWin.document.write(html);
+	printWin.document.close();
+	printWin.focus();
+	setTimeout(() => {
+		printWin.print();
+	}, 250);
 }
 
 let lastSuggestedCreativeIndex = -1;
@@ -1167,7 +1597,7 @@ function suggestCreativeCheckinQuestion() {
 	const choicesEl = document.getElementById('input-checkin-custom-choices');
 	if (!qEl || !choicesEl) return;
 
-	const pool = CREATIVE_FALLBACK_CHECKIN_QUESTIONS;
+	const pool = CONVERSATIONAL_CHECKIN_TOPICS;
 	lastSuggestedCreativeIndex = (lastSuggestedCreativeIndex + 1) % pool.length;
 	const item = pool[lastSuggestedCreativeIndex];
 
@@ -1185,37 +1615,38 @@ function renderAdminCheckinResponse(resp, todayStr) {
 	if (!respTextEl) return;
 
 	// Show current active question info
-	const activeQ = getActiveCheckinQuestion(latestBoardData);
+	const activeTopic = getActiveCheckinTopic(latestBoardData);
 	if (activeQInfoEl) {
-		activeQInfoEl.innerHTML = `Active Question: <em>"${escapeHtml(activeQ.question)}"</em> <span class="text-[10px] font-semibold text-slate-500">(${activeQ.source || 'Auto'})</span>`;
+		activeQInfoEl.innerHTML = `Active Prompt: <em>"${escapeHtml(activeTopic.question)}"</em> <span class="text-[10px] font-semibold text-slate-500">(${activeTopic.source || 'Conversation'})</span>`;
 	}
 
 	if (resp && resp.dateStr === todayStr && resp.answer) {
 		const timeStr = resp.timestamp
 			? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 			: '';
-		respTextEl.innerHTML = `<strong>${escapeHtml(resp.answer)}</strong> (for <em>"${escapeHtml(resp.question || 'Daily Check-In')}"</em>${timeStr ? ' at ' + timeStr : ''})`;
+		const followupText = resp.followupAnswer ? ` &bull; Follow-up: <strong>"${escapeHtml(resp.followupAnswer)}"</strong>` : '';
+		respTextEl.innerHTML = `<strong>${escapeHtml(resp.answer)}</strong> (for <em>"${escapeHtml(resp.question || 'Daily Check-In')}"</em>${timeStr ? ' at ' + timeStr : ''})${followupText}`;
 		if (clearBtn) clearBtn.classList.remove('hidden');
 	} else {
 		respTextEl.innerText = 'No response logged yet today.';
 		if (clearBtn) clearBtn.classList.add('hidden');
 	}
 
-	// Render recent history list
+	// Render recent journal history preview
 	if (historyEl) {
-		let historyMap = latestBoardData?.seniorHistory;
-		if (!historyMap) {
+		let journalMap = latestBoardData?.seniorJournal;
+		if (!journalMap) {
 			try {
-				const rawHist = localStorage.getItem('smb_local_senior_history');
-				if (rawHist) historyMap = JSON.parse(rawHist);
+				const raw = localStorage.getItem('smb_local_senior_journal');
+				if (raw) journalMap = JSON.parse(raw);
 			} catch (e) {}
 		}
-		const historyList = Object.values(historyMap || {})
+		const entries = Object.values(journalMap || {})
 			.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
 			.slice(0, 3);
 
-		if (historyList.length > 0) {
-			historyEl.innerHTML = '<strong>Recent Feedback:</strong> ' + historyList.map(h => `${escapeHtml(h.answer)} <span class="text-slate-400">(${h.dateStr})</span>`).join(' \u2022 ');
+		if (entries.length > 0) {
+			historyEl.innerHTML = '<strong>Recent Journal:</strong> ' + entries.map(h => `${escapeHtml(h.answer)} <span class="text-slate-400">(${h.dateStr})</span>`).join(' &bull; ');
 			historyEl.classList.remove('hidden');
 		} else {
 			historyEl.classList.add('hidden');
@@ -1966,6 +2397,9 @@ function renderBoard(data) {
 	// Render Senior Daily Check-In
 	renderSeniorCheckin(data);
 
+	// Update Admin Journal Count Badge
+	updateAdminJournalCount();
+
 	// Render AI Daily Action Plan & Prep Card
 	renderAiSummaryCard();
 
@@ -2582,7 +3016,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		lookAheadParts.push(`${h.name} arrives ${whenStr} — look forward to catching up with family.`);
 	}
 
-	// Bullet 4: Multi-Day Prep or Next-Few-Days Pacing (with bolded action)
+	// Paragraph 4 (Optional): Proactive Prep or Senior Check-In Reflection
 	if (prepAlerts.length > 0) {
 		let cleanAlert = prepAlerts[0].replace(/^[\p{Emoji}\s]+/u, '').trim();
 		if (!cleanAlert.includes('**')) {
@@ -2592,27 +3026,18 @@ function buildSmartRuleBasedPlan(boardData) {
 			);
 		}
 		todayPlan.push(cleanAlert);
-	} else if (lookAheadParts.length > 0) {
-		let cleanLook = lookAheadParts[0].trim();
-		if (!cleanLook.includes('**')) {
-			cleanLook = cleanLook.replace(
-				/(Lay out [^.,]+|Confirm [^.,]+|Enjoy [^.,]+|Rest [^.,]+)/i,
-				'**$1**'
-			);
-		}
-		todayPlan.push(cleanLook);
-	}
-
-	// Bullet 5: Senior Check-In Response acknowledgment (if answered today)
-	if (seniorResp && seniorResp.answer) {
+	} else if (seniorResp && seniorResp.answer) {
 		const qLower = (seniorResp.question || '').toLowerCase();
 		const ansText = seniorResp.answer;
-		if (qLower.includes('dinner') || qLower.includes('eat') || qLower.includes('food')) {
+		const isEscape = ansText.toLowerCase().includes('not sure') || ansText.toLowerCase().includes('none');
+		if (isEscape) {
+			todayPlan.push('Thank you for checking in this morning. **Take things easy today** and enjoy an unhurried afternoon.');
+		} else if (qLower.includes('dinner') || qLower.includes('eat') || qLower.includes('food')) {
 			todayPlan.push(`Dinner preference noted: ${ansText}. **Enjoy a comforting dinner** this evening.`);
-		} else if (qLower.includes('stroll') || qLower.includes('porch') || qLower.includes('air') || qLower.includes('outside')) {
-			todayPlan.push(`Check-in response noted: ${ansText}. **Enjoy the fresh air and sunshine** at your own pace.`);
+		} else if (qLower.includes('song') || qLower.includes('music') || qLower.includes('radio')) {
+			todayPlan.push(`Your memory of ${ansText} is such a treasure. **Put on some favorite music** today and hum along.`);
 		} else {
-			todayPlan.push(`Check-in response logged: "${ansText}". **Have a wonderful, restful afternoon**.`);
+			todayPlan.push(`We loved hearing your reflection: "${ansText}". **Have a wonderful, restful day**.`);
 		}
 	}
 
@@ -2679,33 +3104,24 @@ function renderAiSummaryCard() {
 
 	if (!todayPlan || todayPlan.length === 0) {
 		todayPlanEl.innerHTML = `
-			<ul class="space-y-3.5 sm:space-y-4">
-				<li class="flex items-start gap-3 sm:gap-3.5">
-					<span class="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 mt-2 sm:mt-2.5 rounded-full bg-blue-600 shrink-0" aria-hidden="true"></span>
-					<span class="text-xl sm:text-2xl font-medium text-slate-800 leading-snug">
-						Take your day at a gentle pace. <strong class="font-black text-slate-950">Keep a glass of water nearby</strong> and enjoy a relaxing day.
-					</span>
-				</li>
-			</ul>
+			<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+				Good morning! Wishing you a peaceful and comfortable start to your day.
+			</p>
+			<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+				Take your day at a gentle pace. <strong class="font-black text-slate-950">Keep a glass of water nearby</strong> and enjoy a relaxing day.
+			</p>
 		`;
 	} else {
-		todayPlanEl.innerHTML = `
-			<ul class="space-y-3.5 sm:space-y-4">
-				${todayPlan
-					.map((item) => {
-						const formatted = formatActionBulletHtml(item);
-						return `
-							<li class="flex items-start gap-3 sm:gap-3.5">
-								<span class="inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 mt-2 sm:mt-2.5 rounded-full bg-blue-600 shrink-0" aria-hidden="true"></span>
-								<span class="text-xl sm:text-2xl font-medium text-slate-800 leading-snug">
-									${formatted}
-								</span>
-							</li>
-						`;
-					})
-					.join('')}
-			</ul>
-		`;
+		todayPlanEl.innerHTML = todayPlan
+			.map((item) => {
+				const formatted = formatActionBulletHtml(item);
+				return `
+					<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+						${formatted}
+					</p>
+				`;
+			})
+			.join('');
 	}
 
 	if (prepAlertsEl) {
@@ -2756,15 +3172,13 @@ async function generateAiActionPlan(options = {}) {
 	});
 
 	if (!apiKey) {
-		// Instant Smart Care Companion generation without requiring an external key
-		const smartQ = generateSmartFallbackQuestion(latestBoardData);
+		// Instant Smart Care Companion generation using built-in conversational topics
 		const dayOfYear = getDayOfYear();
-		const fallbackItem =
-			smartQ ||
-			CREATIVE_FALLBACK_CHECKIN_QUESTIONS[dayOfYear % CREATIVE_FALLBACK_CHECKIN_QUESTIONS.length];
+		const fallbackTopic =
+			CONVERSATIONAL_CHECKIN_TOPICS[dayOfYear % CONVERSATIONAL_CHECKIN_TOPICS.length];
 		const smartAiQuestion = {
-			question: fallbackItem.question,
-			choices: fallbackItem.choices,
+			question: fallbackTopic.question,
+			choices: fallbackTopic.choices,
 			generatedDate: todayStr,
 			updatedAt: Date.now(),
 		};
@@ -2840,6 +3254,10 @@ async function generateAiActionPlan(options = {}) {
 				.join('\n'),
 			medicationInstructions: latestBoardData?.medicationNotes || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
+			seniorJournalMemories: Object.values(latestBoardData?.seniorJournal || {})
+				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+				.slice(0, 10)
+				.map((j) => ({ date: j.dateStr, prompt: j.question, reflection: j.answer, notes: j.notes || undefined })),
 			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
 				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
 				.slice(0, 6)
@@ -2884,25 +3302,24 @@ async function generateAiActionPlan(options = {}) {
 				model: 'gemini-3.8-flash',
 				store: false,
 				system_instruction:
-					'You are a loving, thoughtful family member speaking directly to an older adult ("you") on their home message board.\n' +
-					'Your voice is warm, natural, colloquial, and genuinely human. Avoid robotic checklists, clinical instructions, or automated assistant cliches.\n\n' +
+					'You are a loving, thoughtful family member speaking directly to an 80+ senior ("you") on their home message board.\n' +
+					'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and completely human.\n' +
+					'STRICT ACCESSIBILITY & ALZHEIMER\'S GUIDELINES:\n' +
+					'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
+					'- Avoid long paragraphs or dense text blocks. High visual spacing and short 1-2 sentence paragraphs prevent disorientation.\n' +
+					'- Zero emojis anywhere.\n\n' +
 					'CRITICAL RULES:\n' +
-					'1. `todayPlan` (AN ARRAY OF 3 TO 5 CONCISE BULLET POINTS, NEVER USE EMOJIS):\n' +
-					'   - WEATHER BULLET: Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. Use natural descriptions like "crisp morning", "mild and pleasant", or "rainy afternoon".\n' +
-					'   - BOLD ACTIONS: In each bullet point, BOLD any specific action the senior should take using markdown **action text** (e.g. **Take your morning pills with breakfast**, **Put on a warm sweater**, **Bring your insurance card and glasses**, **Drink extra water**).\n' +
-					'   - SCHEDULE BULLET: Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful open day).\n' +
-					'   - MULTI-DAY PREP BULLET: Proactive prep for upcoming events in the next few days.\n' +
-					'   - CHECK-IN ACKNOWLEDGMENT: If senior already answered today\'s check-in question (`seniorCheckIn`), warmly weave their choice into a bullet.\n' +
-					'2. `dailyQuestion`: CREATIVE SENIOR CHECK-IN (NEVER REPETITIVE, NEVER BORING):\n' +
-					'   - STRICTLY FORBIDDEN: NEVER ask generic or repetitive questions like "What is on your agenda today?", "What are you doing today?", "What are your plans?", or "What sounds good for dinner tonight / what is for dinner?". These feel robotic and repetitive to the senior.\n' +
-					'   - BE CREATIVE, DELIGHTFUL, AND NOSTALGIC: Create ONE creative, warm question that sparks fond memories, evokes classic nostalgia, celebrates timeless music, explores comforting sensory pleasures, invites daydreams (scenic train rides, tranquil places), or asks about little things that bring a smile.\n' +
-					'   - ADAPT TO CAREGIVER & SENIOR FEEDBACK: Review `caregiverNotesAndFeedback` and `seniorRecentHistoryAndFeedback`. If the caregiver mentions her favorite music (e.g. big band, Frank Sinatra, country), hobbies (gardening, birds, baking), or hometown, craft a question around that! If she answered a music question recently, ask about childhood treats, cozy spots, or scenic views today.\n' +
-					'   - DO NOT REPEAT: Review `seniorRecentHistoryAndFeedback` questions and do not repeat any question or theme asked recently.\n' +
-					'   - SENIOR-FRIENDLY CHOICES: Provide 3 or 4 distinct, uplifting choices under 6 words each. ZERO emojis or icons anywhere in the question or choices.\n' +
-					'3. LEARN FROM THE SENIOR: Review `seniorRecentHistoryAndFeedback`. Notice what they enjoy or if they felt tired recently. Acknowledge and build on their real habits rather than guessing.\n' +
-					'4. CAREGIVER GUIDANCE: If `caregiverNotesAndFeedback` is provided, follow every detail faithfully.\n' +
-					'5. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
-					'6. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.',
+					'1. `todayPlan` (AN ARRAY OF 2 TO 4 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
+					'   - PARAGRAPH 1 (WEATHER & MORNING OUTLOOK): Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. E.g. "Crisp, sunny weather today with cool afternoon air. **Put on a warm sweater** before sitting out on the porch."\n' +
+					'   - PARAGRAPH 2 (MEDICATION & HYDRATION): Note morning medication status and hydration advice with bold markdown **action text**, e.g. "**Take your morning medicine with breakfast** and drink a full glass of water."\n' +
+					'   - PARAGRAPH 3 (SCHEDULE & PACING): Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful quiet day at home).\n' +
+					'   - PARAGRAPH 4 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
+					'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
+					'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
+					'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
+					'   - Choices must include 3 distinct nostalgic/warm choices plus 1 low-pressure escape choice (e.g. "Not sure today" or "None of these"). Under 6 words each. Zero emojis.\n' +
+					'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
+					'4. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.',
 				input:
 					'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
 					JSON.stringify(boardSnapshot, null, 2),
@@ -2916,7 +3333,7 @@ async function generateAiActionPlan(options = {}) {
 								type: 'array',
 								items: { type: 'string' },
 								description:
-									'An array of 3 to 5 concise bullet point strings. Each bullet has bold markdown **action text** for any required action. The weather bullet MUST NOT contain any numbers, digits, degree symbols, or percentages.',
+									'An array of 2 to 4 short, warm paragraphs (1-2 sentences each). Each paragraph has bold markdown **action text** for any required action. The weather description MUST NOT contain any numbers, digits, degree symbols, or percentages. No bullet points or emojis.',
 							},
 							prepAlerts: {
 								type: 'array',
