@@ -313,6 +313,15 @@ The Senior Message Board is a specialized, zero-build static web application des
   - **Storage Locations**: Transcribed text and AI-polished stories are stored in Firebase Realtime Database (`board/seniorJournal/<id>`, `board/seniorResponse`, `board/seniorProfile/favorites`) with an offline browser cache in `localStorage` (`smb_local_senior_journal`).
   - **Capacity / Limits**: Because storage is pure text (~0.5 KB - 1 KB per entry), Firebase's free 1 GB tier can hold hundreds of thousands of stories without exceeding limits or incurring costs.
 
+#### Turn 86
+- **User Request**:
+  - The main message card on the today page has extra borders and padding (an extra container that is different from the other page layouts). Design it to match the other pages.
+- **Technical Implementation**:
+  - Standardized `#card-announcement` on `#disp-page-today` to match the exact single-card layout of the other five kiosk sub-pages (`bg-white p-5 sm:p-7 rounded-2xl border-2 border-blue-200 shadow-sm space-y-6`).
+  - Added the unified sub-page top header section (`border-b-2 border-blue-100 pb-4`) with `#disp-ai-today-heading` (`Morning Briefing`) as the `h2` title and a matching subtitle (`Today's personal overview, reminders, and activities`).
+  - Removed the double-nested inner container and inner border/padding (`bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs`) from `#disp-ai-today-plan`, allowing briefing paragraphs to flow naturally within the primary card.
+  - Re-styled `#disp-announcement-container` (when active) as a prominent alert callout within the unified card rather than wrapping the entire page.
+
 ---
 
 ## Current Architecture & File Inventory

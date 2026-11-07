@@ -234,32 +234,44 @@
 							<!-- Main Message & AI Daily Companion Hub (Full-Width Cohesive Morning Briefing) -->
 							<div
 								id="card-announcement"
-								class="bg-blue-50/90 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-5"
+								class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-blue-200 shadow-sm space-y-6"
 							>
+								<div class="flex items-center justify-between border-b-2 border-blue-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h2
+											id="disp-ai-today-heading"
+											class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950"
+										>
+											Morning Briefing
+										</h2>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Today's personal overview, reminders, and activities
+										</p>
+									</div>
+								</div>
+
 								<!-- Today's Important Hero Message (Across Top, Spanning Full Width, Hidden if empty) -->
-								<div id="disp-announcement-container" class="space-y-2 pb-5 border-b-2 border-blue-200/80 hidden">
-									<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg">
+								<div
+									id="disp-announcement-container"
+									class="hidden p-5 sm:p-6 bg-blue-50 rounded-2xl border-2 border-blue-200 space-y-1"
+								>
+									<span class="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-900 block">
 										Today's Important Message
-									</h2>
+									</span>
 									<p
 										id="disp-announcement"
-										class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 leading-snug"
+										class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950 leading-snug"
 									></p>
 								</div>
 
 								<!-- Full-Width Cohesive Daily Briefing (2-3 Flowing Paragraphs with Contextual Deep Links) -->
-								<div id="disp-ai-today-section" class="flex flex-col space-y-3">
-									<h3 id="disp-ai-today-heading" class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
-										Morning Briefing
-									</h3>
-									<div
-										id="disp-ai-today-plan"
-										class="p-5 sm:p-6 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs space-y-4 sm:space-y-5"
-									>
-										<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
-											Putting together your morning greeting...
-										</p>
-									</div>
+								<div
+									id="disp-ai-today-plan"
+									class="space-y-4 sm:space-y-5"
+								>
+									<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
+										Putting together your morning greeting...
+									</p>
 								</div>
 							</div>
 						</div>
