@@ -242,6 +242,29 @@ async function updateWeather(zip) {
 			// Evening wind-down (5 PM - 9 PM)
 			const eveningTemps = hourlyTemps.slice(17, 22).map(Math.round).filter((n) => !isNaN(n));
 			const eveningAvg = eveningTemps.length ? Math.round(eveningTemps.reduce((a, b) => a + b, 0) / eveningTemps.length) : low;
+			const eveningCode = hourlyCodes[19] !== undefined ? hourlyCodes[19] : code;
+			const eveningDesc = getWeatherDesc(eveningCode);
+
+			// 3-Day Upcoming Forecast (Tomorrow + Next 2 Days)
+			const dailyDates = weatherData.daily?.time || [];
+			const dailyMaxs = weatherData.daily?.temperature_2m_max || [];
+			const dailyMins = weatherData.daily?.temperature_2m_min || [];
+			const dailyCodes = weatherData.daily?.weathercode || [];
+			const dailyRain = weatherData.daily?.precipitation_probability_max || [];
+			const forecastDays = [];
+			for (let i = 1; i <= 3; i++) {
+				if (dailyDates[i]) {
+					const dCode = dailyCodes[i] !== undefined ? dailyCodes[i] : code;
+					forecastDays.push({
+						dateStr: dailyDates[i],
+						high: Math.round(dailyMaxs[i] ?? high),
+						low: Math.round(dailyMins[i] ?? low),
+						code: dCode,
+						desc: getWeatherDesc(dCode),
+						rainChance: Math.round(dailyRain[i] ?? 0),
+					});
+				}
+			}
 
 			// Full-day rain timing & likelihood
 			let rainTiming = "Dry and clear all day";
@@ -322,15 +345,142 @@ async function updateWeather(zip) {
 				suggestion,
 				rainChanceMax,
 				rainTiming,
+				morningLow,
+				morningHigh,
+				morningDesc,
+				afternoonPeak,
+				afternoonDesc,
+				eveningAvg,
+				eveningDesc,
+				forecastDays,
 				morning: `${morningLow}\u00B0F to ${morningHigh}\u00B0F (${morningDesc.toLowerCase()})`,
 				afternoon: `peak ${afternoonPeak}\u00B0F (${afternoonDesc.toLowerCase()})`,
 				evening: `cooling to around ${eveningAvg}\u00B0F`,
 				bestWindow,
 			};
+			renderWeatherPage();
+			updateKioskNavBadges(latestBoardData);
 			renderAiSummaryCard();
 		}
 	} catch (err) {
 		console.warn('Weather fetch failed:', err);
+	}
+}
+
+function renderWeatherPage() {
+	if (!lastWeatherData) return;
+	const w = lastWeatherData;
+
+	const adviceEl = document.getElementById('page-weather-advice');
+	if (adviceEl) {
+		const rawAdvice = getWeatherSummaryWithoutNumbers(w).replace(/\*\*(.*?)\*\*/g, '$1');
+		adviceEl.innerText = rawAdvice;
+	}
+
+	const bestWinEl = document.getElementById('page-weather-best-window');
+	if (bestWinEl) {
+		bestWinEl.innerText = w.bestWindow || 'Early afternoon';
+	}
+
+	const rainEl = document.getElementById('page-weather-rain-timing');
+	if (rainEl) {
+		rainEl.innerText = w.rainTiming || 'Dry and clear all day';
+	}
+
+	const periodsEl = document.getElementById('page-weather-today-periods');
+	if (periodsEl) {
+		const mRange =
+			w.morningLow && w.morningHigh && w.morningLow !== w.morningHigh
+				? `${w.morningLow}\u00B0 to ${w.morningHigh}\u00B0F`
+				: `${w.morningHigh || w.temp}\u00B0F`;
+		const aTemp = `${w.afternoonPeak || w.high}\u00B0F`;
+		const eTemp = `${w.eveningAvg || w.low}\u00B0F`;
+
+		periodsEl.innerHTML = `
+			<div class="p-4 sm:p-5 bg-amber-50/70 rounded-2xl border-2 border-amber-200 space-y-1.5">
+				<div class="text-sm sm:text-base font-black uppercase tracking-wider text-amber-900">Morning (8 AM - Noon)</div>
+				<div class="text-2xl sm:text-3xl font-black text-slate-950">${escapeHtml(mRange)}</div>
+				<div class="text-lg sm:text-xl font-bold text-slate-700">${escapeHtml(w.morningDesc || w.desc)}</div>
+			</div>
+			<div class="p-4 sm:p-5 bg-sky-50/80 rounded-2xl border-2 border-sky-200 space-y-1.5">
+				<div class="text-sm sm:text-base font-black uppercase tracking-wider text-sky-900">Afternoon (Noon - 5 PM)</div>
+				<div class="text-2xl sm:text-3xl font-black text-slate-950">High near ${escapeHtml(aTemp)}</div>
+				<div class="text-lg sm:text-xl font-bold text-slate-700">${escapeHtml(w.afternoonDesc || w.desc)}</div>
+			</div>
+			<div class="p-4 sm:p-5 bg-indigo-50/70 rounded-2xl border-2 border-indigo-200 space-y-1.5">
+				<div class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900">Evening (5 PM - 9 PM)</div>
+				<div class="text-2xl sm:text-3xl font-black text-slate-950">Around ${escapeHtml(eTemp)}</div>
+				<div class="text-lg sm:text-xl font-bold text-slate-700">${escapeHtml(w.eveningDesc || w.desc)}</div>
+			</div>
+		`;
+	}
+
+	const forecastEl = document.getElementById('page-weather-forecast-days');
+	if (forecastEl) {
+		const days = Array.isArray(w.forecastDays) ? w.forecastDays : [];
+		if (days.length === 0) {
+			forecastEl.innerHTML = `
+				<div class="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 text-lg font-bold text-slate-600 col-span-full">
+					Upcoming forecast will appear shortly.
+				</div>
+			`;
+		} else {
+			const allEvts = Object.values(currentEventsMap || {});
+			forecastEl.innerHTML = days
+				.map((day, idx) => {
+					const parts = (day.dateStr || '').split('-').map(Number);
+					let dayLabel = idx === 0 ? 'Tomorrow' : `Day ${idx + 1}`;
+					if (parts.length === 3) {
+						const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+						const weekday = dt.toLocaleDateString([], { weekday: 'long' });
+						const monthDay = dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
+						dayLabel = idx === 0 ? `Tomorrow (${weekday})` : `${weekday}, ${monthDay}`;
+					}
+
+					const matchingEvts = allEvts.filter((e) => {
+						if (!e.date) return false;
+						if (e.endDate && e.endDate >= e.date) {
+							return day.dateStr >= e.date && day.dateStr <= e.endDate;
+						}
+						return e.date === day.dateStr;
+					});
+
+					const matchingHoliday = (upcomingHolidays || []).find((h) => h.date === day.dateStr);
+					let calendarTieInHtml = '';
+					if (matchingEvts.length > 0) {
+						const titles = matchingEvts.map((e) => e.title).join(', ');
+						calendarTieInHtml = `
+							<div class="mt-2 pt-2 border-t border-slate-200 text-base sm:text-lg font-black text-blue-900">
+								On Calendar: ${escapeHtml(titles)}
+							</div>
+						`;
+					} else if (matchingHoliday) {
+						calendarTieInHtml = `
+							<div class="mt-2 pt-2 border-t border-slate-200 text-base sm:text-lg font-black text-amber-900">
+								Holiday: ${escapeHtml(matchingHoliday.name)}
+							</div>
+						`;
+					}
+
+					const rainBadge =
+						day.rainChance >= 30
+							? `<span class="inline-block text-sm font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-200">${day.rainChance}% rain chance</span>`
+							: `<span class="inline-block text-sm font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Low rain chance</span>`;
+
+					return `
+						<div class="p-4 sm:p-5 bg-white rounded-2xl border-2 border-slate-200 shadow-2xs flex flex-col justify-between space-y-2">
+							<div class="space-y-1">
+								<div class="text-base sm:text-lg font-black uppercase tracking-wider text-slate-700">${escapeHtml(dayLabel)}</div>
+								<div class="text-2xl sm:text-3xl font-black text-slate-950">High ${day.high}\u00B0 | Low ${day.low}\u00B0</div>
+								<div class="text-lg sm:text-xl font-bold text-sky-950">${escapeHtml(day.desc)}</div>
+								<div class="pt-1">${rainBadge}</div>
+							</div>
+							${calendarTieInHtml}
+						</div>
+					`;
+				})
+				.join('');
+		}
 	}
 }
 
@@ -440,7 +590,7 @@ let kioskIdleTimer = null;
 const KIOSK_IDLE_TIMEOUT_MS = 90 * 1000; // 90 seconds auto-return to Today for Alzheimer's accessibility
 
 function switchKioskPage(pageName) {
-	const validPages = ['today', 'meds', 'events', 'family'];
+	const validPages = ['today', 'weather', 'meds', 'events', 'family'];
 	if (!validPages.includes(pageName)) pageName = 'today';
 	currentKioskPage = pageName;
 
@@ -457,16 +607,37 @@ function switchKioskPage(pageName) {
 		if (btnEl) {
 			if (p === pageName) {
 				btnEl.className =
-					'py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-blue-600 text-white shadow-md';
+					'py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-blue-600 text-white shadow-md';
 			} else {
 				btnEl.className =
-					'py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200';
+					'py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200';
 			}
 		}
 	});
 
+	if (pageName === 'weather') {
+		renderWeatherPage();
+	}
+
 	window.scrollTo({ top: 0, behavior: 'smooth' });
 	resetKioskIdleTimer();
+}
+
+function navigateFromBriefing(pageName, targetCardId) {
+	switchKioskPage(pageName);
+	if (!targetCardId) return;
+	setTimeout(() => {
+		const cardEl = document.getElementById(targetCardId);
+		if (cardEl) {
+			cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			cardEl.classList.remove('briefing-spotlight-ring');
+			void cardEl.offsetWidth;
+			cardEl.classList.add('briefing-spotlight-ring');
+			setTimeout(() => {
+				cardEl.classList.remove('briefing-spotlight-ring');
+			}, 3300);
+		}
+	}, 90);
 }
 
 function resetKioskIdleTimer() {
@@ -566,6 +737,17 @@ function updateKioskNavBadges(boardData) {
 			familyBadge.classList.remove('hidden');
 		} else {
 			familyBadge.classList.add('hidden');
+		}
+	}
+
+	// 4. Weather Nav Badge
+	const weatherBadge = document.getElementById('kiosk-nav-weather-badge');
+	if (weatherBadge) {
+		if (lastWeatherData && typeof lastWeatherData.temp === 'number') {
+			weatherBadge.innerText = `${lastWeatherData.temp}\u00B0`;
+			weatherBadge.classList.remove('hidden');
+		} else {
+			weatherBadge.classList.add('hidden');
 		}
 	}
 }
@@ -3950,6 +4132,75 @@ function formatActionBulletHtml(text) {
 	return safe;
 }
 
+function getTimeOfDayBriefingMeta() {
+	const now = new Date();
+	const hour = now.getHours();
+	const weekday = now.toLocaleDateString([], { weekday: 'long' });
+	if (hour < 12) {
+		return {
+			heading: 'Morning Briefing',
+			greeting: `Good morning and happy ${weekday}!`,
+		};
+	}
+	if (hour < 17) {
+		return {
+			heading: 'Afternoon Briefing',
+			greeting: `Good afternoon! Hope you are having a lovely ${weekday}.`,
+		};
+	}
+	return {
+		heading: 'Evening Briefing',
+		greeting: `Good evening! Wishing you a peaceful ${weekday} evening.`,
+	};
+}
+
+function getCohesiveWeatherPhrase(weatherData) {
+	if (!weatherData) {
+		return 'It is a calm, comfortable day outside.';
+	}
+
+	const code = typeof weatherData.code === 'number' ? weatherData.code : -1;
+	const high = typeof weatherData.high === 'number' ? weatherData.high : null;
+	const rainChance = typeof weatherData.rainChanceMax === 'number' ? weatherData.rainChanceMax : 0;
+	const desc = (weatherData.desc || '').toLowerCase();
+
+	if (code === 95 || code === 96 || code === 99 || desc.includes('thunder')) {
+		return 'Skies are stormy with passing thunderstorms today, making it a great day to stay cozy indoors.';
+	}
+	if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || desc.includes('snow') || desc.includes('flurr')) {
+		return 'It is wintry and cold with snow outside today, so **wear warm layers and non-slip shoes** if stepping out.';
+	}
+	if (
+		(code >= 51 && code <= 67) ||
+		(code >= 80 && code <= 82) ||
+		rainChance >= 60 ||
+		desc.includes('rain') ||
+		desc.includes('drizzle') ||
+		desc.includes('shower')
+	) {
+		return 'Rainy, damp weather is in the forecast today, so **keep an umbrella and non-slip shoes handy** if heading out.';
+	}
+	if (high !== null) {
+		if (high >= 85) {
+			return 'It will be quite warm this afternoon, so enjoy the cooler morning air and stay comfortable indoors during peak heat.';
+		}
+		if (high >= 75) {
+			return 'Warm, pleasant sunshine is on the way today with a comfortable afternoon breeze.';
+		}
+		if (high < 45) {
+			return 'It is brisk and cold outside today, so **bundle up in a warm coat** if you step out for fresh air.';
+		}
+		if (high < 60) {
+			return 'The air is crisp and cool today, so **put on a cozy sweater or cardigan** if sitting out on the porch.';
+		}
+		if (code === 0 || code === 1 || desc.includes('clear') || desc.includes('sun')) {
+			return 'It is mild, bright, and sunny outside today—lovely weather for some fresh air on the porch.';
+		}
+		return 'Weather outside is mild and comfortable today with gentle cloud cover.';
+	}
+	return 'Weather outside looks calm and comfortable today.';
+}
+
 function buildSmartRuleBasedPlan(boardData) {
 	const data = boardData || latestBoardData || {};
 	const todayStr = getTodayDateString();
@@ -3961,31 +4212,6 @@ function buildSmartRuleBasedPlan(boardData) {
 		data.seniorResponse && data.seniorResponse.dateStr === todayStr
 			? data.seniorResponse
 			: null;
-
-	// Bullet 1: Natural weather feel with bolded action (Zero numbers)
-	const weatherBullet = getWeatherSummaryWithoutNumbers(lastWeatherData);
-	todayPlan.push(weatherBullet);
-
-	// Bullet 2: Medication status & morning hydration advice
-	const medNotes = (data.medicationNotes || '').trim();
-	const medsList = getStructuredMedicationsList(data);
-	let medBullet = '';
-	if (data.medsTaken) {
-		medBullet =
-			'Morning medicine is logged as taken. **Take your evening medicine after dinner** and sip water throughout the day.';
-	} else {
-		if (medsList.length > 0) {
-			medBullet =
-				'**Take your morning medicine with breakfast** and drink a full glass of water.';
-		} else {
-			medBullet =
-				'**Take your daily medicine when ready** and drink a full glass of water to start your day.';
-		}
-	}
-	if (medNotes) {
-		medBullet += ` (${medNotes.replace(/[.!]+$/, '')})`;
-	}
-	todayPlan.push(medBullet);
 
 	// Schedule & Events context
 	const allEvents = Object.entries(currentEventsMap || {})
@@ -4001,80 +4227,12 @@ function buildSmartRuleBasedPlan(boardData) {
 		});
 
 	const todayEvents = allEvents.filter((e) => e.diffDays === 0);
+	const futureEvents = allEvents.filter((e) => e.diffDays >= 1);
 	const { allContacts } = getCombinedContactsList();
 	const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
 	const todaysHolidays = (upcomingHolidays || []).filter((h) => h.date === todayStr);
 
-	// Bullet 3: Today's Appointments & Schedule Pacing
-	if (todayEvents.length > 0) {
-		const firstEvt = todayEvents[0];
-		const { category, location } = getEventContext(firstEvt);
-		let timeStr = '';
-		if (firstEvt.time) {
-			const [h, m] = firstEvt.time.split(':').map(Number);
-			const d = new Date();
-			d.setHours(h, m, 0, 0);
-			timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-		}
-		const titleStr = firstEvt.title || 'appointment';
-		const driverNote = (firstEvt.notes || '').trim();
-		const reminderNote = (firstEvt.reminder || '').trim();
-
-		let evtBullet = '';
-		if (category === 'family') {
-			if (location === 'home') {
-				evtBullet = `${titleStr}${timeStr ? ' at ' + timeStr : ''} today. **Put on a fresh kettle of tea** and enjoy an unhurried morning.`;
-			} else {
-				evtBullet = `Getting together for ${titleStr}${timeStr ? ' at ' + timeStr : ''}. **Have a light meal beforehand** and enjoy your visit.`;
-			}
-		} else if (category === 'service') {
-			evtBullet = `Home service visit scheduled today for ${titleStr}${timeStr ? ' at ' + timeStr : ''}. **Keep a clear walkway to the door** and your phone nearby.`;
-		} else if (category === 'errand') {
-			evtBullet = `Outing for ${titleStr}${timeStr ? ' at ' + timeStr : ''}. **Wear comfortable walking shoes** and take your time.`;
-		} else {
-			// Medical or General Outing
-			if (location === 'home') {
-				evtBullet = `Home healthcare visit for ${titleStr}${timeStr ? ' at ' + timeStr : ''}. **Have your daily medication list handy**.`;
-			} else {
-				evtBullet = `${titleStr}${timeStr ? ' at ' + timeStr : ''}. **Bring your ID, glasses, and insurance card** with you.`;
-			}
-		}
-
-		if (reminderNote) {
-			evtBullet += ` **Remember**: ${reminderNote.replace(/[.!]+$/, '')}.`;
-		}
-		if (driverNote && !driverNote.toLowerCase().includes('driving')) {
-			evtBullet += ` Note: ${driverNote.replace(/[.!]+$/, '')}.`;
-		}
-		todayPlan.push(evtBullet);
-	} else if (todaysBirthdays.length > 0) {
-		const names = todaysBirthdays.map((c) => c.name).join(' and ');
-		todayPlan.push(
-			`Today is ${names}'s birthday! **Call them this afternoon** to wish them a very happy birthday.`
-		);
-	} else if (todaysHolidays.length > 0) {
-		todayPlan.push(
-			`Happy ${todaysHolidays[0].name}! **Treat yourself today** and keep your phone handy for family calls.`
-		);
-	} else {
-		const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
-		const hasCallReminder = activeMsgs.some((m) => (m.text || '').toLowerCase().includes('call'));
-		if (hasCallReminder) {
-			todayPlan.push(
-				'An open, restful day with no scheduled outings. **Call family this afternoon** to catch up.'
-			);
-		} else if (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')) {
-			todayPlan.push(
-				'An unhurried schedule at home today. **Enjoy your favorite puzzles or books** and take things easy.'
-			);
-		} else {
-			todayPlan.push(
-				'An unhurried schedule at home today. **Take a gentle walk around the house** every couple of hours.'
-			);
-		}
-	}
-
-	// Multi-Day Prep Coaching (0 to 4 days out)
+	// Multi-Day Prep Coaching (Strictly for future events 1 to 3 days out to avoid duplicating today's event details)
 	const rulesText = data.aiRules !== undefined ? data.aiRules : DEFAULT_AI_RULES;
 	const customRules = [];
 	(rulesText || '')
@@ -4092,113 +4250,81 @@ function buildSmartRuleBasedPlan(boardData) {
 			}
 		});
 
-	allEvents.forEach((evt) => {
-		if (evt.diffDays > 4) return;
+	futureEvents.forEach((evt) => {
+		if (evt.diffDays > 3) return;
 		const combinedText = `${evt.title || ''} ${evt.notes || ''} ${evt.reminder || ''}`.toLowerCase();
-		const whenPhrase =
-			evt.diffDays === 0
-				? 'today'
-				: evt.diffDays === 1
-				? 'tomorrow'
-				: `in ${evt.diffDays} days`;
+		const whenPhrase = evt.diffDays === 1 ? 'tomorrow' : `in ${evt.diffDays} days`;
 
-		if (evt.reminder && evt.reminder.trim()) {
+		if (
+			combinedText.includes('infusion') ||
+			combinedText.includes(' iv ') ||
+			combinedText.startsWith('iv ') ||
+			combinedText.includes('hydration')
+		) {
 			prepAlerts.push(
-				`For ${evt.title} (${whenPhrase}): ${evt.reminder.trim()}`
+				`**Drink an extra glass or two of water today** so you feel well-hydrated for your infusion ${whenPhrase}.`
 			);
+			return;
 		}
 
 		if (
-			evt.diffDays <= 3 &&
-			(combinedText.includes('infusion') ||
-				combinedText.includes(' iv ') ||
-				combinedText.startsWith('iv ') ||
-				combinedText.includes('hydration'))
+			combinedText.includes('blood') ||
+			combinedText.includes('lab') ||
+			combinedText.includes('fasting')
 		) {
-			if (evt.diffDays === 0) {
-				prepAlerts.push(
-					'Sip water this morning and wear a loose-sleeved top with a warm layer for your infusion today.'
-				);
-			} else {
-				prepAlerts.push(
-					`Drink 2 to 3 extra glasses of water today so you are well-hydrated for your infusion ${whenPhrase}.`
-				);
+			prepAlerts.push(
+				`**Sip extra water today** ahead of your lab visit ${whenPhrase}.`
+			);
+			return;
+		}
+
+		if (
+			combinedText.includes('physical therapy') ||
+			combinedText.includes(' pt ') ||
+			combinedText.startsWith('pt ') ||
+			combinedText.includes('therapy') ||
+			combinedText.includes('rehab')
+		) {
+			prepAlerts.push(
+				`Rest your legs today and **set out supportive walking shoes** for therapy ${whenPhrase}.`
+			);
+			return;
+		}
+
+		if (evt.reminder && evt.reminder.trim() && evt.diffDays === 1) {
+			prepAlerts.push(
+				`For ${evt.title} tomorrow: ${evt.reminder.trim().replace(/[.!]+$/, '')}.`
+			);
+			return;
+		}
+
+		customRules.forEach((rule) => {
+			if (
+				!['infusion', 'blood draw', 'physical therapy'].includes(rule.keyword) &&
+				combinedText.includes(rule.keyword)
+			) {
+				prepAlerts.push(`For ${evt.title} ${whenPhrase}: ${rule.instruction}`);
 			}
-			return;
-		}
-
-		if (
-			evt.diffDays <= 2 &&
-			(combinedText.includes('blood') ||
-				combinedText.includes('lab') ||
-				combinedText.includes('fasting'))
-		) {
-			prepAlerts.push(
-				`Drink extra water today for your lab visit ${whenPhrase}, and check if you need to fast before going.`
-			);
-			return;
-		}
-
-		if (
-			evt.diffDays <= 1 &&
-			(combinedText.includes('physical therapy') ||
-				combinedText.includes(' pt ') ||
-				combinedText.startsWith('pt ') ||
-				combinedText.includes('therapy') ||
-				combinedText.includes('rehab'))
-		) {
-			prepAlerts.push(
-				`Rest your legs and set out supportive walking shoes for therapy ${whenPhrase}.`
-			);
-			return;
-		}
-
-		if (
-			evt.diffDays <= 2 &&
-			(combinedText.includes('eye') ||
-				combinedText.includes('optom') ||
-				combinedText.includes('ophthalm'))
-		) {
-			prepAlerts.push(
-				`Bring your everyday glasses and sunglasses for your eye visit ${whenPhrase}.`
-			);
-			return;
-		}
-
-		const evtCtx = getEventContext(evt);
-		if (evtCtx.category === 'family' && evt.diffDays >= 1 && evt.diffDays <= 2 && (!evt.reminder || !evt.reminder.trim())) {
-			prepAlerts.push(
-				`Looking forward to ${evt.title} ${whenPhrase} — take time to rest up today so you have plenty of energy for company.`
-			);
-			return;
-		}
-
-		if (evt.diffDays <= 3) {
-			customRules.forEach((rule) => {
-				if (
-					!['infusion', 'blood draw', 'physical therapy'].includes(rule.keyword) &&
-					combinedText.includes(rule.keyword)
-				) {
-					prepAlerts.push(`Prep for ${whenPhrase}: ${rule.instruction}`);
-				}
-			});
-		}
+		});
 	});
 
-	if (todayEvents.length > 0 && lastWeatherData) {
-		if (lastWeatherData.code >= 51 && lastWeatherData.code <= 65) {
-			prepAlerts.push(
-				'Wear non-slip shoes and bring an umbrella for your trip out today.'
-			);
-		} else if (lastWeatherData.temp < 48 || (lastWeatherData.code >= 71 && lastWeatherData.code <= 75)) {
-			prepAlerts.push(
-				'Bundle up with a warm coat and gloves before heading out today.'
-			);
+	// ================= PARAGRAPH 1: COHESIVE GREETING, WEATHER & MORNING MEDICINE =================
+	const { greeting } = getTimeOfDayBriefingMeta();
+	const weatherPhrase = getCohesiveWeatherPhrase(lastWeatherData);
+	const medNotes = (data.medicationNotes || '').trim();
+	let medSentence = '';
+	if (data.medsTaken) {
+		medSentence = 'Your morning medicine is already logged and taken care of for today.';
+	} else {
+		medSentence = '**Please take your morning medicine with breakfast** and a full glass of water.';
+		if (medNotes) {
+			medSentence += ` (${medNotes.replace(/[.!]+$/, '')}.)`;
 		}
 	}
+	todayPlan.push(`${greeting} ${weatherPhrase} ${medSentence}`);
 
-	// Look-ahead pacing context
-	const upcomingSoonEvents = allEvents.filter((e) => e.diffDays >= 1 && e.diffDays <= 5);
+	// ================= PARAGRAPH 2: TODAY'S FLOW, SCHEDULE, WHO IS HELPING & LOOK-AHEAD =================
+	const upcomingSoonEvents = futureEvents.filter((e) => e.diffDays <= 5);
 	const upcomingSoonHolidays = (upcomingHolidays || []).filter((h) => {
 		const d = getDaysFromToday(h.date);
 		return d !== null && d >= 1 && d <= 5;
@@ -4208,99 +4334,164 @@ function buildSmartRuleBasedPlan(boardData) {
 		.filter((c) => c.diffDays !== null && c.diffDays >= 1 && c.diffDays <= 5)
 		.sort((a, b) => a.diffDays - b.diffDays);
 
-	const lookAheadParts = [];
+	let lookAheadSentence = '';
 	if (upcomingSoonEvents.length === 0) {
-		lookAheadParts.push(
-			'Your next few days are clear of appointments — enjoy a restful, unhurried week at home.'
-		);
+		lookAheadSentence = 'Your next few days are clear of appointments—enjoy a restful, unhurried week at home.';
 	} else {
 		const tomorrowEvents = upcomingSoonEvents.filter((e) => e.diffDays === 1);
 		if (tomorrowEvents.length > 0) {
 			const tomEvt = tomorrowEvents[0];
 			const tomCtx = getEventContext(tomEvt);
 			if (tomCtx.category === 'family') {
-				lookAheadParts.push(
-					`Look forward to seeing family tomorrow (${tomEvt.title}) — enjoy a restful evening tonight.`
-				);
+				lookAheadSentence = `Look forward to seeing family tomorrow for ${tomEvt.title}.`;
 			} else {
-				lookAheadParts.push(
-					'Lay out your clothes tonight and get a good night of sleep so tomorrow morning feels easy.'
-				);
+				lookAheadSentence = `Tomorrow you have ${tomEvt.title} on the calendar, so enjoy a relaxing evening tonight.`;
 			}
 		} else {
 			const nextEvt = upcomingSoonEvents[0];
-			const nextCtx = getEventContext(nextEvt);
-			if (nextCtx.category === 'family') {
-				lookAheadParts.push(
-					`You have family visiting in ${nextEvt.diffDays} days (${nextEvt.title}) — look forward to a wonderful time together.`
-				);
+			lookAheadSentence = `Your next scheduled outing is ${nextEvt.title} in ${nextEvt.diffDays} days.`;
+		}
+	}
+
+	let paragraph2 = '';
+	if (todayEvents.length > 0) {
+		const evtDescriptions = todayEvents.slice(0, 2).map((evt, idx) => {
+			const { category, location } = getEventContext(evt);
+			let timeStr = '';
+			if (evt.time) {
+				const [h, m] = evt.time.split(':').map(Number);
+				const d = new Date();
+				d.setHours(h, m, 0, 0);
+				timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+			}
+			const titleStr = evt.title || 'your appointment';
+			const driverNote = (evt.notes || '').trim().replace(/[.!]+$/, '');
+			const reminderNote = (evt.reminder || '').trim().replace(/[.!]+$/, '');
+
+			let core = '';
+			if (category === 'family') {
+				core = location === 'home'
+					? `**${titleStr}${timeStr ? ' is at ' + timeStr : ' is today'}** right at home`
+					: `**You have ${titleStr}${timeStr ? ' at ' + timeStr : ' today'}**`;
+			} else if (category === 'service') {
+				core = `**Home visit for ${titleStr}${timeStr ? ' is scheduled at ' + timeStr : ' today'}**`;
 			} else {
-				lookAheadParts.push(
-					`Enjoy a quiet stretch at home before your next outing in ${nextEvt.diffDays} days.`
-				);
+				core = `**${titleStr}${timeStr ? ' is scheduled for ' + timeStr : ' is today'}**`;
+			}
+
+			const extras = [];
+			if (driverNote) extras.push(driverNote);
+			if (reminderNote) extras.push(`**remember to ${reminderNote.charAt(0).toLowerCase() + reminderNote.slice(1)}**`);
+			else if (idx === 0 && category !== 'family' && category !== 'service' && location !== 'home') {
+				extras.push('**keep your ID and glasses handy**');
+			}
+
+			if (extras.length > 0) {
+				return `${core} (${extras.join('; ')}).`;
+			}
+			return `${core}.`;
+		});
+
+		paragraph2 = evtDescriptions.join(' ');
+		if (prepAlerts.length > 0) {
+			paragraph2 += ` Also, ${prepAlerts[0].charAt(0).toLowerCase() + prepAlerts[0].slice(1)}`;
+		} else if (lookAheadSentence) {
+			paragraph2 += ` ${lookAheadSentence}`;
+		}
+	} else {
+		if (todaysHolidays.length > 0) {
+			paragraph2 = `Today is **${todaysHolidays[0].name}**, and your schedule is wide open to relax and enjoy the day.`;
+		} else if (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')) {
+			paragraph2 = 'Your calendar is wide open today with nowhere you need to rush off to—a lovely day to enjoy your favorite puzzles, books, or music.';
+		} else {
+			paragraph2 = 'Your calendar is wide open today with no scheduled appointments, so you can take the day at an easy, unhurried pace.';
+		}
+
+		if (prepAlerts.length > 0) {
+			paragraph2 += ` ${prepAlerts[0]}`;
+		} else if (lookAheadSentence) {
+			paragraph2 += ` ${lookAheadSentence}`;
+		}
+	}
+	todayPlan.push(paragraph2);
+
+	// ================= PARAGRAPH 3: FAMILY CONNECTION, CELEBRATIONS & SHARED MEMORIES =================
+	const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
+	const familyParts = [];
+
+	if (activeMsgs.length > 0) {
+		const latestMsg = activeMsgs[0];
+		const authorName = (latestMsg.author || 'Family').trim();
+		const msgText = (latestMsg.text || '').trim().replace(/\s+/g, ' ');
+		if (msgText) {
+			if (msgText.length <= 95 && activeMsgs.length === 1) {
+				const cleanMsg = msgText.replace(/[.!?]+$/, '');
+				familyParts.push(`**${authorName} sent a loving note**: "${cleanMsg}."`);
+			} else {
+				const snippet = msgText.length > 80 ? msgText.slice(0, 78).trim() + '...' : msgText.replace(/[.!?]+$/, '');
+				if (activeMsgs.length > 1) {
+					const secondAuthor = (activeMsgs[1].author || 'family').trim();
+					familyParts.push(
+						`**${authorName} and ${secondAuthor} left ${activeMsgs.length} family notes for you**, starting with: "${snippet}"`
+					);
+				} else {
+					familyParts.push(`**${authorName} left a loving note for you**: "${snippet}"`);
+				}
 			}
 		}
 	}
 
-	if (upcomingSoonBirthdays.length > 0) {
+	if (todaysBirthdays.length > 0) {
+		const names = todaysBirthdays.map((c) => c.name).join(' and ');
+		familyParts.push(`Today is **${names}'s birthday**!`);
+	} else if (upcomingSoonBirthdays.length > 0) {
 		const b = upcomingSoonBirthdays[0];
 		const whenStr = b.diffDays === 1 ? 'tomorrow' : `in ${b.diffDays} days`;
-		lookAheadParts.push(
-			`${b.name}'s birthday is ${whenStr} — a great time to plan a quick phone call.`
-		);
-	} else if (upcomingSoonHolidays.length > 0) {
+		familyParts.push(`${b.name}'s birthday is coming up ${whenStr}.`);
+	} else if (upcomingSoonHolidays.length > 0 && todaysHolidays.length === 0) {
 		const h = upcomingSoonHolidays[0];
 		const d = getDaysFromToday(h.date);
 		const whenStr = d === 1 ? 'tomorrow' : `in ${d} days`;
-		lookAheadParts.push(`${h.name} arrives ${whenStr} — look forward to catching up with family.`);
+		familyParts.push(`${h.name} is coming up ${whenStr}.`);
 	}
 
-	// Paragraph 4: Family Love Notes & Messages (Idea D)
-	const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
-	if (activeMsgs.length > 0) {
-		const latestMsg = activeMsgs[0];
-		const authorName = (latestMsg.author || 'Family').trim();
-		const msgText = (latestMsg.text || '').trim();
-		if (msgText) {
-			const cleanMsg = msgText.replace(/\s+/g, ' ').replace(/[.!?]+$/, '');
-			todayPlan.push(
-				`${authorName} sent a loving note: "${cleanMsg}." **Enjoy hearing from family** today.`
-			);
-		}
-	}
-
-	// Paragraph 5 (Optional): Proactive Prep or Senior Check-In Reflection
-	if (prepAlerts.length > 0) {
-		let cleanAlert = prepAlerts[0].replace(/^[\p{Emoji}\s]+/u, '').trim();
-		if (!cleanAlert.includes('**')) {
-			cleanAlert = cleanAlert.replace(
-				/^(Drink [^.,]+|Wear [^.,]+|Bundle up [^.,]+|Rest [^.,]+|Bring [^.,]+|Set out [^.,]+|Confirm [^.,]+|Take [^.,]+)/i,
-				'**$1**'
-			);
-		}
-		todayPlan.push(cleanAlert);
-	} else if (seniorResp && seniorResp.answer) {
-		const qLower = (seniorResp.question || '').toLowerCase();
+	if (seniorResp && seniorResp.answer) {
 		const ansText = seniorResp.answer;
 		const isEscape = ansText.toLowerCase().includes('not sure') || ansText.toLowerCase().includes('none');
 		if (seniorResp.isStory) {
-			todayPlan.push(`We loved hearing your story "${ansText}". **Enjoy some comforting music** this afternoon.`);
-		} else if (isEscape) {
-			todayPlan.push('Thank you for checking in this morning. **Take things easy today** and enjoy an unhurried afternoon.');
-		} else if (qLower.includes('dinner') || qLower.includes('eat') || qLower.includes('food')) {
-			todayPlan.push(`Dinner preference noted: ${ansText}. **Enjoy a comforting dinner** this evening.`);
-		} else if (qLower.includes('song') || qLower.includes('music') || qLower.includes('radio')) {
-			todayPlan.push(`Your memory of ${ansText} is such a treasure. **Put on some favorite music** today and hum along.`);
-		} else {
-			todayPlan.push(`We loved hearing your reflection: "${ansText}". **Have a wonderful, restful day**.`);
+			familyParts.push(`We also loved hearing your story "${ansText}".`);
+		} else if (!isEscape) {
+			familyParts.push(`We loved your reflection on "${ansText}" during today's check-in.`);
 		}
+	}
+
+	if (familyParts.length > 0) {
+		todayPlan.push(familyParts.join(' '));
 	}
 
 	return {
 		todayPlan,
 		prepAlerts,
-		lookAhead: lookAheadParts.join(' '),
+		lookAhead: lookAheadSentence,
 	};
+}
+
+function syncBriefingMedsStatus(paragraphs, medsTaken) {
+	if (!Array.isArray(paragraphs)) return [];
+	return paragraphs.map((p) => {
+		if (typeof p !== 'string') return '';
+		let text = p;
+		// Remove any accidental mention of evening medicine (Mom only takes morning medicine)
+		text = text.replace(/[^.!?]*evening\s+(medicine|medication|pills?)[^.!?]*[.!?]?/gi, '').trim();
+		if (medsTaken) {
+			// Replace unlogged morning medicine prompts with live confirmation
+			text = text.replace(
+				/(\*\*[^*]*take your (morning|daily) (medicine|medication|pills?)[^*]*\*\*[^.!?]*[.!?]?|please take your (morning|daily) (medicine|medication|pills?)[^.!?]*[.!?]?|remember to take your (morning|daily) (medicine|medication|pills?)[^.!?]*[.!?]?|take your (morning|daily) (medicine|medication|pills?) with breakfast[^.!?]*[.!?]?)/gi,
+				'Your morning medicine is already logged and taken care of for today.'
+			);
+		}
+		return text.replace(/\s{2,}/g, ' ').trim();
+	}).filter(Boolean);
 }
 
 function getEffectiveAiSummary() {
@@ -4310,8 +4501,6 @@ function getEffectiveAiSummary() {
 	const autoRefresh = data.aiAutoRefresh !== false;
 	const isSavedFromToday = saved.generatedDate === getTodayDateString();
 
-	// When Auto-Refresh is enabled (default), always reflect live board changes immediately
-	// unless a fresh Gemini AI summary was just generated today.
 	if (autoRefresh) {
 		if (!isSavedFromToday || saved.source !== 'gemini') {
 			return {
@@ -4327,6 +4516,9 @@ function getEffectiveAiSummary() {
 			? [...saved.todayPlan]
 			: [...smartPlan.todayPlan];
 
+	// Always keep morning medication status live in the briefing text
+	todayPlan = syncBriefingMedsStatus(todayPlan, !!data.medsTaken);
+
 	let prepAlerts =
 		Array.isArray(saved.prepAlerts) && saved.prepAlerts.length > 0
 			? [...saved.prepAlerts]
@@ -4335,27 +4527,98 @@ function getEffectiveAiSummary() {
 	let lookAhead =
 		saved.lookAhead && saved.lookAhead.trim() ? saved.lookAhead.trim() : smartPlan.lookAhead;
 
-	if (autoRefresh && isSavedFromToday) {
-		// Merge any newly added live appointment prep alerts into a Gemini summary
-		smartPlan.prepAlerts.forEach((liveAlert) => {
-			const prefix = liveAlert.slice(0, 22).toLowerCase();
-			const alreadyPresent = prepAlerts.some((p) => p.toLowerCase().includes(prefix));
-			if (!alreadyPresent) {
-				prepAlerts.push(liveAlert);
-			}
-		});
-	}
-
 	return { todayPlan, prepAlerts, lookAhead };
 }
 
+function getBriefingParagraphLinks(paragraphText, idx, boardData, usedPages) {
+	const lower = (paragraphText || '').toLowerCase();
+	const links = [];
+	const data = boardData || latestBoardData || {};
+
+	// 1. Weather link (if weather/outdoors/forecast mentioned and not yet linked)
+	if (
+		!usedPages.has('weather') &&
+		(idx === 0 ||
+			/\b(weather|sunny|sunshine|cloudy|overcast|rain|rainy|storm|snow|crisp|mild|breeze|porch|outside|coat|sweater|cardigan|umbrella)\b/i.test(
+				lower
+			))
+	) {
+		usedPages.add('weather');
+		links.push({
+			page: 'weather',
+			cardId: 'card-weather-main',
+			label: 'Weather Forecast',
+			classes: 'bg-sky-50 hover:bg-sky-100 text-sky-950 border-sky-300',
+		});
+	}
+
+	// 2. Medicine link (if medicine mentioned and not yet linked)
+	if (
+		!usedPages.has('meds') &&
+		/\b(medicine|medication|pill|pills|prescription)\b/i.test(lower)
+	) {
+		usedPages.add('meds');
+		links.push({
+			page: 'meds',
+			cardId: 'card-medications',
+			label: data.medsTaken ? 'Medicine Details' : 'Morning Medicine',
+			classes: 'bg-purple-50 hover:bg-purple-100 text-purple-950 border-purple-300',
+		});
+	}
+
+	// 3. Calendar / Appointments link (if schedule/appointment/visit/holiday mentioned)
+	const hasUpcomingEvents = Object.values(currentEventsMap || {}).some((e) =>
+		isEventUpcomingOrActive(e, getTodayDateString())
+	);
+	if (
+		!usedPages.has('events') &&
+		(idx === 1 ||
+			/\b(appointment|calendar|scheduled|doctor|dr\.|visit|outing|infusion|therapy|lab|clinic|tomorrow|holiday)\b/i.test(
+				lower
+			)) &&
+		(hasUpcomingEvents || /\b(appointment|calendar|scheduled|visit|outing|holiday)\b/i.test(lower))
+	) {
+		usedPages.add('events');
+		links.push({
+			page: 'events',
+			cardId: 'card-events',
+			label: 'View Calendar',
+			classes: 'bg-blue-50 hover:bg-blue-100 text-blue-950 border-blue-300',
+		});
+	}
+
+	// 4. Family & Friends link (if note, message, birthday, or family member mentioned)
+	if (
+		!usedPages.has('family') &&
+		/\b(note|notes|message|messages|family|birthday|sent a|left a)\b/i.test(lower)
+	) {
+		usedPages.add('family');
+		const isBirthdayOnly = /\bbirthday\b/i.test(lower) && !/\b(note|notes|message)\b/i.test(lower);
+		links.push({
+			page: 'family',
+			cardId: isBirthdayOnly ? 'card-contacts' : 'card-messages',
+			label: isBirthdayOnly ? 'Family & Friends' : 'Read Family Notes',
+			classes: 'bg-rose-50 hover:bg-rose-100 text-rose-950 border-rose-300',
+		});
+	}
+
+	return links;
+}
+
 function renderAiSummaryCard() {
+	renderWeatherPage();
 	const todayPlanEl = document.getElementById('disp-ai-today-plan');
+	const headingEl = document.getElementById('disp-ai-today-heading');
 	const prepAlertsEl = document.getElementById('disp-ai-prep-alerts');
 	const lookAheadEl = document.getElementById('disp-ai-look-ahead');
 	if (!todayPlanEl) return;
 
+	if (headingEl) {
+		headingEl.innerText = getTimeOfDayBriefingMeta().heading;
+	}
+
 	const { todayPlan, prepAlerts, lookAhead } = getEffectiveAiSummary();
+	const usedPages = new Set();
 
 	if (!todayPlan || todayPlan.length === 0) {
 		todayPlanEl.innerHTML = `
@@ -4363,17 +4626,40 @@ function renderAiSummaryCard() {
 				Good morning! Wishing you a peaceful and comfortable start to your day.
 			</p>
 			<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
-				Take your day at a gentle pace. <strong class="font-black text-slate-950">Keep a glass of water nearby</strong> and enjoy a relaxing day.
+				Take your day at a gentle pace and enjoy a relaxing day at home.
 			</p>
 		`;
 	} else {
 		todayPlanEl.innerHTML = todayPlan
-			.map((item) => {
+			.map((item, idx) => {
 				const formatted = formatActionBulletHtml(item);
+				const links = getBriefingParagraphLinks(item, idx, latestBoardData, usedPages);
+				const linksHtml =
+					links.length > 0
+						? `<div class="pt-2 flex flex-wrap items-center gap-2">
+								${links
+									.map(
+										(lnk) => `
+									<button
+										type="button"
+										onclick="navigateFromBriefing('${lnk.page}', '${lnk.cardId}')"
+										class="px-3.5 py-1.5 rounded-xl border-2 font-black text-base sm:text-lg transition cursor-pointer shadow-2xs ${lnk.classes}"
+									>
+										${escapeHtml(lnk.label)} &rarr;
+									</button>
+								`
+									)
+									.join('')}
+						   </div>`
+						: '';
+
 				return `
-					<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
-						${formatted}
-					</p>
+					<div class="${idx > 0 ? 'pt-3 sm:pt-4 border-t border-slate-200/80' : ''} space-y-1.5">
+						<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+							${formatted}
+						</p>
+						${linksHtml}
+					</div>
 				`;
 			})
 			.join('');
@@ -4569,26 +4855,26 @@ async function generateAiActionPlan(options = {}) {
 		};
 
 		const systemInstructionText =
-			'You are a loving, thoughtful family member speaking directly to an 80+ senior ("you") on their home message board.\n' +
+			'You are a loving, thoughtful family member writing a single cohesive daily briefing note directly to an 80+ senior ("you") on their home message board.\n' +
 			'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and completely human.\n' +
 			'STRICT ACCESSIBILITY & ALZHEIMER\'S GUIDELINES:\n' +
 			'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
-			'- Avoid long paragraphs or dense text blocks. High visual spacing and short 1-2 sentence paragraphs prevent disorientation.\n' +
+			'- Write ONE cohesive summary divided into 2 to 3 short, connected paragraphs (2-3 sentences each) rather than disconnected bullet points.\n' +
+			'- NEVER repeat any detail (such as appointments, reminders, water/hydration, or "take things easy") across multiple paragraphs.\n' +
+			'- The senior ONLY takes morning medication. NEVER mention evening medicine.\n' +
+			'- Use markdown **bold** ONLY for concrete actions, times, or key highlights (never bold generic filler like "Have a wonderful day").\n' +
 			'- Zero emojis anywhere.\n\n' +
-			'CRITICAL RULES:\n' +
-			'1. `todayPlan` (AN ARRAY OF 2 TO 5 SHORT, SPACED PARAGRAPHS - NO BULLET POINTS, NO EMOJIS):\n' +
-			'   - PARAGRAPH 1 (WEATHER & MORNING OUTLOOK): Describe how today feels naturally. CRITICAL: DO NOT use ANY numbers, digits (0-9), degree symbols, or percentages. E.g. "Crisp, sunny weather today with cool afternoon air. **Put on a warm sweater** before sitting out on the porch."\n' +
-			'   - PARAGRAPH 2 (MEDICATION & HYDRATION): Note morning medication status and hydration advice with bold markdown **action text**, e.g. "**Take your morning medicine with breakfast** and drink a full glass of water."\n' +
-			'   - PARAGRAPH 3 (SCHEDULE & PACING): Thoughts tailored to today\'s schedule (family visit, errand, doctor, or a restful quiet day at home).\n' +
-			'   - PARAGRAPH 4 (FAMILY LOVE NOTES - IDEA D): If family messages exist in `familyMessages`, warmly weave their loving words into a short paragraph, e.g. "Sarah sent a sweet note: \'[message text]\'. **Have a wonderful day** knowing your family is thinking of you."\n' +
-			'   - PARAGRAPH 5 (OPTIONAL PREP OR JOURNAL REFLECTION): Multi-day prep (e.g. extra hydration before infusion) OR celebrate a reflection from `seniorJournalMemories` without quizzing her (e.g. "We loved your memory of baking peach pies. **Enjoy some comforting music** this afternoon.").\n' +
+			'CRITICAL RULES FOR `todayPlan` (ARRAY OF 2 TO 3 COHESIVE PARAGRAPHS):\n' +
+			'   - PARAGRAPH 1 (GREETING, WEATHER FEEL & MORNING MEDICINE): Start with a warm day-of-week greeting, describe how today\'s weather feels naturally WITHOUT ANY numbers, digits, degree symbols, or percentages, and note her morning medication status (if `medsTakenToday` is true, confirm her morning medicine is already logged; if false, remind her to **take your morning medicine with breakfast** and a glass of water).\n' +
+			'   - PARAGRAPH 2 (TODAY\'S FLOW, APPOINTMENTS, WHO IS HELPING & PREP): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep (e.g. extra water before an upcoming infusion) or a reassuring note if the calendar is wide open today.\n' +
+			'   - PARAGRAPH 3 (FAMILY CONNECTION, NOTES & MEMORIES - INCLUDE IF APPLICABLE): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and a brief celebration of any recent story from `seniorJournalMemories`.\n' +
 			'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
 			'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
 			'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
 			'   - Choices must include 3 distinct nostalgic/warm choices plus 1 low-pressure escape choice (e.g. "Not sure today" or "None of these"). Under 6 words each. Zero emojis.\n' +
-			'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments (e.g. extra hydration before an infusion).\n' +
+			'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments.\n' +
 			'4. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.\n\n' +
-			'Output MUST be a valid JSON object with keys: "todayPlan" (array of strings), "prepAlerts" (array of strings), "lookAhead" (string), "dailyQuestion" (object with "question" string and "choices" array of strings).';
+			'Output MUST be a valid JSON object with keys: "todayPlan" (array of 2 to 3 strings), "prepAlerts" (array of strings), "lookAhead" (string), "dailyQuestion" (object with "question" string and "choices" array of strings).';
 
 		const requestPayload = {
 			systemInstruction: {

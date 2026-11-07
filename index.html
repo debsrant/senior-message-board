@@ -96,10 +96,11 @@
 		<!-- MAIN CONTAINER -->
 		<main class="p-3 sm:p-6 max-w-6xl mx-auto">
 			<!-- ================= DISPLAY VIEW ================= -->
-			<div id="view-display" class="space-y-4 sm:space-y-6">
+			<div id="view-display" class="space-y-4 sm:space-y-5">
 				<!-- Clock & Medication Action Header (Optimized Tablet 60/40 Split) -->
 				<div
-					class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-8 items-center shadow-sm"
+					id="kiosk-clock-header"
+					class="bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-center shadow-sm"
 				>
 					<!-- Date & Time (Left - 60% on Tablet) -->
 					<div class="md:col-span-7 flex flex-col justify-center">
@@ -117,7 +118,7 @@
 					<!-- Medication Check-In (Right - 40% on Tablet) -->
 					<div
 						id="header-meds-section"
-						class="md:col-span-5 border-t-2 md:border-t-0 md:border-l-2 border-slate-200/80 pt-5 md:pt-0 md:pl-8 flex flex-col justify-center gap-2"
+						class="md:col-span-5 border-t-2 md:border-t-0 md:border-l-2 border-slate-200/80 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center gap-2"
 					>
 						<div class="flex items-center justify-between gap-2">
 							<span class="text-base sm:text-lg font-black uppercase tracking-wider text-slate-800">
@@ -148,92 +149,108 @@
 					</div>
 				</div>
 
-				<!-- Kiosk Multi-Page Navigation Bar (4 Giant Tactile Tabs for 80+ Senior) -->
-				<nav
-					id="kiosk-nav-bar"
-					class="bg-white p-2 sm:p-2.5 rounded-2xl border-2 border-slate-200/90 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3"
-					aria-label="Display View Navigation"
-				>
-					<button
-						type="button"
-						id="btn-kiosk-page-today"
-						onclick="switchKioskPage('today')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center transition cursor-pointer bg-blue-600 text-white shadow-md text-center"
+				<!-- Responsive Kiosk Shell: Left Vertical Sidebar on Landscape Tablet/Desktop, Top Grid on Phone/Portrait Tablet -->
+				<div class="kiosk-layout-shell">
+					<!-- Kiosk Multi-Page Navigation Menu (5 Giant Tactile Tabs for 80+ Senior) -->
+					<nav
+						id="kiosk-nav-bar"
+						class="kiosk-sidebar-nav bg-white p-2 sm:p-2.5 rounded-2xl border-2 border-slate-200/90 shadow-sm"
+						aria-label="Display View Navigation"
 					>
-						Today
-					</button>
-					<button
-						type="button"
-						id="btn-kiosk-page-meds"
-						onclick="switchKioskPage('meds')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
-					>
-						Medicine
-						<span
-							id="kiosk-nav-meds-badge"
-							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200"
-						></span>
-					</button>
-					<button
-						type="button"
-						id="btn-kiosk-page-events"
-						onclick="switchKioskPage('events')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
-					>
-						Calendar
-						<span
-							id="kiosk-nav-events-badge"
-							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200"
-						></span>
-					</button>
-					<button
-						type="button"
-						id="btn-kiosk-page-family"
-						onclick="switchKioskPage('family')"
-						class="py-3.5 sm:py-4 px-3 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-center gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200 text-center"
-					>
-						Family &amp; Friends
-						<span
-							id="kiosk-nav-family-badge"
-							class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-200"
-						></span>
-					</button>
-				</nav>
+						<button
+							type="button"
+							id="btn-kiosk-page-today"
+							onclick="switchKioskPage('today')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-blue-600 text-white shadow-md"
+						>
+							<span>Today</span>
+						</button>
+						<button
+							type="button"
+							id="btn-kiosk-page-weather"
+							onclick="switchKioskPage('weather')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						>
+							<span>Weather</span>
+							<span
+								id="kiosk-nav-weather-badge"
+								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-900 border border-sky-200"
+							></span>
+						</button>
+						<button
+							type="button"
+							id="btn-kiosk-page-meds"
+							onclick="switchKioskPage('meds')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						>
+							<span>Medicine</span>
+							<span
+								id="kiosk-nav-meds-badge"
+								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200"
+							></span>
+						</button>
+						<button
+							type="button"
+							id="btn-kiosk-page-events"
+							onclick="switchKioskPage('events')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						>
+							<span>Calendar</span>
+							<span
+								id="kiosk-nav-events-badge"
+								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200"
+							></span>
+						</button>
+						<button
+							type="button"
+							id="btn-kiosk-page-family"
+							onclick="switchKioskPage('family')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						>
+							<span>Family</span>
+							<span
+								id="kiosk-nav-family-badge"
+								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-200"
+							></span>
+						</button>
+					</nav>
 
-				<!-- ================= PAGE 1: TODAY (MAIN DISPLAY) ================= -->
-				<div id="disp-page-today" class="space-y-4 sm:space-y-6">
-					<!-- Main Message & AI Daily Companion Hub (Option 1: Unified Morning Briefing & Check-In) -->
-					<div
-						id="card-announcement"
-						class="bg-blue-50/90 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-5"
-					>
-						<!-- Today's Important Hero Message (Across Top, Spanning Full Width, Hidden if empty) -->
-						<div id="disp-announcement-container" class="space-y-2 pb-5 border-b-2 border-blue-200/80 hidden">
-							<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg">
-								Today's Important Message
-							</h2>
-							<p
-								id="disp-announcement"
-								class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 leading-snug"
-							></p>
-						</div>
-
-						<!-- 2-Column Balanced Grid: Left = Morning Briefing & Reminders, Right = Daily Check-In -->
-						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
-							<!-- Left Column: Morning Briefing & Notes (Short, Spaced Paragraphs with Bold Action Anchors) -->
-							<div id="disp-ai-today-section" class="flex flex-col space-y-3">
-								<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
-									Morning Briefing
-								</h3>
-								<div
-									id="disp-ai-today-plan"
-									class="p-5 sm:p-6 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs space-y-4 sm:space-y-5"
-								>
-									<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
-										Putting together your morning greeting...
-									</p>
+					<!-- Kiosk Active Page Content Container -->
+					<div id="kiosk-pages-container" class="flex-1 min-w-0 w-full">
+						<!-- ================= PAGE 1: TODAY (MAIN DISPLAY) ================= -->
+						<div id="disp-page-today" class="space-y-4 sm:space-y-6">
+							<!-- Main Message & AI Daily Companion Hub (Unified Cohesive Morning Briefing & Check-In) -->
+							<div
+								id="card-announcement"
+								class="bg-blue-50/90 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-5"
+							>
+								<!-- Today's Important Hero Message (Across Top, Spanning Full Width, Hidden if empty) -->
+								<div id="disp-announcement-container" class="space-y-2 pb-5 border-b-2 border-blue-200/80 hidden">
+									<h2 class="text-blue-900 font-black uppercase tracking-wider text-base sm:text-lg">
+										Today's Important Message
+									</h2>
+									<p
+										id="disp-announcement"
+										class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950 leading-snug"
+									></p>
 								</div>
-							</div>
+
+								<!-- 2-Column Balanced Grid: Left = Cohesive Briefing, Right = Daily Check-In -->
+								<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+									<!-- Left Column: Cohesive Daily Briefing (2-3 Flowing Paragraphs with Contextual Deep Links) -->
+									<div id="disp-ai-today-section" class="flex flex-col space-y-3">
+										<h3 id="disp-ai-today-heading" class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
+											Morning Briefing
+										</h3>
+										<div
+											id="disp-ai-today-plan"
+											class="p-5 sm:p-6 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs space-y-4 sm:space-y-5"
+										>
+											<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
+												Putting together your morning greeting...
+											</p>
+										</div>
+									</div>
 
 							<!-- Right Column: Senior Daily Check-In & Conversation (Interactive, Multi-turn, No Emojis) -->
 							<div id="disp-senior-checkin-section" class="flex flex-col space-y-3 lg:border-l-2 lg:border-blue-200/80 lg:pl-8">
@@ -360,152 +377,291 @@
 							</div>
 						</div>
 
-						<!-- Hidden Compatibility Elements (Preserves existing DOM hooks for alerts and event counts without visual clutter) -->
-						<div class="hidden" aria-hidden="true">
-							<div id="disp-today-events-section">
-								<span id="today-events-count-badge">0</span>
-								<div id="disp-today-events-list"></div>
-							</div>
-							<div id="disp-ai-prep-section">
-								<div id="disp-ai-prep-alerts"></div>
-								<p id="disp-ai-look-ahead"></p>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- ================= PAGE 2: MEDICINE (DEDICATED MORNING PILLS PAGE) ================= -->
-				<div id="disp-page-meds" class="hidden space-y-4 sm:space-y-6">
-					<div id="card-medications" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-purple-200 shadow-sm space-y-6">
-						<div class="flex items-center justify-between border-b-2 border-purple-100 pb-4 flex-wrap gap-3">
-							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
-									Mom's Morning Medicine
-								</h2>
-								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
-									Daily morning medication schedule and notes
-								</p>
-							</div>
-							<span
-								id="medications-count-badge"
-								class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-purple-100 text-purple-900 border-2 border-purple-300"
-							>
-								0 Meds
-							</span>
-						</div>
-
-						<!-- Page Action Button: I Took My Meds -->
-						<div class="p-4 bg-purple-50/60 rounded-2xl border-2 border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-							<div class="space-y-1 text-center sm:text-left">
-								<span class="text-sm sm:text-base font-black uppercase tracking-wider text-purple-900 block">Morning Medicine Status</span>
-								<span id="page-meds-status-text" class="text-xl sm:text-2xl font-black text-slate-900 block">Please take your morning medicine.</span>
-							</div>
-							<button
-								type="button"
-								id="btn-take-meds-page"
-								onclick="markMedsTaken()"
-								class="w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm text-xl sm:text-2xl transition cursor-pointer"
-							>
-								<span>I TOOK MY MEDS</span>
-							</button>
-						</div>
-
-						<!-- General Notes for Senior (shown if present) -->
-						<div
-							id="disp-medications-general-notes"
-							class="hidden p-5 bg-purple-50 rounded-2xl border-2 border-purple-300 text-xl sm:text-2xl text-purple-950 font-bold leading-relaxed shadow-2xs"
-						></div>
-
-						<!-- Morning Pills List Container -->
-						<div
-							id="disp-medications"
-							class="space-y-4 text-slate-700 leading-relaxed"
-						>
-							Loading medications...
-						</div>
-					</div>
-				</div>
-
-				<!-- ================= PAGE 3: CALENDAR (DEDICATED APPOINTMENTS & EVENTS PAGE) ================= -->
-				<div id="disp-page-events" class="hidden space-y-4 sm:space-y-6">
-					<div id="card-events" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-blue-200 shadow-sm space-y-6">
-						<div class="flex items-center justify-between border-b-2 border-blue-100 pb-4 flex-wrap gap-3">
-							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
-									Appointments &amp; Events
-								</h2>
-								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
-									Upcoming doctor visits, family get-togethers, and holidays
-								</p>
-							</div>
-							<span
-								id="events-count-badge"
-								class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-blue-100 text-blue-900 border-2 border-blue-300"
-							>
-								0 Entries
-							</span>
-						</div>
-
-						<!-- Dynamic Events & Holidays List Container -->
-						<div id="disp-events-list" class="space-y-4">
-							<div class="w-full p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
-								<div class="text-2xl sm:text-3xl font-black text-slate-800">No appointments scheduled</div>
-								<div class="text-base text-slate-500">Relax and enjoy your day!</div>
+								<!-- Hidden Compatibility Elements (Preserves existing DOM hooks for alerts and event counts without visual clutter) -->
+								<div class="hidden" aria-hidden="true">
+									<div id="disp-today-events-section">
+										<span id="today-events-count-badge">0</span>
+										<div id="disp-today-events-list"></div>
+									</div>
+									<div id="disp-ai-prep-section">
+										<div id="disp-ai-prep-alerts"></div>
+										<p id="disp-ai-look-ahead"></p>
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
 
-				<!-- ================= PAGE 4: FAMILY & FRIENDS (MESSAGES ABOVE CONTACTS) ================= -->
-				<div id="disp-page-family" class="hidden space-y-6">
-					<!-- Top Section: Love Notes from Family -->
-					<div id="card-messages" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-rose-200 shadow-sm space-y-5">
-						<div class="flex items-center justify-between border-b-2 border-rose-100 pb-4 flex-wrap gap-3">
-							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
-									Love Notes from Family
-								</h2>
-								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
-									Warm messages sent to you from your loved ones
-								</p>
+						<!-- ================= PAGE 2: WEATHER (DEDICATED FULL FORECAST & COMFORT GUIDE) ================= -->
+						<div id="disp-page-weather" class="hidden space-y-4 sm:space-y-6">
+							<div id="card-weather-main" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-sky-200 shadow-sm space-y-6">
+								<div class="flex items-center justify-between border-b-2 border-sky-100 pb-4 flex-wrap gap-3">
+									<div>
+										<div class="flex items-center gap-3 flex-wrap">
+											<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+												Weather Forecast
+											</h2>
+											<span
+												id="weather-city"
+												class="hidden text-lg sm:text-xl font-black px-4 py-1 rounded-full bg-sky-100 text-sky-900 border-2 border-sky-300"
+											></span>
+										</div>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Today's conditions, what to wear, and upcoming outlook
+										</p>
+									</div>
+									<button
+										type="button"
+										onclick="switchKioskPage('today')"
+										class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-lg sm:text-xl rounded-xl border-2 border-slate-300 transition cursor-pointer"
+									>
+										Back to Today
+									</button>
+								</div>
+
+								<!-- Top Hero Row: Current Conditions (Left) & What to Wear / Outdoor Comfort (Right) -->
+								<div id="weather-widget" class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+									<div class="lg:col-span-5 p-5 sm:p-6 bg-sky-50/90 rounded-2xl border-2 border-sky-200 flex flex-col justify-center space-y-2">
+										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-sky-900">
+											Right Now Outside
+										</span>
+										<div id="weather-temp" class="text-5xl sm:text-6xl font-black text-slate-950 leading-none">
+											--&deg;F
+										</div>
+										<div id="weather-desc" class="text-2xl sm:text-3xl font-black text-sky-950 pt-1">
+											Loading weather...
+										</div>
+										<div id="weather-range" class="text-xl sm:text-2xl font-bold text-slate-700">
+											High: --&deg; | Low: --&deg;
+										</div>
+										<span id="weather-icon" class="hidden"></span>
+									</div>
+
+									<div class="lg:col-span-7 p-5 sm:p-6 bg-blue-50/70 rounded-2xl border-2 border-blue-200 flex flex-col justify-between space-y-4">
+										<div class="space-y-2">
+											<span class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-950 block">
+												What to Wear &amp; Expect Today
+											</span>
+											<p id="page-weather-advice" class="text-xl sm:text-2xl font-bold text-slate-900 leading-relaxed">
+												Checking today's forecast for your comfort...
+											</p>
+										</div>
+										<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t-2 border-blue-200/70">
+											<div class="bg-white/90 p-3.5 rounded-xl border border-blue-200">
+												<span class="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-900 block">
+													Nicest Time Outside
+												</span>
+												<span id="page-weather-best-window" class="text-lg sm:text-xl font-black text-slate-900 block mt-0.5">
+													Early afternoon
+												</span>
+											</div>
+											<div class="bg-white/90 p-3.5 rounded-xl border border-blue-200">
+												<span class="text-xs sm:text-sm font-black uppercase tracking-wider text-blue-900 block">
+													Rain &amp; Sky Outlook
+												</span>
+												<span id="page-weather-rain-timing" class="text-lg sm:text-xl font-black text-slate-900 block mt-0.5">
+													Dry and clear
+												</span>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Middle Row: Today's Morning / Afternoon / Evening Progression -->
+								<div class="space-y-3">
+									<h3 class="text-lg sm:text-xl font-black uppercase tracking-wider text-slate-800">
+										Today's Time-of-Day Progression
+									</h3>
+									<div id="page-weather-today-periods" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+										<div class="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200">
+											<div class="text-base font-black uppercase tracking-wider text-slate-600">Morning</div>
+											<div class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Loading...</div>
+										</div>
+										<div class="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200">
+											<div class="text-base font-black uppercase tracking-wider text-slate-600">Afternoon</div>
+											<div class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Loading...</div>
+										</div>
+										<div class="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200">
+											<div class="text-base font-black uppercase tracking-wider text-slate-600">Evening</div>
+											<div class="text-xl sm:text-2xl font-black text-slate-900 mt-1">Loading...</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Bottom Row: Upcoming 3-Day Outlook -->
+								<div class="space-y-3">
+									<h3 class="text-lg sm:text-xl font-black uppercase tracking-wider text-slate-800">
+										Next 3 Days Outlook
+									</h3>
+									<div id="page-weather-forecast-days" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+										<div class="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 text-lg font-bold text-slate-600">
+											Loading multi-day forecast...
+										</div>
+									</div>
+								</div>
 							</div>
-							<span
-								id="messages-count-badge"
-								class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-rose-100 text-rose-900 border-2 border-rose-300"
-							>
-								0 Notes
-							</span>
 						</div>
 
-						<!-- Messages List Container -->
-						<div id="disp-messages" class="space-y-4 text-slate-700">
-							Loading messages...
-						</div>
-					</div>
+						<!-- ================= PAGE 3: MEDICINE (DEDICATED MORNING PILLS PAGE) ================= -->
+						<div id="disp-page-meds" class="hidden space-y-4 sm:space-y-6">
+							<div id="card-medications" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-purple-200 shadow-sm space-y-6">
+								<div class="flex items-center justify-between border-b-2 border-purple-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+											Mom's Morning Medicine
+										</h2>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Daily morning medication schedule and notes
+										</p>
+									</div>
+									<div class="flex items-center gap-3 flex-wrap">
+										<span
+											id="medications-count-badge"
+											class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-purple-100 text-purple-900 border-2 border-purple-300"
+										>
+											0 Meds
+										</span>
+										<button
+											type="button"
+											onclick="switchKioskPage('today')"
+											class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-lg sm:text-xl rounded-xl border-2 border-slate-300 transition cursor-pointer"
+										>
+											Back to Today
+										</button>
+									</div>
+								</div>
 
-					<!-- Bottom Section: Family & Friends Directory (No Call Buttons, No Email, No Messaging) -->
-					<div id="card-contacts" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-5">
-						<div class="flex items-center justify-between border-b-2 border-emerald-100 pb-4 flex-wrap gap-3">
-							<div>
-								<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
-									Family &amp; Friends
-								</h2>
-								<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
-									People who love and care about you
-								</p>
+								<!-- Page Action Button: I Took My Meds -->
+								<div class="p-4 bg-purple-50/60 rounded-2xl border-2 border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+									<div class="space-y-1 text-center sm:text-left">
+										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-purple-900 block">Morning Medicine Status</span>
+										<span id="page-meds-status-text" class="text-xl sm:text-2xl font-black text-slate-900 block">Please take your morning medicine.</span>
+									</div>
+									<button
+										type="button"
+										id="btn-take-meds-page"
+										onclick="markMedsTaken()"
+										class="w-full sm:w-auto px-8 py-4 bg-rose-600 hover:bg-rose-700 active:scale-[0.99] text-white font-black rounded-2xl shadow-sm text-xl sm:text-2xl transition cursor-pointer"
+									>
+										<span>I TOOK MY MEDS</span>
+									</button>
+								</div>
+
+								<!-- General Notes for Senior (shown if present) -->
+								<div
+									id="disp-medications-general-notes"
+									class="hidden p-5 bg-purple-50 rounded-2xl border-2 border-purple-300 text-xl sm:text-2xl text-purple-950 font-bold leading-relaxed shadow-2xs"
+								></div>
+
+								<!-- Morning Pills List Container -->
+								<div
+									id="disp-medications"
+									class="space-y-4 text-slate-700 leading-relaxed"
+								>
+									Loading medications...
+								</div>
 							</div>
-							<span
-								id="contacts-count-badge"
-								class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-900 border-2 border-emerald-300"
-							>
-								0 Contacts
-							</span>
 						</div>
 
-						<!-- Dynamic Contacts List Container -->
-						<div id="disp-contacts-list" class="space-y-3">
-							<div class="py-6 text-center text-xl text-slate-500 font-medium italic">
-								Loading contacts...
+						<!-- ================= PAGE 4: CALENDAR (DEDICATED APPOINTMENTS & EVENTS PAGE) ================= -->
+						<div id="disp-page-events" class="hidden space-y-4 sm:space-y-6">
+							<div id="card-events" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-blue-200 shadow-sm space-y-6">
+								<div class="flex items-center justify-between border-b-2 border-blue-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+											Appointments &amp; Events
+										</h2>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Upcoming doctor visits, family get-togethers, and holidays
+										</p>
+									</div>
+									<div class="flex items-center gap-3 flex-wrap">
+										<span
+											id="events-count-badge"
+											class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-blue-100 text-blue-900 border-2 border-blue-300"
+										>
+											0 Entries
+										</span>
+										<button
+											type="button"
+											onclick="switchKioskPage('today')"
+											class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-lg sm:text-xl rounded-xl border-2 border-slate-300 transition cursor-pointer"
+										>
+											Back to Today
+										</button>
+									</div>
+								</div>
+
+								<!-- Dynamic Events & Holidays List Container -->
+								<div id="disp-events-list" class="space-y-4">
+									<div class="w-full p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-center space-y-2">
+										<div class="text-2xl sm:text-3xl font-black text-slate-800">No appointments scheduled</div>
+										<div class="text-base text-slate-500">Relax and enjoy your day!</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- ================= PAGE 5: FAMILY & FRIENDS (MESSAGES ABOVE CONTACTS) ================= -->
+						<div id="disp-page-family" class="hidden space-y-6">
+							<!-- Top Section: Love Notes from Family -->
+							<div id="card-messages" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-rose-200 shadow-sm space-y-5">
+								<div class="flex items-center justify-between border-b-2 border-rose-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+											Love Notes from Family
+										</h2>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Warm messages sent to you from your loved ones
+										</p>
+									</div>
+									<div class="flex items-center gap-3 flex-wrap">
+										<span
+											id="messages-count-badge"
+											class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-rose-100 text-rose-900 border-2 border-rose-300"
+										>
+											0 Notes
+										</span>
+										<button
+											type="button"
+											onclick="switchKioskPage('today')"
+											class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-lg sm:text-xl rounded-xl border-2 border-slate-300 transition cursor-pointer"
+										>
+											Back to Today
+										</button>
+									</div>
+								</div>
+
+								<!-- Messages List Container -->
+								<div id="disp-messages" class="space-y-4 text-slate-700">
+									Loading messages...
+								</div>
+							</div>
+
+							<!-- Bottom Section: Family & Friends Directory (No Call Buttons, No Email, No Messaging) -->
+							<div id="card-contacts" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-5">
+								<div class="flex items-center justify-between border-b-2 border-emerald-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+											Family &amp; Friends
+										</h2>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											People who love and care about you
+										</p>
+									</div>
+									<span
+										id="contacts-count-badge"
+										class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-900 border-2 border-emerald-300"
+									>
+										0 Contacts
+									</span>
+								</div>
+
+								<!-- Dynamic Contacts List Container -->
+								<div id="disp-contacts-list" class="space-y-3">
+									<div class="py-6 text-center text-xl text-slate-500 font-medium italic">
+										Loading contacts...
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>

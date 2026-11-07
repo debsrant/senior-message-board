@@ -253,41 +253,57 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
-### Phase 10: Deep-Linking & Living Project Documentation (Nov 6-7, 2026)
+### Phase 10: Cohesive Briefing, Dedicated Weather Page, Responsive Sidebar & Deep-Linking (Nov 6-7, 2026)
 
-#### Turns 78 to 79
+#### Turns 78 to 82
 - **User Requests**:
   - Suggest a way to click into the details of an item in the AI daily briefing (e.g. click into the Family & Friends tab when family notes are mentioned).
-  - Put the briefing deep-linking question on hold to revisit later.
-  - Create an `aichat.md` file inside the project that documents the entire chat conversation and keep it up to date throughout the project.
+  - Put the briefing deep-linking question on hold temporarily and create an `aichat.md` file inside the project that documents the entire chat conversation and keep it up to date throughout the project.
+  - Improve the Morning Briefing so it reads as a single cohesive summary instead of disconnected talking points that repeat content, while still catching all details that need attention and displaying in short readable paragraphs.
+  - Consider how the cohesive summary connects with contextual deep-linking, a dedicated Weather page (since the old weather widget was removed when font sizes increased), and a vertical sidebar menu for a 7" tablet in landscape mode—while ensuring layouts remain responsive to phones and tablets in vertical mode.
 - **Technical Implementation**:
-  - Analyzed senior ergonomic options for briefing deep-linking (Tactile Action Pills, Interactive Card Rows, Bottom Shortcut Bar) and cataloged the design for future implementation.
-  - Put deep-linking on hold per user instruction.
-  - Created `aichat.md` capturing the complete historical narrative, architectural decisions, and current technical state.
+  - **Responsive Kiosk Layout Shell (`styles.css` & `index.html`)**:
+    - Built `.kiosk-layout-shell` and `.kiosk-sidebar-nav` that render a sticky **Left Vertical Sidebar** on 7" landscape tablets and desktops (`(min-width: 720px) and (orientation: landscape)` or `min-width: 1024px`), and automatically switch to a **Top Multi-Column Grid** on phones and tablets in vertical (portrait) mode.
+    - Added compact vertical header rules for short landscape viewports (`max-height: 660px`) to maximize vertical space on a 7" landscape screen.
+  - **Dedicated `Weather` Page (`#disp-page-weather` & `renderWeatherPage()`)**:
+    - Added the 5th navigation tab (`Weather`) with a live temperature badge (`#kiosk-nav-weather-badge`).
+    - Built a full-page forecast featuring "Right Now Outside" conditions, a "What to Wear & Expect Today" comfort callout, nicest outdoor window, Morning/Afternoon/Evening progression cards, and a 3-Day Outlook that automatically highlights any scheduled calendar events or holidays falling on those days.
+  - **Cohesive 2 to 3 Paragraph Briefing (`buildSmartRuleBasedPlan`, `syncBriefingMedsStatus`, and Gemini System Prompt)**:
+    - Replaced the 5-slot bullet formula with a unified 2–3 paragraph letter:
+      1. *Paragraph 1*: Time-of-day weekday greeting, zero-number weather feel, and live morning medicine status (immediately updating when "I TOOK MY MEDS" is tapped, and never referencing evening medicine).
+      2. *Paragraph 2*: Today's schedule, who is driving/helping, and upcoming multi-day prep with zero duplicate appointment reminders.
+      3. *Paragraph 3*: Active family notes (concisely previewing longer notes), birthdays/holidays, and a nod to her latest recorded story or check-in reflection.
+    - Enforced selective bolding strictly for concrete actions, times, and highlights.
+  - **Contextual Deep-Linking & Spotlight on Arrival (`getBriefingParagraphLinks` & `navigateFromBriefing`)**:
+    - Added inline tactile action pills (`Weather Forecast ->`, `Morning Medicine ->`, `View Calendar ->`, `Read Family Notes ->`) beneath relevant paragraphs in the briefing.
+    - Tapping a pill switches to the target page, smooth-scrolls to the specific card, and applies a 3-second highlight pulse (`.briefing-spotlight-ring`).
+    - Added explicit `Back to Today` buttons to the header of every sub-page alongside the 90-second auto-return timer.
 
 ---
 
 ## Current Architecture & File Inventory
 
 ### File Inventory
-- **`index.html`** (~1,820 lines):
-  - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" toggle.
-  - Kiosk Navigation Bar: 4 large tactile buttons (`Today`, `Medicine`, `Calendar`, `Family & Friends`).
-  - Page 1 (`disp-page-today`): Hero Announcement, Morning Briefing, and Conversational Daily Check-In.
-  - Page 2 (`disp-page-meds`): Morning Medicine instructions, schedule cards, and storage notes.
-  - Page 3 (`disp-page-events`): Calendar agenda, appointment times, driver notes, and US holidays.
-  - Page 4 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
+- **`index.html`** (~1,975 lines):
+  - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" toggle (compact in landscape).
+  - Responsive Kiosk Navigation (`#kiosk-nav-bar`): Left Vertical Sidebar in landscape/desktop, Top Grid on phones/portrait tablets; 5 large tactile buttons (`Today`, `Weather`, `Medicine`, `Calendar`, `Family`).
+  - Page 1 (`disp-page-today`): Hero Announcement, Cohesive Morning/Afternoon/Evening Briefing with deep-link pills, and Conversational Daily Check-In.
+  - Page 2 (`disp-page-weather`): Current conditions, What to Wear comfort guide, Morning/Afternoon/Evening progression, and 3-Day Outlook with calendar tie-ins.
+  - Page 3 (`disp-page-meds`): Morning Medicine instructions, schedule cards, and storage notes.
+  - Page 4 (`disp-page-events`): Calendar agenda, appointment times, driver notes, and US holidays.
+  - Page 5 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
   - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Check-In & Memories`, `AI & Board Settings`, `Contacts & Users`).
-- **`app.js`** (~6,300 lines):
+- **`app.js`** (~6,585 lines):
   - Firebase RTDB real-time listeners and multi-user authentication.
-  - Kiosk navigation engine with 90-second Alzheimer's safety return timer.
+  - Kiosk 5-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
+  - Cohesive 2–3 paragraph AI briefing engine with live medication sync and selective bolding.
   - Conversational 2-turn check-in engine and nostalgic question database.
   - Voice recording engine (Web Speech API) with silence detection and AI polishing.
   - Gemini API client with auto-discovery, timeout protection, and smart offline fallback.
-  - Open-Meteo weather integration with zero-number text generation.
+  - Open-Meteo weather integration with 3-day daily forecast and zero-number prose helper.
   - Structured CRUD for medications, events, messages, contacts, and journal entries.
 - **`styles.css`**:
-  - Custom kiosk touch states, responsive typography rules, and print formatting.
+  - Responsive kiosk shell (`.kiosk-layout-shell`, `.kiosk-sidebar-nav`) for landscape vs. portrait/mobile, spotlight pulse animation, and print formatting.
 - **`project.md`**:
   - Operational setup and configuration guide for GitHub, Firebase, and tablet kiosk.
 - **`gemini.md`**:
@@ -299,12 +315,9 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ## Backlog & Items On Hold
 
-1. **Morning Briefing Contextual Deep-Linking** (from Turn 78, put on hold in Turn 79):
-   - Allow tapping an item in the morning briefing to navigate directly to its detail view.
-   - **Recommended Implementation**: Tactile Action Pills (`[ View Family Notes -> ]`, `[ View Medicine Schedule -> ]`, `[ View Calendar -> ]`) color-coded to the destination tabs, with smooth-scrolling to the specific target card and automatic 90-second return safety.
-2. **Additional Tablet Visual Polish**:
-   - Continuous refinement of font contrast and spacing for varying lighting conditions.
-3. **Caregiver Notification Enhancements**:
+1. **Additional Tablet Visual Polish**:
+   - Continuous refinement of font contrast and spacing after testing on the physical 7" tablet.
+2. **Caregiver Notification Enhancements**:
    - Optional browser notifications when Mom logs her morning medication or completes a voice journal entry.
 
 ---
