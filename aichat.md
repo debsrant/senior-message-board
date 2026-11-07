@@ -305,6 +305,14 @@ The Senior Message Board is a specialized, zero-build static web application des
     - Renamed `#btn-admin-tab-checkin` to **`Memories`** and updated header/card labels (`Morning Medicine`, `Memories & Favorite Things`, `Today's Shared Memory & Learned Favorites`).
     - Deleted all legacy shims and unused functions (`applyCardPositions`, `normalizeCardPositions`, `handleCardPositionChange`, `renderTextLinesCard`, `renderTodayColumn`, `getHolidayEmoji`, `saveData`, legacy aliases, and hidden compatibility DOM elements `#disp-today-events-section` and `#disp-ai-prep-section`), and actively pruned obsolete Firebase nodes (`reminders`, `medications`, `cardPositions`, `seniorHistory`).
 
+#### Turn 85
+- **User Inquiry**:
+  - Are audio recordings saved? Where are they stored? Is there a limit?
+- **Architecture Clarification**:
+  - **No Audio Files Saved**: The app uses the client-side Web Speech API (`SpeechRecognition`) for real-time speech-to-text. Raw audio waveforms (WAV/MP3/WebM) are not recorded or saved.
+  - **Storage Locations**: Transcribed text and AI-polished stories are stored in Firebase Realtime Database (`board/seniorJournal/<id>`, `board/seniorResponse`, `board/seniorProfile/favorites`) with an offline browser cache in `localStorage` (`smb_local_senior_journal`).
+  - **Capacity / Limits**: Because storage is pure text (~0.5 KB - 1 KB per entry), Firebase's free 1 GB tier can hold hundreds of thousands of stories without exceeding limits or incurring costs.
+
 ---
 
 ## Current Architecture & File Inventory
