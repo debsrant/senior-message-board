@@ -281,23 +281,50 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
+### Phase 11: Dedicated Memories Page, Removal of Check-In & Legacy Bloat, and Creative AI Learning Loop (Nov 7, 2026)
+
+#### Turns 83 to 84
+- **User Requests**:
+  - Create a dedicated **`Memories`** page on the kiosk display, moving the interactive conversation there and framing it around preserving memories, gathering Mom's likes/preferences, and suggesting activities.
+  - Train the AI to learn from Mom and make creative activity suggestions that complement the daily summary, rather than feeling programmatic or parroting her raw responses.
+  - Since this is not yet a production site, remove all legacy/backward-compatibility code and obsolete Firebase data nodes (`reminders`, `medications`, `cardPositions`, `seniorHistory`, hidden DOM hooks).
+  - Rename the Admin Panel tab from `"Check-In & Memories"` to just **`"Memories"`**, remove the concept/terminology of `"check-in"` across the code and display, and continue to give Mom low-pressure opt-out choices (`"Not sure today"`, `"None of these"`, `"I'm all done for now"`).
+- **Technical Implementation**:
+  - **Dedicated Kiosk `Memories` Page (`#disp-page-memories` & `renderKioskMemoriesPage()`)**:
+    - Added the 6th navigation button **`Memories`** (`#btn-kiosk-page-memories`) with a live saved-memories count badge (`#kiosk-nav-memories-badge`).
+    - Moved the interactive memory & preference conversation off `#disp-page-today` so the Cohesive Morning Briefing spans the full width of the `Today` page, with a contextual deep-link pill (`Memories & Favorites ->`).
+    - Built 3 sections on the new `Memories` page:
+      1. **Memories & Favorite Things Spark (`#card-memories-spark`)**: Multi-turn reminiscence & favorite-things prompts with `"Tap & Speak Your Story"`, `"Try Another Topic"`, `"Share Another Topic"`, and low-pressure opt-out choices on every turn.
+      2. **Favorite Things & Joys (`#card-memories-favorites`)**: Displays Mom's cumulative learned preferences (`board/seniorProfile/favorites`) as interactive tags that she can tap to share a story about.
+      3. **Your Memory Book (`#card-memories-storybook`)**: Large-print keepsake gallery displaying Mom's saved stories and reflections right on the tablet for Mom and visiting family to read together.
+  - **Upgraded AI Learning Loop & Non-Parroting Activity Suggestions**:
+    - Fixed `getActiveCheckinTopic()` so it prioritizes Gemini's personalized `data.aiQuestion` (with dynamic Turn-2 follow-up support) before falling back to the static reminiscence bank.
+    - Created `learnFromSeniorEntry()`, `synthesizeFavoriteFromEntry()`, and `getSeniorFavoritesList()` to automatically distill clean preference/interest tags into `board/seniorProfile/favorites` whenever Mom shares a substantive choice or story (and added an editable **Learned Favorites & Joys** box in the Admin `Memories` tab).
+    - Replaced the raw-answer parroting in `buildSmartRuleBasedPlan()` and the Gemini system prompt with `buildCreativePersonalizedSuggestion()` and `learnedFavoritesProfile` synthesis so Paragraph 3 of the Morning Briefing suggests creative, forward-looking activities tailored to her musical tastes, comfort treats, and pastimes without ever quoting raw button text.
+  - **Removed "Check-In" Framing & Legacy Code Cleanup**:
+    - Renamed `#btn-admin-tab-checkin` to **`Memories`** and updated header/card labels (`Morning Medicine`, `Memories & Favorite Things`, `Today's Shared Memory & Learned Favorites`).
+    - Deleted all legacy shims and unused functions (`applyCardPositions`, `normalizeCardPositions`, `handleCardPositionChange`, `renderTextLinesCard`, `renderTodayColumn`, `getHolidayEmoji`, `saveData`, legacy aliases, and hidden compatibility DOM elements `#disp-today-events-section` and `#disp-ai-prep-section`), and actively pruned obsolete Firebase nodes (`reminders`, `medications`, `cardPositions`, `seniorHistory`).
+
+---
+
 ## Current Architecture & File Inventory
 
 ### File Inventory
-- **`index.html`** (~1,975 lines):
-  - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" toggle (compact in landscape).
-  - Responsive Kiosk Navigation (`#kiosk-nav-bar`): Left Vertical Sidebar in landscape/desktop, Top Grid on phones/portrait tablets; 5 large tactile buttons (`Today`, `Weather`, `Medicine`, `Calendar`, `Family`).
-  - Page 1 (`disp-page-today`): Hero Announcement, Cohesive Morning/Afternoon/Evening Briefing with deep-link pills, and Conversational Daily Check-In.
+- **`index.html`** (~2,075 lines):
+  - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" Morning Medicine toggle (compact in landscape).
+  - Responsive Kiosk Navigation (`#kiosk-nav-bar`): Left Vertical Sidebar in landscape/desktop, Top Grid on phones/portrait tablets; 6 large tactile buttons (`Today`, `Weather`, `Medicine`, `Calendar`, `Family`, `Memories`).
+  - Page 1 (`disp-page-today`): Hero Announcement and Full-Width Cohesive Morning/Afternoon/Evening Briefing with deep-link pills.
   - Page 2 (`disp-page-weather`): Current conditions, What to Wear comfort guide, Morning/Afternoon/Evening progression, and 3-Day Outlook with calendar tie-ins.
   - Page 3 (`disp-page-meds`): Morning Medicine instructions, schedule cards, and storage notes.
   - Page 4 (`disp-page-events`): Calendar agenda, appointment times, driver notes, and US holidays.
   - Page 5 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
-  - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Check-In & Memories`, `AI & Board Settings`, `Contacts & Users`).
-- **`app.js`** (~6,585 lines):
+  - Page 6 (`disp-page-memories`): Interactive Memory & Favorite Things Spark, Favorite Things & Joys tags, and Your Memory Book keepsake gallery.
+  - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Memories`, `AI & Board Settings`, `Contacts & Users`).
+- **`app.js`** (~6,740 lines):
   - Firebase RTDB real-time listeners and multi-user authentication.
-  - Kiosk 5-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
-  - Cohesive 2–3 paragraph AI briefing engine with live medication sync and selective bolding.
-  - Conversational 2-turn check-in engine and nostalgic question database.
+  - Kiosk 6-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
+  - Cohesive 2–3 paragraph AI briefing engine with live medication sync, non-parroting creative activity suggestions (`buildCreativePersonalizedSuggestion`), and selective bolding.
+  - Cumulative Learned Favorites & Joys profile (`board/seniorProfile/favorites`) and Kiosk Memory Book renderer (`renderKioskMemoriesPage`).
   - Voice recording engine (Web Speech API) with silence detection and AI polishing.
   - Gemini API client with auto-discovery, timeout protection, and smart offline fallback.
   - Open-Meteo weather integration with 3-day daily forecast and zero-number prose helper.

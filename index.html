@@ -115,14 +115,14 @@
 						</div>
 					</div>
 
-					<!-- Medication Check-In (Right - 40% on Tablet) -->
+					<!-- Morning Medicine (Right - 40% on Tablet) -->
 					<div
 						id="header-meds-section"
 						class="md:col-span-5 border-t-2 md:border-t-0 md:border-l-2 border-slate-200/80 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center gap-2"
 					>
 						<div class="flex items-center justify-between gap-2">
 							<span class="text-base sm:text-lg font-black uppercase tracking-wider text-slate-800">
-								Medication Check-In
+								Morning Medicine
 							</span>
 							<span
 								id="meds-status-badge"
@@ -151,7 +151,7 @@
 
 				<!-- Responsive Kiosk Shell: Left Vertical Sidebar on Landscape Tablet/Desktop, Top Grid on Phone/Portrait Tablet -->
 				<div class="kiosk-layout-shell">
-					<!-- Kiosk Multi-Page Navigation Menu (5 Giant Tactile Tabs for 80+ Senior) -->
+					<!-- Kiosk Multi-Page Navigation Menu (6 Giant Tactile Tabs for 80+ Senior) -->
 					<nav
 						id="kiosk-nav-bar"
 						class="kiosk-sidebar-nav bg-white p-2 sm:p-2.5 rounded-2xl border-2 border-slate-200/90 shadow-sm"
@@ -213,13 +213,25 @@
 								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-200"
 							></span>
 						</button>
+						<button
+							type="button"
+							id="btn-kiosk-page-memories"
+							onclick="switchKioskPage('memories')"
+							class="py-3.5 sm:py-4 px-3.5 sm:px-4 rounded-xl font-black text-xl sm:text-2xl flex items-center justify-between gap-2 transition cursor-pointer bg-white text-slate-700 hover:bg-slate-100 border-2 border-slate-200"
+						>
+							<span>Memories</span>
+							<span
+								id="kiosk-nav-memories-badge"
+								class="hidden text-xs sm:text-sm font-bold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200"
+							></span>
+						</button>
 					</nav>
 
 					<!-- Kiosk Active Page Content Container -->
 					<div id="kiosk-pages-container" class="flex-1 min-w-0 w-full">
 						<!-- ================= PAGE 1: TODAY (MAIN DISPLAY) ================= -->
 						<div id="disp-page-today" class="space-y-4 sm:space-y-6">
-							<!-- Main Message & AI Daily Companion Hub (Unified Cohesive Morning Briefing & Check-In) -->
+							<!-- Main Message & AI Daily Companion Hub (Full-Width Cohesive Morning Briefing) -->
 							<div
 								id="card-announcement"
 								class="bg-blue-50/90 p-5 sm:p-7 rounded-2xl border-2 border-blue-300 shadow-sm space-y-5"
@@ -235,157 +247,18 @@
 									></p>
 								</div>
 
-								<!-- 2-Column Balanced Grid: Left = Cohesive Briefing, Right = Daily Check-In -->
-								<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
-									<!-- Left Column: Cohesive Daily Briefing (2-3 Flowing Paragraphs with Contextual Deep Links) -->
-									<div id="disp-ai-today-section" class="flex flex-col space-y-3">
-										<h3 id="disp-ai-today-heading" class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
-											Morning Briefing
-										</h3>
-										<div
-											id="disp-ai-today-plan"
-											class="p-5 sm:p-6 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs space-y-4 sm:space-y-5"
-										>
-											<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
-												Putting together your morning greeting...
-											</p>
-										</div>
-									</div>
-
-							<!-- Right Column: Senior Daily Check-In & Conversation (Interactive, Multi-turn, No Emojis) -->
-							<div id="disp-senior-checkin-section" class="flex flex-col space-y-3 lg:border-l-2 lg:border-blue-200/80 lg:pl-8">
-								<div class="flex items-center justify-between">
-									<h3 class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
-										Daily Check-In
+								<!-- Full-Width Cohesive Daily Briefing (2-3 Flowing Paragraphs with Contextual Deep Links) -->
+								<div id="disp-ai-today-section" class="flex flex-col space-y-3">
+									<h3 id="disp-ai-today-heading" class="text-blue-950 font-black uppercase tracking-wider text-base sm:text-lg">
+										Morning Briefing
 									</h3>
-									<span id="disp-checkin-status-badge" class="hidden text-sm sm:text-base font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border-2 border-emerald-300">
-										Logged
-									</span>
-								</div>
-
-								<!-- Turn 1 Container: Initial Prompt & Choices -->
-								<div id="disp-checkin-turn1" class="space-y-3">
-									<p id="disp-checkin-question" class="text-2xl sm:text-3xl font-black text-slate-950 leading-snug">
-										Loading question...
-									</p>
-									<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-										<!-- Dynamic choice buttons generated here without emojis -->
-									</div>
-									<div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-										<button
-											type="button"
-											id="btn-kiosk-start-voice"
-											onclick="startKioskVoiceCapture()"
-											class="flex-1 py-3.5 px-4 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:from-purple-900 active:to-indigo-900 text-white rounded-2xl text-lg sm:text-xl font-black shadow-sm transition flex items-center justify-center cursor-pointer text-center"
-										>
-											Tap &amp; Speak Your Story
-										</button>
-										<button
-											type="button"
-											id="btn-ask-another-question"
-											onclick="cycleNextCheckinQuestion()"
-											class="px-5 py-3.5 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-950 rounded-2xl text-base sm:text-lg font-bold border-2 border-blue-200 transition flex items-center justify-center cursor-pointer shadow-2xs text-center"
-										>
-											Another Question
-										</button>
-									</div>
-								</div>
-
-								<!-- Turn 2 Container: Gentle Follow-up Question -->
-								<div id="disp-checkin-turn2" class="hidden space-y-3">
-									<div id="disp-checkin-reaction" class="p-4 bg-blue-100/90 border-2 border-blue-300 text-blue-950 rounded-2xl font-bold text-xl sm:text-2xl leading-snug">
-										<!-- Warm reaction text populated here -->
-									</div>
-									<p id="disp-checkin-followup-question" class="text-2xl sm:text-3xl font-black text-slate-950 leading-snug">
-										<!-- Follow-up question populated here -->
-									</p>
-									<div id="disp-checkin-followup-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-										<!-- Dynamic follow-up choices generated here -->
-									</div>
-									<div class="pt-1">
-										<button
-											type="button"
-											onclick="startKioskVoiceCapture(true)"
-											class="w-full py-3 px-4 bg-purple-50 hover:bg-purple-100 text-purple-950 rounded-xl text-base sm:text-lg font-bold border-2 border-purple-200 transition flex items-center justify-center cursor-pointer text-center"
-										>
-											Tap &amp; Speak More About This
-										</button>
-									</div>
-								</div>
-
-								<!-- Voice Recording Container: Tap & Speak Story for Mom -->
-								<div id="disp-checkin-voice" class="hidden p-5 sm:p-6 bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl border-2 border-indigo-300 space-y-4 shadow-sm">
-									<div class="flex items-center justify-between">
-										<span class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900">
-											Listening to Your Story
-										</span>
-										<span id="disp-voice-timer" class="text-sm sm:text-base font-mono font-bold text-indigo-800 bg-white px-3 py-1 rounded-lg border border-indigo-200">00:00</span>
-									</div>
-
-									<p id="disp-voice-prompt" class="text-xl sm:text-2xl font-black text-slate-950 leading-snug">
-										Tell us about your memory...
-									</p>
-
-									<div class="p-4 sm:p-5 bg-white rounded-2xl border-2 border-indigo-200 min-h-[7rem] max-h-48 overflow-y-auto space-y-2">
-										<div id="disp-voice-status-text" class="text-base sm:text-lg font-semibold text-slate-500 italic">
-											Speak naturally. Take all the time you need, Mom...
-										</div>
-										<div id="disp-voice-transcript" class="text-xl sm:text-2xl font-bold text-slate-950 leading-relaxed"></div>
-									</div>
-
-									<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
-										<button
-											type="button"
-											id="btn-voice-finish"
-											onclick="stopKioskVoiceCapture(true)"
-											class="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-black text-xl sm:text-2xl shadow-md transition flex items-center justify-center cursor-pointer text-center"
-										>
-											Finished Speaking
-										</button>
-										<button
-											type="button"
-											id="btn-voice-cancel"
-											onclick="cancelKioskVoiceCapture()"
-											class="py-3 px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-base sm:text-lg transition cursor-pointer text-center"
-										>
-											Cancel
-										</button>
-									</div>
-
-									<div id="disp-voice-fallback-msg" class="hidden text-xs sm:text-sm font-semibold text-amber-900 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-										Microphone is not enabled on this browser. Tap Cancel to return to the answer buttons.
-									</div>
-								</div>
-
-								<!-- Confirmation Container: Logged Summary -->
-								<div id="disp-checkin-confirmation" class="hidden p-5 bg-white/95 rounded-2xl border-2 border-blue-200 flex items-center justify-between gap-4 shadow-xs">
-									<div class="space-y-1.5 flex-1">
-										<span id="disp-checkin-confirm-title" class="text-sm sm:text-base font-black uppercase tracking-wider text-blue-800 block">Response Recorded</span>
-										<span id="disp-checkin-answer-text" class="text-2xl sm:text-3xl font-black text-slate-950 block"></span>
-										<span id="disp-checkin-followup-answer-text" class="text-xl sm:text-2xl font-bold text-slate-800 block"></span>
-										<span id="disp-checkin-time-text" class="text-base sm:text-lg font-semibold text-slate-600 block"></span>
-									</div>
-									<button
-										type="button"
-										id="btn-change-checkin"
-										onclick="resetSeniorCheckinChoice()"
-										class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-300 transition shrink-0 cursor-pointer"
+									<div
+										id="disp-ai-today-plan"
+										class="p-5 sm:p-6 bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs space-y-4 sm:space-y-5"
 									>
-										Change
-									</button>
-								</div>
-							</div>
-						</div>
-
-								<!-- Hidden Compatibility Elements (Preserves existing DOM hooks for alerts and event counts without visual clutter) -->
-								<div class="hidden" aria-hidden="true">
-									<div id="disp-today-events-section">
-										<span id="today-events-count-badge">0</span>
-										<div id="disp-today-events-list"></div>
-									</div>
-									<div id="disp-ai-prep-section">
-										<div id="disp-ai-prep-alerts"></div>
-										<p id="disp-ai-look-ahead"></p>
+										<p class="text-xl sm:text-2xl font-medium text-slate-500 italic">
+											Putting together your morning greeting...
+										</p>
 									</div>
 								</div>
 							</div>
@@ -664,6 +537,205 @@
 								</div>
 							</div>
 						</div>
+
+						<!-- ================= PAGE 6: MEMORIES & FAVORITES (INTERACTIVE STORYTELLING, LEARNED LIKES & STORY BOOK) ================= -->
+						<div id="disp-page-memories" class="hidden space-y-6">
+							<!-- Top Section: Interactive Memory & Favorite Things Spark -->
+							<div id="card-memories-spark" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-indigo-200 shadow-sm space-y-5">
+								<div class="flex items-center justify-between border-b-2 border-indigo-100 pb-4 flex-wrap gap-3">
+									<div>
+										<div class="flex items-center gap-3 flex-wrap">
+											<h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-950">
+												Memories &amp; Favorite Things
+											</h2>
+											<span
+												id="disp-checkin-status-badge"
+												class="hidden text-sm sm:text-base font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border-2 border-emerald-300"
+											>
+												Saved Today
+											</span>
+										</div>
+										<p class="text-lg sm:text-xl font-bold text-slate-500 mt-1">
+											Share a favorite memory, song, treat, or story whenever you feel like chatting
+										</p>
+									</div>
+									<button
+										type="button"
+										onclick="switchKioskPage('today')"
+										class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-black text-lg sm:text-xl rounded-xl border-2 border-slate-300 transition cursor-pointer"
+									>
+										Back to Today
+									</button>
+								</div>
+
+								<div id="disp-senior-checkin-section" class="flex flex-col space-y-4">
+									<!-- Turn 1 Container: Initial Prompt & Choices -->
+									<div id="disp-checkin-turn1" class="space-y-4">
+										<p id="disp-checkin-question" class="text-2xl sm:text-3xl font-black text-slate-950 leading-snug">
+											Loading memory topic...
+										</p>
+										<div id="disp-checkin-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+											<!-- Dynamic choice buttons generated here without emojis, always including an opt-out option -->
+										</div>
+										<div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+											<button
+												type="button"
+												id="btn-kiosk-start-voice"
+												onclick="startKioskVoiceCapture()"
+												class="flex-1 py-4 px-5 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 active:from-purple-900 active:to-indigo-900 text-white rounded-2xl text-xl sm:text-2xl font-black shadow-sm transition flex items-center justify-center cursor-pointer text-center"
+											>
+												Tap &amp; Speak Your Story
+											</button>
+											<button
+												type="button"
+												id="btn-ask-another-question"
+												onclick="cycleNextCheckinQuestion()"
+												class="px-6 py-4 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-950 rounded-2xl text-lg sm:text-xl font-black border-2 border-indigo-200 transition flex items-center justify-center cursor-pointer shadow-2xs text-center"
+											>
+												Try Another Topic
+											</button>
+										</div>
+									</div>
+
+									<!-- Turn 2 Container: Gentle Follow-up & Creative Activity Idea -->
+									<div id="disp-checkin-turn2" class="hidden space-y-4">
+										<div id="disp-checkin-reaction" class="p-4 sm:p-5 bg-indigo-50/90 border-2 border-indigo-200 text-indigo-950 rounded-2xl font-bold text-xl sm:text-2xl leading-snug">
+											<!-- Warm reaction & creative activity suggestion populated here -->
+										</div>
+										<p id="disp-checkin-followup-question" class="text-2xl sm:text-3xl font-black text-slate-950 leading-snug">
+											<!-- Follow-up question populated here -->
+										</p>
+										<div id="disp-checkin-followup-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+											<!-- Dynamic follow-up choices generated here -->
+										</div>
+										<div class="pt-1">
+											<button
+												type="button"
+												onclick="startKioskVoiceCapture(true)"
+												class="w-full py-3.5 px-5 bg-purple-50 hover:bg-purple-100 text-purple-950 rounded-xl text-lg sm:text-xl font-black border-2 border-purple-200 transition flex items-center justify-center cursor-pointer text-center"
+											>
+												Tap &amp; Speak More About This
+											</button>
+										</div>
+									</div>
+
+									<!-- Voice Recording Container: Tap & Speak Story for Mom -->
+									<div id="disp-checkin-voice" class="hidden p-5 sm:p-6 bg-gradient-to-b from-indigo-50 to-purple-50 rounded-3xl border-2 border-indigo-300 space-y-4 shadow-sm">
+										<div class="flex items-center justify-between">
+											<span class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900">
+												Listening to Your Story
+											</span>
+											<span id="disp-voice-timer" class="text-sm sm:text-base font-mono font-bold text-indigo-800 bg-white px-3 py-1 rounded-lg border border-indigo-200">00:00</span>
+										</div>
+
+										<p id="disp-voice-prompt" class="text-xl sm:text-2xl font-black text-slate-950 leading-snug">
+											Tell us about your memory...
+										</p>
+
+										<div class="p-4 sm:p-5 bg-white rounded-2xl border-2 border-indigo-200 min-h-[7rem] max-h-48 overflow-y-auto space-y-2">
+											<div id="disp-voice-status-text" class="text-base sm:text-lg font-semibold text-slate-500 italic">
+												Speak naturally. Take all the time you need, Mom...
+											</div>
+											<div id="disp-voice-transcript" class="text-xl sm:text-2xl font-bold text-slate-950 leading-relaxed"></div>
+										</div>
+
+										<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+											<button
+												type="button"
+												id="btn-voice-finish"
+												onclick="stopKioskVoiceCapture(true)"
+												class="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-2xl font-black text-xl sm:text-2xl shadow-md transition flex items-center justify-center cursor-pointer text-center"
+											>
+												Finished Speaking
+											</button>
+											<button
+												type="button"
+												id="btn-voice-cancel"
+												onclick="cancelKioskVoiceCapture()"
+												class="py-3 px-5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-base sm:text-lg transition cursor-pointer text-center"
+											>
+												Cancel
+											</button>
+										</div>
+
+										<div id="disp-voice-fallback-msg" class="hidden text-xs sm:text-sm font-semibold text-amber-900 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+											Microphone is not enabled on this browser. Tap Cancel to return to the answer buttons.
+										</div>
+									</div>
+
+									<!-- Confirmation Container: Logged Summary -->
+									<div id="disp-checkin-confirmation" class="hidden p-5 sm:p-6 bg-indigo-50/60 rounded-2xl border-2 border-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+										<div class="space-y-1.5 flex-1">
+											<span id="disp-checkin-confirm-title" class="text-sm sm:text-base font-black uppercase tracking-wider text-indigo-900 block">Memory Saved</span>
+											<span id="disp-checkin-answer-text" class="text-2xl sm:text-3xl font-black text-slate-950 block"></span>
+											<span id="disp-checkin-followup-answer-text" class="text-xl sm:text-2xl font-bold text-slate-800 block"></span>
+											<span id="disp-checkin-time-text" class="text-base sm:text-lg font-semibold text-slate-600 block"></span>
+										</div>
+										<div class="flex flex-wrap items-center gap-2.5 shrink-0">
+											<button
+												type="button"
+												onclick="shareAnotherMemoryTopic()"
+												class="px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white text-base sm:text-lg font-black rounded-xl shadow-xs transition cursor-pointer"
+											>
+												Share Another Topic
+											</button>
+											<button
+												type="button"
+												id="btn-change-checkin"
+												onclick="resetSeniorCheckinChoice()"
+												class="px-5 py-3.5 bg-white hover:bg-slate-100 text-slate-900 text-base sm:text-lg font-bold rounded-xl border-2 border-slate-300 transition cursor-pointer"
+											>
+												Change Answer
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Middle Section: Things You Love (Learned Favorites & Preferences) -->
+							<div id="card-memories-favorites" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-amber-200 shadow-sm space-y-4">
+								<div class="flex items-center justify-between border-b-2 border-amber-100 pb-3 flex-wrap gap-2">
+									<div>
+										<h3 class="text-2xl sm:text-3xl font-black text-slate-950">
+											Favorite Things &amp; Joys
+										</h3>
+										<p class="text-base sm:text-lg font-bold text-slate-500 mt-0.5">
+											Music, treats, pastimes, and cherished topics gathered from your stories
+										</p>
+									</div>
+								</div>
+								<div id="disp-senior-favorites-list" class="flex flex-wrap gap-3">
+									<p class="text-lg sm:text-xl font-medium text-slate-500 italic">
+										As you share memories and favorite things above, they will appear here.
+									</p>
+								</div>
+							</div>
+
+							<!-- Bottom Section: Your Memory Book (Saved Keepsake Stories on the Tablet) -->
+							<div id="card-memories-storybook" class="bg-white p-5 sm:p-7 rounded-2xl border-2 border-purple-200 shadow-sm space-y-5">
+								<div class="flex items-center justify-between border-b-2 border-purple-100 pb-4 flex-wrap gap-3">
+									<div>
+										<h3 class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-950">
+											Your Memory Book
+										</h3>
+										<p class="text-base sm:text-lg font-bold text-slate-500 mt-0.5">
+											Special stories and reflections you and your family have shared together
+										</p>
+									</div>
+									<span
+										id="disp-storybook-count-badge"
+										class="hidden text-base sm:text-lg font-black px-4 py-1.5 rounded-full bg-purple-100 text-purple-900 border-2 border-purple-300"
+									>
+										0 Stories
+									</span>
+								</div>
+								<div id="disp-kiosk-storybook-list" class="space-y-4">
+									<p class="text-lg sm:text-xl font-medium text-slate-500 italic">
+										No stories saved yet. Tap a choice or speak a story above to start your Memory Book.
+									</p>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -673,7 +745,7 @@
 				id="view-admin"
 				class="hidden space-y-5 sm:space-y-6 max-w-6xl mx-auto"
 			>
-				<!-- Panel Top Header & 3-Tab Navigation Card -->
+				<!-- Panel Top Header & 4-Tab Navigation Card -->
 				<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
 					<div class="flex flex-wrap justify-between items-center gap-3">
 						<div>
@@ -708,7 +780,7 @@
 							onclick="switchAdminTab('checkin')"
 							class="py-2.5 px-3 rounded-lg text-xs sm:text-sm font-bold transition flex items-center justify-center text-slate-600 hover:text-slate-900 text-center"
 						>
-							Check-In &amp; Memories
+							Memories
 						</button>
 						<button
 							type="button"
@@ -1154,62 +1226,89 @@
 					</div>
 				</div>
 
-				<!-- ==================== TAB 2: CHECK-IN & MEMORIES ==================== -->
+				<!-- ==================== TAB 2: MEMORIES ==================== -->
 				<div id="admin-tab-checkin" class="hidden space-y-5 sm:space-y-6">
-					<!-- Top Grid: Today's Senior Check-In Status & Question Controls -->
+					<!-- Top Grid: Today's Memory & Learned Favorites Profile + Prompt Controls -->
 					<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-						<!-- Card: Senior's Today Response -->
+						<!-- Card: Today's Shared Memory & Learned Favorites -->
 						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3.5">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-										Senior's Today Response
+										Today's Shared Memory &amp; Learned Favorites
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
-										Real-time status of mom's daily check-in answer.
+										Real-time status of Mom's shared memory today and cumulative preferences learned by AI.
 									</p>
 								</div>
-								<span class="text-[11px] font-semibold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 shrink-0">
-									Interactive
+								<span class="text-[11px] font-semibold text-indigo-700 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 shrink-0">
+									Memories &amp; Likes
 								</span>
 							</div>
 
 							<div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
 								<div class="flex items-center justify-between">
-									<span class="font-bold text-slate-600">Answer Status:</span>
+									<span class="font-bold text-slate-600">Today's Shared Memory:</span>
 									<button
 										type="button"
 										id="btn-admin-clear-checkin"
 										onclick="adminClearSeniorResponse()"
 										class="hidden text-xs text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer"
 									>
-										Clear Today's Response
+										Clear Today's Answer
 									</button>
 								</div>
 								<div id="admin-checkin-response-text" class="text-slate-900 font-bold text-sm bg-white p-3 rounded-lg border border-slate-200">
-									No response logged yet today.
+									No memory or preference shared yet today.
 								</div>
 								<div id="admin-active-question-info" class="text-[11px] text-blue-700 font-semibold"></div>
 								<div id="admin-checkin-history" class="pt-2 border-t border-slate-200 text-[11px] text-slate-500"></div>
 							</div>
+
+							<!-- Cumulative Learned Favorites & Preferences Profile -->
+							<div class="pt-2 border-t border-slate-100 space-y-2">
+								<div class="flex items-center justify-between">
+									<label class="block text-xs font-bold text-slate-700">
+										Learned Favorites &amp; Joys (Used by AI for Creative Suggestions)
+									</label>
+								</div>
+								<textarea
+									id="input-senior-profile-favorites"
+									rows="2"
+									placeholder="e.g. 1950s Big Band & Swing, Warm peach pie, Watching cardinals at the feeder, Sunday family drives"
+									class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-xs leading-relaxed focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+								></textarea>
+								<div class="flex items-center justify-between gap-2">
+									<p class="text-[11px] text-slate-500">
+										Comma-separated favorites automatically gathered as Mom shares stories (you can also edit or add items here).
+									</p>
+									<button
+										type="button"
+										onclick="saveSeniorProfileFavorites()"
+										class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shrink-0 transition cursor-pointer"
+									>
+										Save Favorites
+									</button>
+								</div>
+							</div>
 						</div>
 
-						<!-- Card: Check-In Question Settings & Creative Bank -->
+						<!-- Card: Memory & Preference Prompt Settings -->
 						<div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3.5">
 							<div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
 								<div>
 									<h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
-										Check-In Question Settings
+										Memory &amp; Preference Prompt Settings
 									</h3>
 									<p class="text-xs text-slate-500 mt-0.5">
-										Customize or suggest interactive questions for the kiosk.
+										Customize or suggest interactive memory &amp; favorite-things prompts for the Memories page.
 									</p>
 								</div>
 								<button
 									type="button"
 									onclick="suggestCreativeCheckinQuestion()"
 									class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
-									title="Cycle through creative nostalgic and music ideas"
+									title="Cycle through creative nostalgic, music, and favorite-things ideas"
 								>
 									Suggest Ideas
 								</button>
@@ -1218,12 +1317,12 @@
 							<div class="space-y-2.5">
 								<div>
 									<label class="block text-xs font-semibold mb-1 text-slate-700">
-										Custom Question (Optional Override)
+										Custom Memory Prompt (Optional Override)
 									</label>
 									<input
 										type="text"
 										id="input-checkin-custom-question"
-										placeholder="Leave blank for creative daily questions (music, memories, daydreams)"
+										placeholder="Leave blank for AI-crafted daily memory &amp; favorite-things prompts"
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
 									/>
 								</div>
@@ -1234,11 +1333,11 @@
 									<input
 										type="text"
 										id="input-checkin-custom-choices"
-										placeholder="e.g. Big band or swing, Classic country, Piano classical, Golden oldies"
+										placeholder="e.g. Big band or swing, Classic country, Piano melodies, Soft hymns"
 										class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"
 									/>
 									<p class="text-[11px] text-slate-500 mt-1">
-										When blank, the AI creates dynamic daily questions learning from the senior's recent answers and schedule.
+										An easy opt-out choice ("Not sure today" / "None of these") is always included for Mom.
 									</p>
 								</div>
 
@@ -1249,7 +1348,7 @@
 										onclick="saveCheckinQuestionSettings()"
 										class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5 cursor-pointer"
 									>
-										Save Question Settings
+										Save Prompt Settings
 									</button>
 								</div>
 							</div>

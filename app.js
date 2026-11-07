@@ -57,7 +57,6 @@ auth.onAuthStateChanged(async (user) => {
 					userProfile.active = true;
 				}
 			}
-			if (userProfile.role === 'USER') userProfile.role = 'EDITOR'; // legacy role migration
 			console.log('User Profile Loaded:', userProfile);
 
 			// Enforce Active Status: Block deactivated accounts
@@ -581,6 +580,7 @@ function switchAdminTab(tab) {
 	if (tab === 'checkin') {
 		renderMemoryJournalEntries();
 		renderStoryCatcherSparks();
+		renderAdminSeniorProfileInput();
 	}
 }
 
@@ -590,7 +590,7 @@ let kioskIdleTimer = null;
 const KIOSK_IDLE_TIMEOUT_MS = 90 * 1000; // 90 seconds auto-return to Today for Alzheimer's accessibility
 
 function switchKioskPage(pageName) {
-	const validPages = ['today', 'weather', 'meds', 'events', 'family'];
+	const validPages = ['today', 'weather', 'meds', 'events', 'family', 'memories'];
 	if (!validPages.includes(pageName)) pageName = 'today';
 	currentKioskPage = pageName;
 
@@ -617,6 +617,8 @@ function switchKioskPage(pageName) {
 
 	if (pageName === 'weather') {
 		renderWeatherPage();
+	} else if (pageName === 'memories') {
+		renderKioskMemoriesPage(latestBoardData);
 	}
 
 	window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -750,6 +752,18 @@ function updateKioskNavBadges(boardData) {
 			weatherBadge.classList.add('hidden');
 		}
 	}
+
+	// 5. Memories Nav Badge
+	const memoriesBadge = document.getElementById('kiosk-nav-memories-badge');
+	if (memoriesBadge) {
+		const storiesCount = getMeaningfulJournalEntries(data).length;
+		if (storiesCount > 0) {
+			memoriesBadge.innerText = `${storiesCount}`;
+			memoriesBadge.classList.remove('hidden');
+		} else {
+			memoriesBadge.classList.add('hidden');
+		}
+	}
 }
 
 function initBoard() {
@@ -788,103 +802,9 @@ function initBoard() {
 	);
 }
 
-let currentCardPositions = {
-	messages: 1,
-	medications: 2,
-	events: 3,
-	contacts: 4,
-};
 let currentBoardUserContacts = {};
 let currentAdditionalContacts = {};
 let liveUsersData = {};
-
-function normalizeCardPositions(posData) {
-	const raw = posData || {};
-	const keys = ['messages', 'medications', 'events', 'contacts'];
-	const entries = keys.map((k, idx) => {
-		const val = parseInt(raw[k], 10);
-		return { key: k, order: isNaN(val) ? idx + 100 : val, tie: idx };
-	});
-	entries.sort((a, b) => (a.order !== b.order ? a.order - b.order : a.tie - b.tie));
-
-	const result = {};
-	entries.forEach((item, index) => {
-		result[item.key] = index + 1;
-	});
-	return result;
-}
-
-function applyCardPositions(posData) {
-	currentCardPositions = normalizeCardPositions(posData);
-
-	const grid = document.getElementById('display-cards-grid');
-	const cardMap = {
-		messages: document.getElementById('card-messages'),
-		medications: document.getElementById('card-medications'),
-		events: document.getElementById('card-events'),
-		contacts: document.getElementById('card-contacts'),
-	};
-
-	if (
-		grid &&
-		cardMap.messages &&
-		cardMap.medications &&
-		cardMap.events &&
-		cardMap.contacts
-	) {
-		const sortedKeys = Object.keys(currentCardPositions).sort(
-			(a, b) => currentCardPositions[a] - currentCardPositions[b]
-		);
-		sortedKeys.forEach((key) => {
-			const cardEl = cardMap[key];
-			if (cardEl) {
-				cardEl.style.order = String(currentCardPositions[key]);
-				grid.appendChild(cardEl);
-			}
-		});
-	}
-
-	const selMsg = document.getElementById('select-pos-messages');
-	const selMed = document.getElementById('select-pos-medications');
-	const selEvt = document.getElementById('select-pos-events');
-	const selCon = document.getElementById('select-pos-contacts');
-	if (selMsg) selMsg.value = String(currentCardPositions.messages);
-	if (selMed) selMed.value = String(currentCardPositions.medications);
-	if (selEvt) selEvt.value = String(currentCardPositions.events);
-	if (selCon) selCon.value = String(currentCardPositions.contacts);
-}
-
-async function handleCardPositionChange(changedCard, newPosValue) {
-	if (!userProfile || userProfile.role !== 'ADMIN') {
-		alert('Permission Denied: Only ADMIN users can change card positions.');
-		applyCardPositions(currentCardPositions);
-		return;
-	}
-
-	const targetPos = parseInt(newPosValue, 10);
-	if (![1, 2, 3, 4].includes(targetPos)) return;
-
-	const oldPos = currentCardPositions[changedCard];
-	if (oldPos === targetPos) return;
-
-	const updatedPositions = { ...currentCardPositions };
-	Object.keys(updatedPositions).forEach((key) => {
-		if (key !== changedCard && updatedPositions[key] === targetPos) {
-			updatedPositions[key] = oldPos;
-		}
-	});
-	updatedPositions[changedCard] = targetPos;
-
-	applyCardPositions(updatedPositions);
-
-	try {
-		await database.ref('board/cardPositions').set(updatedPositions);
-		showToast('Display card order updated!');
-	} catch (err) {
-		console.error('Failed to update card positions:', err);
-		alert('Error saving card positions: ' + err.message);
-	}
-}
 
 function updateEntryCountBadge(badgeEl, count) {
 	if (!badgeEl) return;
@@ -894,40 +814,6 @@ function updateEntryCountBadge(badgeEl, count) {
 	} else {
 		badgeEl.classList.add('hidden');
 	}
-}
-
-function renderTextLinesCard(containerId, badgeId, rawText, emptyTitle, emptySubtitle, emoji) {
-	const container = document.getElementById(containerId);
-	const badgeEl = document.getElementById(badgeId);
-	const lines = String(rawText || '')
-		.split(/\r?\n/)
-		.map((l) => l.trim())
-		.filter(Boolean);
-
-	updateEntryCountBadge(badgeEl, lines.length);
-
-	if (!container) return;
-	if (lines.length === 0) {
-		container.innerHTML = `
-			<div class="w-full p-6 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-center space-y-1">
-				<div class="text-2xl">${emoji}</div>
-				<div class="text-base font-bold text-slate-700">${escapeHtml(emptyTitle)}</div>
-				<div class="text-xs text-slate-500">${escapeHtml(emptySubtitle)}</div>
-			</div>
-		`;
-		return;
-	}
-
-	container.innerHTML = lines
-		.map((line) => {
-			const cleaned = line.replace(/^[-•*]\s*/, '');
-			return `
-				<div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-lg sm:text-xl text-slate-800 font-medium leading-snug">
-					${escapeHtml(cleaned)}
-				</div>
-			`;
-		})
-		.join('');
 }
 
 const DEFAULT_AI_RULES =
@@ -1285,15 +1171,12 @@ const CONVERSATIONAL_CHECKIN_TOPICS = [
 	},
 ];
 
-// Compatibility aliases
-const CREATIVE_FALLBACK_CHECKIN_QUESTIONS = CONVERSATIONAL_CHECKIN_TOPICS;
-const DEFAULT_ROTATING_CHECKIN_QUESTIONS = CONVERSATIONAL_CHECKIN_TOPICS;
-
 let checkinConversationState = {
 	turn: 1,
 	topicIndex: 0,
 	turn1Choice: null,
 	isEditing: false,
+	useAiQuestion: true,
 };
 
 function getDayOfYear(date = new Date()) {
@@ -1306,6 +1189,19 @@ function getDayOfYear(date = new Date()) {
 try {
 	checkinConversationState.topicIndex = getDayOfYear() % CONVERSATIONAL_CHECKIN_TOPICS.length;
 } catch (e) {}
+
+function isOptOutChoice(choiceText) {
+	if (!choiceText || typeof choiceText !== 'string') return false;
+	const c = choiceText.toLowerCase().trim();
+	return (
+		c.includes('not sure') ||
+		c.includes('none of') ||
+		c === 'none' ||
+		c.includes('all done') ||
+		c.includes('skip') ||
+		c.includes('maybe later')
+	);
+}
 
 function isRepetitiveLegacyQuestion(questionText) {
 	if (!questionText || typeof questionText !== 'string') return false;
@@ -1320,12 +1216,73 @@ function isRepetitiveLegacyQuestion(questionText) {
 	);
 }
 
+function buildDynamicFollowupForChoice(questionText, choiceText) {
+	const qLower = (questionText || '').toLowerCase();
+	const cClean = (choiceText || '').trim();
+
+	if (/music|song|sing|band|radio|melod|tune|dance/i.test(qLower + ' ' + cClean)) {
+		return {
+			reaction: `${cClean} brings such a wonderful rhythm and warmth to the room.`,
+			question: 'When that music plays, what feels nicest to do?',
+			choices: [
+				'Hum or sing along softly',
+				'Tap my toes and smile',
+				'Listen quietly and relax',
+				"I'm all done for now",
+			],
+		};
+	}
+	if (/bake|baking|pie|cookie|bread|kitchen|treat|dessert|food|coffee|tea|supper/i.test(qLower + ' ' + cClean)) {
+		return {
+			reaction: `There is nothing quite as comforting as ${cClean.toLowerCase()}.`,
+			question: 'What was the best part of enjoying a treat like that?',
+			choices: [
+				'Sharing it with family at the table',
+				'The warm aroma filling the kitchen',
+				'Having a quiet afternoon cup of tea',
+				"I'm all done for now",
+			],
+		};
+	}
+	if (/bird|flower|garden|porch|spring|summer|autumn|fall|winter|tree|outside|nature|lake|drive/i.test(qLower + ' ' + cClean)) {
+		return {
+			reaction: `${cClean} paints such a peaceful, lovely picture.`,
+			question: 'What makes a moment like that feel most special to you?',
+			choices: [
+				'The quiet, fresh outdoor air',
+				'Watching the colors and birds',
+				'Sitting with someone you love',
+				"I'm all done for now",
+			],
+		};
+	}
+	return {
+		reaction: `${cClean} is such a wonderful memory to hold onto.`,
+		question: 'What part of that brings the biggest smile to your face?',
+		choices: [
+			'Good times shared with family',
+			'The simple peace and comfort of it',
+			'How happy and carefree it felt',
+			"I'm all done for now",
+		],
+	};
+}
+
+function ensureOptOutChoice(choicesList) {
+	const list = Array.isArray(choicesList) ? [...choicesList] : [];
+	if (!list.some((c) => isOptOutChoice(c))) {
+		list.push('Not sure today');
+	}
+	return list;
+}
+
 function getActiveCheckinTopic(boardData) {
 	const data = boardData || latestBoardData || {};
-	// 1. Explicit Admin custom question override
+
+	// 1. Explicit Admin custom prompt override
 	if (data.customCheckinQuestion && data.customCheckinQuestion.trim()) {
 		const qText = data.customCheckinQuestion.trim();
-		let choices = ['Yes', 'No', 'Not sure today'];
+		let choices = ['Yes, I love that', 'Sometimes', 'Not sure today'];
 		if (data.customCheckinChoices && data.customCheckinChoices.trim()) {
 			const parsed = data.customCheckinChoices
 				.split(',')
@@ -1333,20 +1290,69 @@ function getActiveCheckinTopic(boardData) {
 				.filter(Boolean);
 			if (parsed.length > 0) choices = parsed;
 		}
-		if (!choices.some((c) => c.toLowerCase().includes('not sure') || c.toLowerCase().includes('none'))) {
-			choices.push('Not sure today');
-		}
+		choices = ensureOptOutChoice(choices);
+		const followups = {};
+		choices.forEach((c) => {
+			if (!isOptOutChoice(c)) {
+				followups[c] = buildDynamicFollowupForChoice(qText, c);
+			}
+		});
 		return {
 			id: 'custom_admin',
 			question: qText,
-			choices: choices,
-			source: 'Custom',
+			choices,
+			followups,
+			source: 'Custom Prompt',
 		};
 	}
 
-	// 2. Select from the conversational topic bank
+	// 2. Dynamic Gemini AI-crafted daily memory & preference prompt (if active and not cycled past)
+	if (
+		checkinConversationState.useAiQuestion !== false &&
+		data.aiQuestion &&
+		data.aiQuestion.question &&
+		!isRepetitiveLegacyQuestion(data.aiQuestion.question) &&
+		Array.isArray(data.aiQuestion.choices) &&
+		data.aiQuestion.choices.length >= 2
+	) {
+		const qText = data.aiQuestion.question.trim();
+		const choices = ensureOptOutChoice(data.aiQuestion.choices.map((c) => String(c).trim()).filter(Boolean));
+		const rawFollowups = data.aiQuestion.followups || {};
+		const followups = {};
+		choices.forEach((c) => {
+			if (!isOptOutChoice(c)) {
+				if (rawFollowups[c] && rawFollowups[c].question && Array.isArray(rawFollowups[c].choices)) {
+					const fChoices = [...rawFollowups[c].choices];
+					if (!fChoices.some((fc) => fc.toLowerCase().includes('all done'))) {
+						fChoices.push("I'm all done for now");
+					}
+					followups[c] = {
+						reaction: rawFollowups[c].reaction || `${c} is a wonderful choice.`,
+						question: rawFollowups[c].question,
+						choices: fChoices,
+					};
+				} else {
+					followups[c] = buildDynamicFollowupForChoice(qText, c);
+				}
+			}
+		});
+		return {
+			id: 'gemini_daily',
+			question: qText,
+			choices,
+			followups,
+			source: 'AI Personalized',
+		};
+	}
+
+	// 3. Select from the curated conversational memory & favorites bank
 	const idx = Math.abs(checkinConversationState.topicIndex) % CONVERSATIONAL_CHECKIN_TOPICS.length;
-	return CONVERSATIONAL_CHECKIN_TOPICS[idx] || CONVERSATIONAL_CHECKIN_TOPICS[0];
+	const baseTopic = CONVERSATIONAL_CHECKIN_TOPICS[idx] || CONVERSATIONAL_CHECKIN_TOPICS[0];
+	return {
+		...baseTopic,
+		choices: ensureOptOutChoice(baseTopic.choices),
+		source: 'Memory Sparks',
+	};
 }
 
 function getActiveCheckinQuestion(boardData) {
@@ -1354,37 +1360,37 @@ function getActiveCheckinQuestion(boardData) {
 	return {
 		question: topic.question,
 		choices: topic.choices,
-		source: topic.source || 'Conversation Bank',
+		source: topic.source || 'Memory Sparks',
 	};
 }
 
 function cycleNextCheckinQuestion() {
+	checkinConversationState.useAiQuestion = false;
 	checkinConversationState.topicIndex =
 		(checkinConversationState.topicIndex + 1) % CONVERSATIONAL_CHECKIN_TOPICS.length;
 	checkinConversationState.turn = 1;
 	checkinConversationState.turn1Choice = null;
+	checkinConversationState.isEditing = true;
 	renderSeniorCheckin(latestBoardData);
-	showToast('Switched to another question!');
+	showToast('Loaded another memory topic!');
+}
+
+function shareAnotherMemoryTopic() {
+	checkinConversationState.useAiQuestion = false;
+	checkinConversationState.topicIndex =
+		(checkinConversationState.topicIndex + 1) % CONVERSATIONAL_CHECKIN_TOPICS.length;
+	checkinConversationState.turn = 1;
+	checkinConversationState.turn1Choice = null;
+	checkinConversationState.isEditing = true;
+	renderSeniorCheckin(latestBoardData);
 }
 
 async function selectCheckinTurn1Choice(choice) {
 	const todayStr = getTodayDateString();
 	const activeTopic = getActiveCheckinTopic(latestBoardData);
-
-	const isEscape =
-		choice.toLowerCase().includes('not sure') ||
-		choice.toLowerCase().includes('none');
+	const isEscape = isOptOutChoice(choice);
 
 	if (isEscape) {
-		const entry = {
-			dateStr: todayStr,
-			timestamp: Date.now(),
-			question: activeTopic.question,
-			answer: choice,
-			notes: 'Mom checked in (Not sure / None of these)',
-		};
-		await recordSeniorJournalEntry(entry);
-
 		const responsePayload = {
 			question: activeTopic.question,
 			answer: choice,
@@ -1409,19 +1415,22 @@ async function selectCheckinTurn1Choice(choice) {
 		return;
 	}
 
-	// Check if follow-up exists for this choice
-	const followup = activeTopic.followups && activeTopic.followups[choice];
+	// Check if follow-up exists for this choice (or generate a smart follow-up)
+	const followup =
+		(activeTopic.followups && activeTopic.followups[choice]) ||
+		buildDynamicFollowupForChoice(activeTopic.question, choice);
+
 	if (followup) {
 		checkinConversationState.turn = 2;
 		checkinConversationState.turn1Choice = choice;
 		renderSeniorCheckin(latestBoardData);
 	} else {
-		// Single turn completion
 		const entry = {
 			dateStr: todayStr,
 			timestamp: Date.now(),
 			question: activeTopic.question,
 			answer: choice,
+			source: 'memory_tap',
 		};
 		await recordSeniorJournalEntry(entry);
 
@@ -1453,9 +1462,11 @@ async function selectCheckinTurn2Choice(followupChoice) {
 	const todayStr = getTodayDateString();
 	const activeTopic = getActiveCheckinTopic(latestBoardData);
 	const turn1Choice = checkinConversationState.turn1Choice;
-	const followupObj = activeTopic.followups && activeTopic.followups[turn1Choice];
+	const followupObj =
+		(activeTopic.followups && activeTopic.followups[turn1Choice]) ||
+		buildDynamicFollowupForChoice(activeTopic.question, turn1Choice);
 
-	const isDone = followupChoice === "I'm all done for now";
+	const isDone = isOptOutChoice(followupChoice);
 	const entry = {
 		dateStr: todayStr,
 		timestamp: Date.now(),
@@ -1463,7 +1474,7 @@ async function selectCheckinTurn2Choice(followupChoice) {
 		answer: turn1Choice,
 		followupQuestion: !isDone && followupObj ? followupObj.question : undefined,
 		followupAnswer: !isDone ? followupChoice : undefined,
-		notes: isDone ? 'Wrapped up at Turn 1' : undefined,
+		source: 'memory_tap',
 	};
 	await recordSeniorJournalEntry(entry);
 
@@ -1493,11 +1504,6 @@ async function selectCheckinTurn2Choice(followupChoice) {
 	} catch (err) {}
 
 	renderAiSummaryCard();
-}
-
-// Alias for compatibility
-function submitSeniorCheckin(choice) {
-	return selectCheckinTurn1Choice(choice);
 }
 
 function resetSeniorCheckinChoice() {
@@ -1553,11 +1559,11 @@ function renderSeniorCheckin(boardData) {
 
 		const confirmTitleEl = document.getElementById('disp-checkin-confirm-title');
 		if (resp.isStory) {
-			if (confirmTitleEl) confirmTitleEl.innerText = "Mom's Memory Recorded";
+			if (confirmTitleEl) confirmTitleEl.innerText = 'Story Saved to Memory Book';
 			if (answerTextEl) answerTextEl.innerText = `"${resp.answer}"`;
 			if (followupAnswerTextEl) {
 				if (resp.storyText) {
-					const preview = resp.storyText.length > 140 ? resp.storyText.slice(0, 137) + '...' : resp.storyText;
+					const preview = resp.storyText.length > 160 ? resp.storyText.slice(0, 157) + '...' : resp.storyText;
 					followupAnswerTextEl.innerText = `"${preview}"`;
 					followupAnswerTextEl.classList.remove('hidden');
 				} else {
@@ -1565,17 +1571,17 @@ function renderSeniorCheckin(boardData) {
 				}
 			}
 		} else {
-			if (confirmTitleEl) confirmTitleEl.innerText = 'Response Recorded';
+			if (confirmTitleEl) confirmTitleEl.innerText = 'Memory & Preference Saved';
 			if (answerTextEl) {
-				if (resp.answer.toLowerCase().includes('not sure') || resp.answer.toLowerCase().includes('none')) {
+				if (isOptOutChoice(resp.answer)) {
 					answerTextEl.innerText = `${resp.answer} — and that is completely fine!`;
 				} else {
 					answerTextEl.innerText = resp.answer;
 				}
 			}
 			if (followupAnswerTextEl) {
-				if (resp.followupAnswer && resp.followupAnswer !== "I'm all done for now") {
-					followupAnswerTextEl.innerText = `Mom: "${resp.followupAnswer}"`;
+				if (resp.followupAnswer && !isOptOutChoice(resp.followupAnswer)) {
+					followupAnswerTextEl.innerText = `Favorite detail: "${resp.followupAnswer}"`;
 					followupAnswerTextEl.classList.remove('hidden');
 				} else {
 					followupAnswerTextEl.classList.add('hidden');
@@ -1586,7 +1592,7 @@ function renderSeniorCheckin(boardData) {
 			const timeStr = resp.timestamp
 				? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 				: '';
-			timeTextEl.innerText = timeStr ? `Logged today at ${timeStr}` : 'Logged for today';
+			timeTextEl.innerText = timeStr ? `Saved today at ${timeStr}` : 'Saved today';
 		}
 	} else {
 		confirmEl.classList.add('hidden');
@@ -1598,12 +1604,13 @@ function renderSeniorCheckin(boardData) {
 		const activeTopic = getActiveCheckinTopic(data);
 
 		if (checkinConversationState.turn === 2 && checkinConversationState.turn1Choice) {
-			// Turn 2 Followup
 			if (turn1El) turn1El.classList.add('hidden');
 			if (turn2El) turn2El.classList.remove('hidden');
 
 			const choice = checkinConversationState.turn1Choice;
-			const followup = activeTopic.followups && activeTopic.followups[choice];
+			const followup =
+				(activeTopic.followups && activeTopic.followups[choice]) ||
+				buildDynamicFollowupForChoice(activeTopic.question, choice);
 
 			if (followup && reactionEl && followupQEl && followupOptionsEl) {
 				reactionEl.innerText = followup.reaction || 'Thank you for sharing that!';
@@ -1615,9 +1622,9 @@ function renderSeniorCheckin(boardData) {
 							type="button"
 							onclick="selectCheckinTurn2Choice('${escapeHtml(c).replace(/'/g, "\\'")}')"
 							class="w-full text-left px-5 py-4 ${
-								c.includes('all done')
+								isOptOutChoice(c)
 									? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-2 border-slate-300'
-									: 'bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white text-slate-950 border-2 border-blue-300 hover:border-blue-500'
+									: 'bg-white hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-950 border-2 border-indigo-300 hover:border-indigo-500'
 							} rounded-2xl font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
 						>
 							${escapeHtml(c)}
@@ -1627,7 +1634,6 @@ function renderSeniorCheckin(boardData) {
 					.join('');
 			}
 		} else {
-			// Turn 1 Opening
 			if (turn2El) turn2El.classList.add('hidden');
 			if (turn1El) turn1El.classList.remove('hidden');
 
@@ -1640,9 +1646,9 @@ function renderSeniorCheckin(boardData) {
 							type="button"
 							onclick="selectCheckinTurn1Choice('${escapeHtml(choice).replace(/'/g, "\\'")}')"
 							class="w-full text-left px-5 py-4 ${
-								choice.toLowerCase().includes('not sure') || choice.toLowerCase().includes('none')
+								isOptOutChoice(choice)
 									? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-2 border-slate-300'
-									: 'bg-white hover:bg-blue-50 active:bg-blue-600 active:text-white text-slate-950 border-2 border-blue-300 hover:border-blue-500'
+									: 'bg-white hover:bg-indigo-50 active:bg-indigo-600 active:text-white text-slate-950 border-2 border-indigo-300 hover:border-indigo-500'
 							} rounded-2xl font-bold text-xl sm:text-2xl transition shadow-xs cursor-pointer leading-snug"
 						>
 							${escapeHtml(choice)}
@@ -1655,6 +1661,253 @@ function renderSeniorCheckin(boardData) {
 	}
 
 	renderAdminCheckinResponse(resp, todayStr);
+	renderKioskMemoriesPage(data);
+}
+
+// ================= LEARNED FAVORITES PROFILE & KIOSK MEMORIES PAGE =================
+
+function getMeaningfulJournalEntries(boardData) {
+	const data = boardData || latestBoardData || {};
+	let journalMap = data.seniorJournal;
+	if (!journalMap) {
+		try {
+			const raw = localStorage.getItem('smb_local_senior_journal');
+			if (raw) journalMap = JSON.parse(raw);
+		} catch (e) {}
+	}
+	return Object.values(journalMap || {})
+		.filter((e) => e && e.answer && !isOptOutChoice(e.answer))
+		.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+}
+
+function synthesizeFavoriteFromEntry(entry) {
+	if (!entry || !entry.answer || isOptOutChoice(entry.answer)) return null;
+	const ans = String(entry.answer).trim();
+	const follow = entry.followupAnswer && !isOptOutChoice(entry.followupAnswer) ? String(entry.followupAnswer).trim() : '';
+
+	if (entry.storyTitle && entry.storyTitle.trim() && entry.storyTitle !== "Mom's Memory") {
+		return entry.storyTitle.trim();
+	}
+	if (ans.length > 55) {
+		return null;
+	}
+	if (/^(yes|no|sometimes|maybe)\b/i.test(ans)) {
+		return follow && follow.length <= 50 ? follow : null;
+	}
+	if (follow && follow.length <= 42 && !follow.toLowerCase().includes(ans.toLowerCase())) {
+		return `${ans} (${follow})`;
+	}
+	return ans;
+}
+
+function getSeniorFavoritesList(boardData) {
+	const data = boardData || latestBoardData || {};
+	let savedFavs = [];
+
+	if (Array.isArray(data.seniorProfile?.favorites)) {
+		savedFavs = data.seniorProfile.favorites;
+	} else if (typeof data.seniorProfile?.favorites === 'string') {
+		savedFavs = data.seniorProfile.favorites.split(',').map((s) => s.trim()).filter(Boolean);
+	} else {
+		try {
+			const localRaw = localStorage.getItem('smb_local_senior_favorites');
+			if (localRaw) {
+				const parsed = JSON.parse(localRaw);
+				if (Array.isArray(parsed)) savedFavs = parsed;
+			}
+		} catch (e) {}
+	}
+
+	const uniqueMap = new Map();
+	savedFavs.forEach((f) => {
+		const clean = String(f || '').trim();
+		if (clean && !isOptOutChoice(clean)) {
+			uniqueMap.set(clean.toLowerCase(), clean);
+		}
+	});
+
+	// Also synthesize from recorded journal entries so learned favorites are always rich
+	const entries = getMeaningfulJournalEntries(data);
+	entries.forEach((e) => {
+		const tag = synthesizeFavoriteFromEntry(e);
+		if (tag && !uniqueMap.has(tag.toLowerCase()) && uniqueMap.size < 14) {
+			uniqueMap.set(tag.toLowerCase(), tag);
+		}
+	});
+
+	return Array.from(uniqueMap.values());
+}
+
+async function learnFromSeniorEntry(entry) {
+	const newTag = synthesizeFavoriteFromEntry(entry);
+	if (!newTag) return;
+
+	const currentList = getSeniorFavoritesList(latestBoardData);
+	if (!currentList.some((item) => item.toLowerCase() === newTag.toLowerCase())) {
+		currentList.unshift(newTag);
+	}
+	const trimmedList = currentList.slice(0, 14);
+
+	if (!latestBoardData) latestBoardData = {};
+	if (!latestBoardData.seniorProfile) latestBoardData.seniorProfile = {};
+	latestBoardData.seniorProfile.favorites = trimmedList;
+
+	try {
+		localStorage.setItem('smb_local_senior_favorites', JSON.stringify(trimmedList));
+	} catch (e) {}
+
+	try {
+		await database.ref('board/seniorProfile').update({
+			favorites: trimmedList,
+			updatedAt: Date.now(),
+		});
+	} catch (e) {}
+
+	renderAdminSeniorProfileInput();
+	renderKioskMemoriesPage(latestBoardData);
+}
+
+function renderAdminSeniorProfileInput() {
+	const inputEl = document.getElementById('input-senior-profile-favorites');
+	if (!inputEl || document.activeElement === inputEl) return;
+	const favs = getSeniorFavoritesList(latestBoardData);
+	inputEl.value = favs.join(', ');
+}
+
+async function saveSeniorProfileFavorites() {
+	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
+		alert('Permission Denied: Only ADMIN and EDITOR users can save favorites.');
+		return;
+	}
+	const inputEl = document.getElementById('input-senior-profile-favorites');
+	const raw = (inputEl?.value || '').trim();
+	const list = raw
+		.split(',')
+		.map((s) => s.trim())
+		.filter((s) => s && !isOptOutChoice(s));
+
+	if (!latestBoardData) latestBoardData = {};
+	if (!latestBoardData.seniorProfile) latestBoardData.seniorProfile = {};
+	latestBoardData.seniorProfile.favorites = list;
+
+	try {
+		localStorage.setItem('smb_local_senior_favorites', JSON.stringify(list));
+	} catch (e) {}
+
+	try {
+		await database.ref('board/seniorProfile').update({
+			favorites: list,
+			updatedAt: Date.now(),
+		});
+		renderKioskMemoriesPage(latestBoardData);
+		renderAiSummaryCard();
+		showToast("Saved Mom's learned favorites profile!");
+	} catch (err) {
+		alert('Error saving favorites: ' + err.message);
+	}
+}
+
+function exploreFavoriteTopicOnKiosk(favText) {
+	const cleanFav = (favText || '').trim();
+	if (!cleanFav) return;
+	kioskCurrentPrompt = `Tell us a favorite memory about ${cleanFav}`;
+	startKioskVoiceCapture(false);
+	const promptEl = document.getElementById('disp-voice-prompt');
+	if (promptEl) {
+		promptEl.innerText = `What do you love most about ${cleanFav}?`;
+	}
+	document.getElementById('card-memories-spark')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderKioskMemoriesPage(boardData) {
+	const data = boardData || latestBoardData || {};
+	const favContainer = document.getElementById('disp-senior-favorites-list');
+	const bookContainer = document.getElementById('disp-kiosk-storybook-list');
+	const bookBadge = document.getElementById('disp-storybook-count-badge');
+
+	// 1. Render Favorite Things & Joys
+	if (favContainer) {
+		const favs = getSeniorFavoritesList(data);
+		if (favs.length === 0) {
+			favContainer.innerHTML = `
+				<p class="text-xl sm:text-2xl font-medium text-slate-600 italic">
+					As you share memories and favorite choices above, the things you love will be collected right here.
+				</p>
+			`;
+		} else {
+			favContainer.innerHTML = favs
+				.map(
+					(fav) => `
+					<button
+						type="button"
+						onclick="exploreFavoriteTopicOnKiosk('${escapeHtml(fav).replace(/'/g, "\\'")}')"
+						class="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 text-amber-950 border-2 border-amber-300 rounded-2xl font-black text-lg sm:text-xl transition cursor-pointer shadow-2xs text-left"
+						title="Tap to share a story about this favorite"
+					>
+						${escapeHtml(fav)}
+					</button>
+				`
+				)
+				.join('');
+		}
+	}
+
+	// 2. Render Mom's Memory Book on Kiosk
+	if (bookContainer) {
+		const entries = getMeaningfulJournalEntries(data);
+		if (bookBadge) {
+			if (entries.length > 0) {
+				bookBadge.innerText = `${entries.length} ${entries.length === 1 ? 'Memory' : 'Memories'}`;
+				bookBadge.classList.remove('hidden');
+			} else {
+				bookBadge.classList.add('hidden');
+			}
+		}
+
+		if (entries.length === 0) {
+			bookContainer.innerHTML = `
+				<div class="p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-center space-y-1">
+					<div class="text-xl sm:text-2xl font-black text-slate-800">Your Memory Book is ready</div>
+					<div class="text-base sm:text-lg font-semibold text-slate-500">Tap a choice or speak a story above to save your first memory here.</div>
+				</div>
+			`;
+		} else {
+			bookContainer.innerHTML = entries
+				.slice(0, 12)
+				.map((entry) => {
+					const formattedDate = entry.timestamp
+						? new Date(entry.timestamp).toLocaleDateString('en-US', {
+								weekday: 'short',
+								month: 'short',
+								day: 'numeric',
+								year: 'numeric',
+						  })
+						: entry.dateStr || '';
+					const title = entry.storyTitle || entry.question || 'Shared Memory';
+					const followupHtml =
+						entry.followupAnswer && !isOptOutChoice(entry.followupAnswer)
+							? `<div class="text-lg sm:text-xl font-bold text-indigo-900 pt-1">Favorite part: "${escapeHtml(entry.followupAnswer)}"</div>`
+							: '';
+
+					return `
+						<div class="p-5 sm:p-6 bg-purple-50/40 rounded-2xl border-2 border-purple-200 space-y-2.5 shadow-2xs">
+							<div class="flex items-center justify-between gap-2 flex-wrap border-b border-purple-200/70 pb-2">
+								<h4 class="text-xl sm:text-2xl font-black text-purple-950">${escapeHtml(title)}</h4>
+								<span class="text-sm sm:text-base font-bold text-slate-600 bg-white px-3 py-1 rounded-xl border border-purple-200">${escapeHtml(formattedDate)}</span>
+							</div>
+							${
+								entry.storyTitle && entry.question
+									? `<div class="text-base sm:text-lg font-semibold text-slate-600 italic">"${escapeHtml(entry.question)}"</div>`
+									: ''
+							}
+							<p class="text-xl sm:text-2xl font-bold text-slate-900 leading-relaxed whitespace-pre-line">"${escapeHtml(entry.answer)}"</p>
+							${followupHtml}
+						</div>
+					`;
+				})
+				.join('');
+		}
+	}
 }
 
 // ================= SENIOR MEMORY JOURNAL & VOICE STORYTELLING =================
@@ -1736,7 +1989,7 @@ async function recordSeniorJournalEntry(entry) {
 		notes: entry.notes || '',
 		rawTranscript: entry.rawTranscript || '',
 		storyTitle: entry.storyTitle || '',
-		source: entry.source || 'checkin_tap',
+		source: entry.source || 'memory_tap',
 	};
 
 	if (!latestBoardData) latestBoardData = {};
@@ -1753,7 +2006,9 @@ async function recordSeniorJournalEntry(entry) {
 		});
 	} catch (err) {}
 
+	await learnFromSeniorEntry(payload);
 	updateAdminJournalCount();
+	updateKioskNavBadges(latestBoardData);
 }
 
 function updateAdminJournalCount() {
@@ -2877,44 +3132,36 @@ function renderAdminCheckinResponse(resp, todayStr) {
 	const historyEl = document.getElementById('admin-checkin-history');
 	if (!respTextEl) return;
 
-	// Show current active question info
+	// Show current active memory prompt info
 	const activeTopic = getActiveCheckinTopic(latestBoardData);
 	if (activeQInfoEl) {
-		activeQInfoEl.innerHTML = `Active Prompt: <em>"${escapeHtml(activeTopic.question)}"</em> <span class="text-[10px] font-semibold text-slate-500">(${activeTopic.source || 'Conversation'})</span>`;
+		activeQInfoEl.innerHTML = `Active Prompt: <em>"${escapeHtml(activeTopic.question)}"</em> <span class="text-[10px] font-semibold text-slate-500">(${activeTopic.source || 'Memory Sparks'})</span>`;
 	}
 
 	if (resp && resp.dateStr === todayStr && resp.answer) {
 		const timeStr = resp.timestamp
 			? new Date(resp.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 			: '';
-		const followupText = resp.followupAnswer ? ` &bull; Follow-up: <strong>"${escapeHtml(resp.followupAnswer)}"</strong>` : '';
-		respTextEl.innerHTML = `<strong>${escapeHtml(resp.answer)}</strong> (for <em>"${escapeHtml(resp.question || 'Daily Check-In')}"</em>${timeStr ? ' at ' + timeStr : ''})${followupText}`;
+		const followupText = resp.followupAnswer ? ` &bull; Favorite detail: <strong>"${escapeHtml(resp.followupAnswer)}"</strong>` : '';
+		respTextEl.innerHTML = `<strong>${escapeHtml(resp.answer)}</strong> (for <em>"${escapeHtml(resp.question || 'Memories & Favorites')}"</em>${timeStr ? ' at ' + timeStr : ''})${followupText}`;
 		if (clearBtn) clearBtn.classList.remove('hidden');
 	} else {
-		respTextEl.innerText = 'No response logged yet today.';
+		respTextEl.innerText = 'No memory or preference shared yet today.';
 		if (clearBtn) clearBtn.classList.add('hidden');
 	}
 
 	// Render recent journal history preview
 	if (historyEl) {
-		let journalMap = latestBoardData?.seniorJournal;
-		if (!journalMap) {
-			try {
-				const raw = localStorage.getItem('smb_local_senior_journal');
-				if (raw) journalMap = JSON.parse(raw);
-			} catch (e) {}
-		}
-		const entries = Object.values(journalMap || {})
-			.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-			.slice(0, 3);
-
+		const entries = getMeaningfulJournalEntries(latestBoardData).slice(0, 3);
 		if (entries.length > 0) {
-			historyEl.innerHTML = '<strong>Recent Journal:</strong> ' + entries.map(h => `${escapeHtml(h.answer)} <span class="text-slate-400">(${h.dateStr})</span>`).join(' &bull; ');
+			historyEl.innerHTML = '<strong>Recent Memories:</strong> ' + entries.map((h) => `${escapeHtml(h.storyTitle || h.answer)} <span class="text-slate-400">(${h.dateStr})</span>`).join(' &bull; ');
 			historyEl.classList.remove('hidden');
 		} else {
 			historyEl.classList.add('hidden');
 		}
 	}
+
+	renderAdminSeniorProfileInput();
 }
 
 async function adminClearSeniorResponse() {
@@ -3528,9 +3775,6 @@ function renderBoard(data) {
 		if (announceEl) announceEl.innerText = '';
 	}
 
-	// Apply display card ordering (Position 1 to 4)
-	applyCardPositions(data.cardPositions);
-
 	// Update Contacts state from board
 	currentBoardUserContacts = data.userContacts || {};
 	currentAdditionalContacts = data.contacts || {};
@@ -3603,16 +3847,12 @@ function renderBoard(data) {
 				const titleEl = document.getElementById('input-board-title');
 		if (titleEl && document.activeElement !== titleEl) titleEl.value = data.boardTitle || 'Senior Message Board';
 
-		// Prune legacy transition data from Firebase
-		if (data.reminders !== undefined) {
-			database.ref('board/reminders').remove().catch(() => {});
-		}
-		if (data.medications !== undefined) {
-			database.ref('board/medications').remove().catch(() => {});
-		}
-		if (data.cardPositions && data.cardPositions.reminders !== undefined) {
-			database.ref('board/cardPositions/reminders').remove().catch(() => {});
-		}
+		// Clean up any obsolete Firebase keys
+		['reminders', 'medications', 'cardPositions', 'seniorHistory'].forEach((legacyKey) => {
+			if (data[legacyKey] !== undefined) {
+				database.ref(`board/${legacyKey}`).remove().catch(() => {});
+			}
+		});
 
 		const medNotesEl = document.getElementById('input-medication-notes');
 		if (medNotesEl && document.activeElement !== medNotesEl) {
@@ -3648,6 +3888,7 @@ function renderBoard(data) {
 		if (customChoicesEl && document.activeElement !== customChoicesEl) {
 			customChoicesEl.value = data.customCheckinChoices || '';
 		}
+		renderAdminSeniorProfileInput();
 		const apiKeyEl = document.getElementById('input-gemini-api-key');
 		if (apiKeyEl && document.activeElement !== apiKeyEl) {
 			apiKeyEl.value = userProfile.role === 'ADMIN' ? loadGeminiApiKeyLocal() : '';
@@ -3788,10 +4029,10 @@ async function saveCheckinQuestionSettings() {
 			customCheckinChoices: customCheckinChoices,
 			updatedAt: Date.now(),
 		});
-		showToast('Check-in question settings saved!');
+		showToast('Memory prompt settings saved!');
 	} catch (err) {
-		console.error('Failed to save check-in question settings:', err);
-		alert('Failed to save check-in question settings: ' + err.message);
+		console.error('Failed to save memory prompt settings:', err);
+		alert('Failed to save memory prompt settings: ' + err.message);
 	} finally {
 		if (btn) btn.disabled = false;
 	}
@@ -3863,79 +4104,6 @@ async function saveDisplaySettingsOnly() {
 	} finally {
 		if (btn) btn.disabled = false;
 	}
-}
-
-// Fallback comprehensive save function
-function saveData() {
-	console.log('Attempting to save board data...');
-	if (!userProfile || (userProfile.role !== 'ADMIN' && userProfile.role !== 'EDITOR')) {
-		alert('Permission Denied: You do not have permission to modify board content.');
-		return;
-	}
-
-	const announcement = (document.getElementById('input-announcement')?.value || '').trim();
-	const boardTitle = (document.getElementById('input-board-title')?.value || '').trim() || 'Senior Message Board';
-	const medicationNotes = (document.getElementById('input-medication-notes')?.value || '').trim();
-	const medsTaken = !!document.getElementById('input-meds-taken')?.checked;
-	const zipcode = (document.getElementById('input-zipcode')?.value || '').trim();
-	const aiRules = (document.getElementById('input-ai-rules')?.value ?? DEFAULT_AI_RULES).trim();
-	const aiFeedback = (document.getElementById('input-ai-feedback')?.value ?? '').trim();
-	const customCheckinQuestion = (document.getElementById('input-checkin-custom-question')?.value || '').trim();
-	const customCheckinChoices = (document.getElementById('input-checkin-custom-choices')?.value || '').trim();
-
-	// Recompute fresh Smart Plan from the newly edited form fields
-	const freshSmartPlan = buildSmartRuleBasedPlan({
-		...latestBoardData,
-		announcement,
-		medsTaken,
-		aiRules,
-		aiFeedback,
-		customCheckinQuestion,
-		customCheckinChoices,
-	});
-
-	const updatePayload = {
-		boardTitle: boardTitle,
-		announcement: announcement,
-		medicationNotes: medicationNotes,
-		medsTaken: medsTaken,
-		zipcode: zipcode,
-		aiRules: aiRules,
-		aiFeedback: aiFeedback,
-		customCheckinQuestion: customCheckinQuestion,
-		customCheckinChoices: customCheckinChoices,
-		aiAutoRefresh: true,
-		aiSummary: {
-			todayPlan: freshSmartPlan.todayPlan,
-			prepAlerts: freshSmartPlan.prepAlerts,
-			lookAhead: freshSmartPlan.lookAhead,
-			source: 'smart',
-			generatedDate: getTodayDateString(),
-			updatedAt: Date.now(),
-		},
-		updatedAt: Date.now(),
-	};
-
-	// Delete legacy transition data in Firebase
-	database.ref('board/reminders').remove().catch(() => {});
-	database.ref('board/medications').remove().catch(() => {});
-	database.ref('board/cardPositions/reminders').remove().catch(() => {});
-
-	database.ref('board').update(
-		updatePayload,
-		(error) => {
-			if (error) {
-				console.error('Firebase Save Error:', error);
-				alert('Failed to save changes. ERROR: ' + error.message);
-			} else {
-				console.log('Board data saved successfully.');
-				if (loadGeminiApiKeyLocal()) {
-					generateAiActionPlan({ silent: true });
-				}
-				showToast('All changes published successfully!');
-			}
-		}
-	);
 }
 
 // ================= AI DAILY ACTION PLAN & SMART PREP ENGINE =================
@@ -4415,7 +4583,7 @@ function buildSmartRuleBasedPlan(boardData) {
 	}
 	todayPlan.push(paragraph2);
 
-	// ================= PARAGRAPH 3: FAMILY CONNECTION, CELEBRATIONS & SHARED MEMORIES =================
+	// ================= PARAGRAPH 3: FAMILY CONNECTION, CELEBRATIONS & CREATIVE ACTIVITY SUGGESTION =================
 	const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
 	const familyParts = [];
 
@@ -4455,14 +4623,9 @@ function buildSmartRuleBasedPlan(boardData) {
 		familyParts.push(`${h.name} is coming up ${whenStr}.`);
 	}
 
-	if (seniorResp && seniorResp.answer) {
-		const ansText = seniorResp.answer;
-		const isEscape = ansText.toLowerCase().includes('not sure') || ansText.toLowerCase().includes('none');
-		if (seniorResp.isStory) {
-			familyParts.push(`We also loved hearing your story "${ansText}".`);
-		} else if (!isEscape) {
-			familyParts.push(`We loved your reflection on "${ansText}" during today's check-in.`);
-		}
+	const creativeSuggestion = buildCreativePersonalizedSuggestion(data, seniorResp);
+	if (creativeSuggestion) {
+		familyParts.push(creativeSuggestion);
 	}
 
 	if (familyParts.length > 0) {
@@ -4474,6 +4637,46 @@ function buildSmartRuleBasedPlan(boardData) {
 		prepAlerts,
 		lookAhead: lookAheadSentence,
 	};
+}
+
+function buildCreativePersonalizedSuggestion(boardData, seniorResp) {
+	const data = boardData || latestBoardData || {};
+	const favs = getSeniorFavoritesList(data);
+	const combinedProfileText = (
+		favs.join(' ') +
+		' ' +
+		(data.aiFeedback || '') +
+		' ' +
+		(seniorResp && !isOptOutChoice(seniorResp.answer) ? `${seniorResp.answer} ${seniorResp.followupAnswer || ''}` : '')
+	).toLowerCase();
+
+	if (seniorResp && seniorResp.isStory) {
+		return 'Thank you for adding a new story to your Memory Book today—your family loves reading the memories you share.';
+	}
+
+	if (/big band|swing|glenn miller|frank sinatra|ella fitzgerald|benny goodman/i.test(combinedProfileText)) {
+		return 'When you feel like relaxing this afternoon, **put on some classic big band or Frank Sinatra melodies** to fill the room with music you love.';
+	}
+	if (/country|johnny cash|patsy cline|folk|hank williams|dolly/i.test(combinedProfileText)) {
+		return 'Turning on some **classic country favorites like Patsy Cline or Johnny Cash** would make for a cozy, toe-tapping afternoon.';
+	}
+	if (/oldies|elvis|motown|beach boys|doo-wop|50s|60s/i.test(combinedProfileText)) {
+		return 'Playing some **golden 50s and 60s oldies** is a fun way to bring a bright, cheerful rhythm to your afternoon.';
+	}
+	if (/hymn|piano|classical|orchestra|choir/i.test(combinedProfileText)) {
+		return 'Listening to **gentle piano melodies or favorite hymns** is a peaceful way to unwind whenever you want a quiet moment.';
+	}
+	if (/pie|peach|apple|cinnamon|cookie|bake|baking|bread|biscuit|cobbler/i.test(combinedProfileText)) {
+		return 'With an easy afternoon ahead, **enjoying a warm cup of tea or coffee with a sweet bakery treat** would be a lovely way to relax.';
+	}
+	if (/bird|cardinal|blue jay|robin|feeder|flower|garden|tulip|rose|daffodil/i.test(combinedProfileText)) {
+		return 'Take a peaceful moment by the window or porch today to **watch for songbirds and cardinals** visiting the yard.';
+	}
+	if (/movie|audrey hepburn|musical|gene kelly|james stewart|western|cinema/i.test(combinedProfileText)) {
+		return 'Curling up in your favorite chair with **a classic movie musical or timeless film** would be a wonderful way to spend the afternoon.';
+	}
+
+	return 'Whenever you feel like reminiscing today, **visit the Memories page** to share a favorite story or pastime.';
 }
 
 function syncBriefingMedsStatus(paragraphs, medsTaken) {
@@ -4602,6 +4805,23 @@ function getBriefingParagraphLinks(paragraphText, idx, boardData, usedPages) {
 		});
 	}
 
+	// 5. Memories & Favorites link (if memories, stories, music, favorite pastimes mentioned or on final paragraph)
+	if (
+		!usedPages.has('memories') &&
+		(idx === 2 ||
+			/\b(memory|memories|story|stories|reminisc|music|big band|swing|sinatra|country|oldies|hymn|piano|songbird|cardinal|pastime)\b/i.test(
+				lower
+			))
+	) {
+		usedPages.add('memories');
+		links.push({
+			page: 'memories',
+			cardId: 'card-memories-spark',
+			label: 'Memories & Favorites',
+			classes: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border-indigo-300',
+		});
+	}
+
 	return links;
 }
 
@@ -4609,15 +4829,13 @@ function renderAiSummaryCard() {
 	renderWeatherPage();
 	const todayPlanEl = document.getElementById('disp-ai-today-plan');
 	const headingEl = document.getElementById('disp-ai-today-heading');
-	const prepAlertsEl = document.getElementById('disp-ai-prep-alerts');
-	const lookAheadEl = document.getElementById('disp-ai-look-ahead');
 	if (!todayPlanEl) return;
 
 	if (headingEl) {
 		headingEl.innerText = getTimeOfDayBriefingMeta().heading;
 	}
 
-	const { todayPlan, prepAlerts, lookAhead } = getEffectiveAiSummary();
+	const { todayPlan } = getEffectiveAiSummary();
 	const usedPages = new Set();
 
 	if (!todayPlan || todayPlan.length === 0) {
@@ -4664,32 +4882,6 @@ function renderAiSummaryCard() {
 			})
 			.join('');
 	}
-
-	if (prepAlertsEl) {
-		if (prepAlerts.length === 0) {
-			prepAlertsEl.innerHTML = `
-				<div class="p-2.5 sm:p-3 bg-white/90 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-600 leading-snug font-medium">
-					No special appointment prep needed right now.
-				</div>
-			`;
-		} else {
-			prepAlertsEl.innerHTML = prepAlerts
-				.map(
-					(alertText) => `
-					<div class="p-3 bg-sky-50 rounded-xl border border-sky-300 text-sky-950 text-base font-bold">
-						${escapeHtml(alertText)}
-					</div>
-				`
-				)
-				.join('');
-		}
-	}
-
-	if (lookAheadEl) {
-		lookAheadEl.innerText =
-			lookAhead ||
-			'Your next few days are open and unhurried — enjoy a restful week at home.';
-	}
 }
 
 async function generateAiActionPlan(options = {}) {
@@ -4722,13 +4914,13 @@ async function generateAiActionPlan(options = {}) {
 	});
 
 	if (!apiKey) {
-		// Instant Smart Care Companion generation using built-in conversational topics
 		const dayOfYear = getDayOfYear();
 		const fallbackTopic =
 			CONVERSATIONAL_CHECKIN_TOPICS[dayOfYear % CONVERSATIONAL_CHECKIN_TOPICS.length];
 		const smartAiQuestion = {
 			question: fallbackTopic.question,
-			choices: fallbackTopic.choices,
+			choices: ensureOptOutChoice(fallbackTopic.choices),
+			followups: fallbackTopic.followups || {},
 			generatedDate: todayStr,
 			updatedAt: Date.now(),
 		};
@@ -4758,12 +4950,12 @@ async function generateAiActionPlan(options = {}) {
 		renderAiSummaryCard();
 		renderSeniorCheckin(latestBoardData);
 		if (!silent) {
-			showToast('Conversational Action Plan refreshed!');
+			showToast('Daily Briefing & Memory Sparks refreshed!');
 		}
 		return;
 	}
 
-	// Call Gemini 3.8 Flash via the official Gemini Interactions API
+	// Call Gemini 3.8 Flash via the official Gemini API
 	if (btn) btn.disabled = true;
 	if (btnText) btnText.innerText = 'Generating with Gemini AI...';
 
@@ -4811,25 +5003,25 @@ async function generateAiActionPlan(options = {}) {
 				.join('\n'),
 			medicationInstructions: latestBoardData?.medicationNotes || '',
 			medsTakenToday: !!latestBoardData.medsTaken,
-			seniorJournalMemories: Object.values(latestBoardData?.seniorJournal || {})
-				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+			learnedFavoritesProfile: getSeniorFavoritesList(latestBoardData),
+			seniorJournalMemories: getMeaningfulJournalEntries(latestBoardData)
 				.slice(0, 10)
 				.map((j) => ({
 					date: j.dateStr,
 					title: j.storyTitle || undefined,
 					prompt: j.question,
 					reflection: j.answer,
+					favoriteDetail: j.followupAnswer || undefined,
 					notes: j.notes || undefined,
 				})),
-			seniorRecentHistoryAndFeedback: Object.values(latestBoardData?.seniorHistory || {})
-				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
-				.slice(0, 6)
-				.map((h) => ({ date: h.dateStr, question: h.question, answered: h.answer })),
-			seniorCheckIn: (latestBoardData?.seniorResponse && latestBoardData.seniorResponse.dateStr === todayStr) ? {
-				question: latestBoardData.seniorResponse.question,
-				answer: latestBoardData.seniorResponse.answer,
-				timeLogged: new Date(latestBoardData.seniorResponse.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
-			} : null,
+			todaySharedMemory:
+				latestBoardData?.seniorResponse && latestBoardData.seniorResponse.dateStr === todayStr
+					? {
+							question: latestBoardData.seniorResponse.question,
+							answer: latestBoardData.seniorResponse.answer,
+							followupAnswer: latestBoardData.seniorResponse.followupAnswer || undefined,
+					  }
+					: null,
 			caregiverNotesAndFeedback: (document.getElementById('input-ai-feedback')?.value || latestBoardData?.aiFeedback || '').trim(),
 			weatherForecast: lastWeatherData ? {
 				currentTemp: `${lastWeatherData.temp}\u00B0F`,
@@ -4855,26 +5047,30 @@ async function generateAiActionPlan(options = {}) {
 		};
 
 		const systemInstructionText =
-			'You are a loving, thoughtful family member writing a single cohesive daily briefing note directly to an 80+ senior ("you") on their home message board.\n' +
-			'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and completely human.\n' +
-			'STRICT ACCESSIBILITY & ALZHEIMER\'S GUIDELINES:\n' +
+			'You are a loving, creative family companion writing a single cohesive daily briefing note directly to an 80+ senior ("you") on their home message board, and crafting an engaging memory & favorites spark for her Memories page.\n' +
+			'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and genuinely human.\n' +
+			'STRICT ACCESSIBILITY & CREATIVITY GUIDELINES:\n' +
 			'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
+			'- NEVER parrot or quote her raw multiple-choice answers back to her (e.g. NEVER say "We loved your reflection on \'1950s Big Band & Swing\'"). Instead, LEARN from `learnedFavoritesProfile`, `seniorJournalMemories`, and `caregiverNotesAndFeedback` and synthesize creative, fresh activity suggestions (for example, if she likes big band music and it is rainy today, suggest putting on a Glenn Miller or Frank Sinatra record with a warm cup of tea).\n' +
 			'- Write ONE cohesive summary divided into 2 to 3 short, connected paragraphs (2-3 sentences each) rather than disconnected bullet points.\n' +
 			'- NEVER repeat any detail (such as appointments, reminders, water/hydration, or "take things easy") across multiple paragraphs.\n' +
 			'- The senior ONLY takes morning medication. NEVER mention evening medicine.\n' +
-			'- Use markdown **bold** ONLY for concrete actions, times, or key highlights (never bold generic filler like "Have a wonderful day").\n' +
+			'- Use markdown **bold** ONLY for concrete actions, times, or key highlights (never bold generic filler).\n' +
 			'- Zero emojis anywhere.\n\n' +
-			'CRITICAL RULES FOR `todayPlan` (ARRAY OF 2 TO 3 COHESIVE PARAGRAPHS):\n' +
+			'CRITICAL RULES FOR OUTPUT KEYS:\n' +
+			'1. `todayPlan` (ARRAY OF 2 TO 3 COHESIVE PARAGRAPHS):\n' +
 			'   - PARAGRAPH 1 (GREETING, WEATHER FEEL & MORNING MEDICINE): Start with a warm day-of-week greeting, describe how today\'s weather feels naturally WITHOUT ANY numbers, digits, degree symbols, or percentages, and note her morning medication status (if `medsTakenToday` is true, confirm her morning medicine is already logged; if false, remind her to **take your morning medicine with breakfast** and a glass of water).\n' +
-			'   - PARAGRAPH 2 (TODAY\'S FLOW, APPOINTMENTS, WHO IS HELPING & PREP): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep (e.g. extra water before an upcoming infusion) or a reassuring note if the calendar is wide open today.\n' +
-			'   - PARAGRAPH 3 (FAMILY CONNECTION, NOTES & MEMORIES - INCLUDE IF APPLICABLE): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and a brief celebration of any recent story from `seniorJournalMemories`.\n' +
-			'2. `dailyQuestion`: CONVERSATIONAL NOSTALGIC CHECK-IN:\n' +
-			'   - Sparks enduring long-term memories (music, classic radio, childhood treats, baking aromas, hometown memories, scenic views, cozy moments).\n' +
-			'   - STRICTLY FORBIDDEN: NEVER ask generic questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
-			'   - Choices must include 3 distinct nostalgic/warm choices plus 1 low-pressure escape choice (e.g. "Not sure today" or "None of these"). Under 6 words each. Zero emojis.\n' +
-			'3. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments.\n' +
-			'4. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.\n\n' +
-			'Output MUST be a valid JSON object with keys: "todayPlan" (array of 2 to 3 strings), "prepAlerts" (array of strings), "lookAhead" (string), "dailyQuestion" (object with "question" string and "choices" array of strings).';
+			'   - PARAGRAPH 2 (TODAY\'S FLOW, APPOINTMENTS, WHO IS HELPING & PREP): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep or a reassuring note if the calendar is wide open today.\n' +
+			'   - PARAGRAPH 3 (FAMILY NOTES, CELEBRATIONS & CREATIVE PERSONALIZED ACTIVITY IDEA): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and 1 creative, personalized activity suggestion inspired by her `learnedFavoritesProfile` and `seniorJournalMemories` without quoting raw button text.\n' +
+			'2. `dailyQuestion` (CREATIVE MEMORY & FAVORITES PROMPT FOR THE MEMORIES PAGE):\n' +
+			'   - Craft a warm, imaginative question that helps preserve her life memories or discover more about her favorite music, comfort foods, hometown traditions, pets, or pastimes. Build creatively on what you know about her without repeating recent `seniorJournalMemories` prompts.\n' +
+			'   - STRICTLY FORBIDDEN: NEVER ask generic daily questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
+			'   - `choices`: 3 specific, evocative choices (under 6 words each) plus 1 low-pressure opt-out choice ("Not sure today" or "None of these").\n' +
+			'   - `followups`: Object mapping each of the 3 main choices to `{ "reaction": "1 warm sentence", "question": "1 gentle follow-up question", "choices": ["Choice 1", "Choice 2", "Choice 3", "I\'m all done for now"] }`.\n' +
+			'3. `learnedFavorites`: Array of up to 4 concise, human-readable favorite/interest tags distilled from `seniorJournalMemories` and `todaySharedMemory` (e.g. "1950s Big Band & Swing", "Warm Peach Cobbler").\n' +
+			'4. `prepAlerts`: 1 to 2 short proactive reminders for upcoming appointments.\n' +
+			'5. `lookAhead`: Exactly 1 warm sentence on pacing the next few days.\n\n' +
+			'Output MUST be a valid JSON object with keys: "todayPlan", "prepAlerts", "lookAhead", "dailyQuestion", and "learnedFavorites".';
 
 		const requestPayload = {
 			systemInstruction: {
@@ -4885,7 +5081,7 @@ async function generateAiActionPlan(options = {}) {
 					parts: [
 						{
 							text:
-								'Write a concise, conversational Daily Companion & Action Plan JSON from this live board context:\n' +
+								'Write a concise, creative Daily Briefing & Memory Spark JSON from this live board context:\n' +
 								JSON.stringify(boardSnapshot, null, 2),
 						},
 					],
@@ -4918,11 +5114,28 @@ async function generateAiActionPlan(options = {}) {
 			rawAiQ.choices.length >= 2
 				? {
 						question: rawAiQ.question.trim(),
-						choices: rawAiQ.choices.map((c) => c.trim()).filter(Boolean),
+						choices: ensureOptOutChoice(rawAiQ.choices.map((c) => String(c).trim()).filter(Boolean)),
+						followups: rawAiQ.followups && typeof rawAiQ.followups === 'object' ? rawAiQ.followups : {},
 						generatedDate: todayStr,
 						updatedAt: Date.now(),
 				  }
 				: null;
+
+		// Merge any AI-distilled learnedFavorites into seniorProfile
+		let mergedFavorites = getSeniorFavoritesList(latestBoardData);
+		if (Array.isArray(parsed.learnedFavorites) && parsed.learnedFavorites.length > 0) {
+			parsed.learnedFavorites.forEach((fav) => {
+				const cleanFav = String(fav || '').trim();
+				if (
+					cleanFav &&
+					!isOptOutChoice(cleanFav) &&
+					!mergedFavorites.some((m) => m.toLowerCase() === cleanFav.toLowerCase())
+				) {
+					mergedFavorites.unshift(cleanFav);
+				}
+			});
+			mergedFavorites = mergedFavorites.slice(0, 14);
+		}
 
 		if (userProfile && (userProfile.role === 'ADMIN' || userProfile.role === 'EDITOR')) {
 			const updatePayload = {
@@ -4936,6 +5149,10 @@ async function generateAiActionPlan(options = {}) {
 					generatedDate: todayStr,
 					updatedAt: Date.now(),
 				},
+				seniorProfile: {
+					favorites: mergedFavorites,
+					updatedAt: Date.now(),
+				},
 			};
 			if (finalAiQuestion) {
 				updatePayload.aiQuestion = finalAiQuestion;
@@ -4945,8 +5162,13 @@ async function generateAiActionPlan(options = {}) {
 				new Promise((resolve) => setTimeout(resolve, 5000)),
 			]).catch((e) => console.warn('Database save warning:', e));
 		}
-		if (finalAiQuestion && latestBoardData) {
-			latestBoardData.aiQuestion = finalAiQuestion;
+		if (latestBoardData) {
+			if (finalAiQuestion) {
+				latestBoardData.aiQuestion = finalAiQuestion;
+				checkinConversationState.useAiQuestion = true;
+			}
+			if (!latestBoardData.seniorProfile) latestBoardData.seniorProfile = {};
+			latestBoardData.seniorProfile.favorites = mergedFavorites;
 		}
 		renderAiSummaryCard();
 		renderSeniorCheckin(latestBoardData);
@@ -5102,7 +5324,6 @@ function initUsersManagement() {
 			syncUsersDirectoryToBoard(liveUsersData);
 			renderUsersTable(liveUsersData);
 			renderContacts();
-			renderTodayColumn();
 		},
 		(err) => {
 			console.warn('Could not read users directory:', err);
@@ -5837,10 +6058,6 @@ function getBuiltInMajorUSHolidays(year) {
 	];
 }
 
-function getHolidayEmoji(name) {
-	return '';
-}
-
 async function fetchUpcomingUSHolidays() {
 	const todayStr = getTodayDateString();
 	const currentYear = new Date().getFullYear();
@@ -5919,120 +6136,6 @@ function formatHolidayCountdown(dateStr) {
 	};
 }
 
-function renderTodayColumn() {
-	const todayList = document.getElementById('disp-today-events-list');
-	const todayCountBadge = document.getElementById('today-events-count-badge');
-	if (!todayList) return;
-
-	const todayStr = getTodayDateString();
-	const todaysHolidays = upcomingHolidays.filter((h) => h.date === todayStr);
-	const { allContacts } = getCombinedContactsList();
-	const todaysBirthdays = allContacts.filter((c) => isBirthdayToday(c.birthday));
-
-	const entries = Object.entries(currentEventsMap || {});
-	const todayEvents = entries
-		.map(([id, evt]) => ({ id, ...evt }))
-		.filter((evt) => isEventOnToday(evt, todayStr))
-		.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-
-	const todayTotal = todaysHolidays.length + todaysBirthdays.length + todayEvents.length;
-	updateEntryCountBadge(todayCountBadge, todayTotal);
-
-	if (todayTotal === 0) {
-		todayList.innerHTML = `
-			<div class="w-full p-3.5 bg-white/80 rounded-xl border border-dashed border-blue-200 text-center space-y-0.5">
-				<div class="text-sm sm:text-base font-bold text-slate-700">No events scheduled for today</div>
-				<div class="text-xs text-slate-500">Enjoy a relaxing day!</div>
-			</div>
-		`;
-		return;
-	}
-
-	let todayHtml = '';
-
-	// 1. Render any US Holiday falling on today
-	todaysHolidays.forEach((h) => {
-		todayHtml += `
-			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
-				<div>
-					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
-						Holiday Today
-					</div>
-					<div class="text-xl sm:text-2xl font-black text-slate-900">
-						${escapeHtml(h.name)}
-					</div>
-				</div>
-			</div>
-		`;
-	});
-
-	// 2. Render any User or Contact Birthday falling on today
-	todaysBirthdays.forEach((c) => {
-		todayHtml += `
-			<div class="w-full bg-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-sm flex items-center gap-3.5">
-				<div>
-					<div class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-900">
-						Birthday Today!
-					</div>
-					<div class="text-xl sm:text-2xl font-black text-slate-900">
-						Happy Birthday, ${escapeHtml(c.name)}!
-					</div>
-					${
-						c.relation
-							? `<div class="text-sm sm:text-base font-bold text-amber-900/90">${escapeHtml(c.relation)}</div>`
-							: ''
-					}
-				</div>
-			</div>
-		`;
-	});
-
-	// 3. Render any Scheduled Appointments / Multi-Day Events falling on today
-	todayEvents.forEach((evt) => {
-		const { time, isMultiDay, rangeLabel } = formatEventDate(evt.date, evt.time, evt.endDate);
-		todayHtml += `
-			<div class="w-full bg-white p-4 rounded-2xl border-2 border-amber-300 shadow-sm space-y-1.5">
-				<div class="flex items-center gap-2 flex-wrap">
-					<span class="text-xs sm:text-sm font-black uppercase tracking-wider px-3 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
-						TODAY
-					</span>
-					${
-						isMultiDay && rangeLabel
-							? `<span class="text-xs font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">${escapeHtml(
-									rangeLabel
-							  )}</span>`
-							: ''
-					}
-					${
-						time
-							? `<span class="text-xs sm:text-sm font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-1 rounded-md flex items-center gap-1.5">${time}</span>`
-							: ''
-					}
-				</div>
-				<div class="text-xl sm:text-2xl font-black text-slate-900 pt-0.5 leading-snug">
-					${escapeHtml(evt.title)}
-				</div>
-				${
-					evt.notes
-						? `<div class="text-base sm:text-lg text-slate-700 font-semibold flex items-center gap-2">${escapeHtml(
-								evt.notes
-						  )}</div>`
-						: ''
-				}
-				${
-					evt.reminder
-						? `<div class="text-base sm:text-lg text-indigo-800 font-bold flex items-center gap-2 pt-0.5">${escapeHtml(
-								evt.reminder
-						  )}</div>`
-						: ''
-				}
-			</div>
-		`;
-	});
-
-	todayList.innerHTML = todayHtml;
-}
-
 function renderEvents(eventsObj) {
 	currentEventsMap = eventsObj || {};
 	const dispContainer = document.getElementById('disp-events-list');
@@ -6095,9 +6198,6 @@ function renderEvents(eventsObj) {
 
 	// Update header entry count badge (total items in scrollable card)
 	updateEntryCountBadge(countBadge, combinedDisplayItems.length);
-
-	// 0. Automatically Render Today's Holidays & Scheduled Events inside Main Message Section Column 2
-	renderTodayColumn();
 	renderAiSummaryCard();
 
 	// 1. Render Display View Scheduled Events & Upcoming Holidays Card
