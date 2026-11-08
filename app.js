@@ -149,6 +149,8 @@ auth.onAuthStateChanged(async (user) => {
 			if (geminiApiKeySection) geminiApiKeySection.classList.add('hidden');
 		}
 
+		updateAiEngineStatusUI({ forceCheck: false, silent: true });
+
 		initBoard();
 	} else {
 		currentUser = null;
@@ -582,6 +584,9 @@ function switchAdminTab(tab) {
 		renderStoryCatcherSparks();
 		renderAdminSeniorProfileInput();
 	}
+	if (tab === 'settings') {
+		updateAiEngineStatusUI({ forceCheck: false, silent: true });
+	}
 }
 
 // ================= KIOSK MULTI-PAGE NAVIGATION =================
@@ -835,6 +840,8 @@ function saveGeminiApiKeyLocal(key) {
 			showToast('Gemini API key saved securely on this device.');
 		} else {
 			localStorage.removeItem('smb_gemini_api_key');
+			localStorage.removeItem('smb_gemini_active_model');
+			cachedGeminiModel = null;
 			showToast('Gemini API key removed.');
 		}
 	} catch (e) {
@@ -842,14 +849,173 @@ function saveGeminiApiKeyLocal(key) {
 	}
 }
 
-function saveGeminiApiKeyFromInput() {
+async function saveGeminiApiKeyFromInput() {
 	if (!userProfile || userProfile.role !== 'ADMIN') {
 		alert('Permission Denied: Only ADMIN users can configure the Gemini API key.');
 		return;
 	}
 	const input = document.getElementById('input-gemini-api-key');
 	const key = input ? input.value : '';
+	cachedGeminiModel = null;
 	saveGeminiApiKeyLocal(key);
+	await updateAiEngineStatusUI({ forceCheck: true, silent: false });
+}
+
+function loadDiscoveredGeminiModelLocal() {
+	try {
+		return localStorage.getItem('smb_gemini_active_model') || '';
+	} catch (e) {
+		return '';
+	}
+}
+
+function checkAiStatusManually() {
+	updateAiEngineStatusUI({ forceCheck: true, silent: false });
+}
+
+async function testGeminiApiKeyConnection(silent = false) {
+	if (!userProfile || userProfile.role !== 'ADMIN') {
+		alert('Permission Denied: Only ADMIN users can configure or test the Gemini API key.');
+		return;
+	}
+	const inputEl = document.getElementById('input-gemini-api-key');
+	const inputKey = inputEl ? inputEl.value.trim() : '';
+	if (inputKey) {
+		saveGeminiApiKeyLocal(inputKey);
+	}
+	await updateAiEngineStatusUI({ forceCheck: true, silent: silent });
+}
+
+async function updateAiEngineStatusUI(options = {}) {
+	const { forceCheck = false, silent = true } = options;
+	const apiKey = (loadGeminiApiKeyLocal() || '').trim();
+
+	const engineNameEl = document.getElementById('ai-status-engine-name');
+	const badgeEl = document.getElementById('ai-status-badge');
+	const keyIndicatorEl = document.getElementById('ai-status-key-indicator');
+	const modelNameEl = document.getElementById('ai-status-model-name');
+	const descEl = document.getElementById('ai-status-description');
+
+	const adminBadgeEl = document.getElementById('admin-key-status-badge');
+	const adminEngineEl = document.getElementById('admin-key-engine-name');
+	const adminModelEl = document.getElementById('admin-key-model-name');
+	const adminDetailEl = document.getElementById('admin-key-status-detail');
+
+	if (!apiKey) {
+		cachedGeminiModel = null;
+		if (engineNameEl) engineNameEl.innerText = 'Smart Care Companion';
+		if (badgeEl) {
+			badgeEl.innerText = 'Inactive (Built-in)';
+			badgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300';
+		}
+		if (keyIndicatorEl) keyIndicatorEl.innerText = 'Not Active (No key saved)';
+		if (modelNameEl) modelNameEl.innerText = 'Rule-Based Care Engine';
+		if (descEl) {
+			descEl.innerText =
+				'Operating offline using the built-in Smart Care Companion. Daily briefings and activity suggestions are generated locally without external API calls.';
+		}
+
+		if (adminBadgeEl) {
+			adminBadgeEl.innerText = 'Inactive';
+			adminBadgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300';
+		}
+		if (adminEngineEl) adminEngineEl.innerText = 'Built-in Rule Engine';
+		if (adminModelEl) adminModelEl.innerText = 'Rule-Based Care Engine';
+		if (adminDetailEl) {
+			adminDetailEl.innerText =
+				'No API key saved on this device. The board is currently using the built-in Smart Care Companion.';
+		}
+		return;
+	}
+
+	const knownModel = cachedGeminiModel || loadDiscoveredGeminiModelLocal();
+
+	if (!forceCheck && knownModel) {
+		applyActiveAiState(knownModel);
+		return;
+	}
+
+	// Show verifying state
+	if (badgeEl) {
+		badgeEl.innerText = 'Verifying...';
+		badgeEl.className =
+			'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300';
+	}
+	if (adminBadgeEl) {
+		adminBadgeEl.innerText = 'Verifying...';
+		adminBadgeEl.className =
+			'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300';
+	}
+	if (modelNameEl) modelNameEl.innerText = 'Discovering model...';
+	if (adminModelEl) adminModelEl.innerText = 'Probing Google API...';
+	if (adminDetailEl) adminDetailEl.innerText = 'Contacting Google Gemini API to test key and discover active models...';
+
+	try {
+		if (forceCheck) cachedGeminiModel = null;
+		const discovered = await getAvailableGeminiModel(apiKey);
+		const activeModel = discovered || 'gemini-3.8-flash';
+		applyActiveAiState(activeModel);
+		if (!silent) {
+			showToast(`Gemini API key active! Discovered model: ${activeModel}`);
+		}
+	} catch (err) {
+		console.warn('API Key validation failed:', err);
+		const errMsg = err?.message || 'Connection to Gemini API failed';
+
+		if (engineNameEl) engineNameEl.innerText = 'Smart Care Companion (Fallback)';
+		if (badgeEl) {
+			badgeEl.innerText = 'Error (Fallback Active)';
+			badgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300';
+		}
+		if (keyIndicatorEl) keyIndicatorEl.innerText = 'Key Error (Check key)';
+		if (modelNameEl) modelNameEl.innerText = 'Rule-Based Fallback Engine';
+		if (descEl) {
+			descEl.innerText = `API Key check failed (${errMsg}). The board is safely using the built-in Smart Care Companion fallback.`;
+		}
+
+		if (adminBadgeEl) {
+			adminBadgeEl.innerText = 'Key Error';
+			adminBadgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300';
+		}
+		if (adminEngineEl) adminEngineEl.innerText = 'Built-in Rule Fallback';
+		if (adminModelEl) adminModelEl.innerText = 'Fallback Rule Engine';
+		if (adminDetailEl) {
+			adminDetailEl.innerText = `Error: ${errMsg}. Check that your Gemini API key is valid and Generative Language API is enabled.`;
+		}
+
+		if (!silent) {
+			alert(`Gemini API Key Error: ${errMsg}`);
+		}
+	}
+
+	function applyActiveAiState(modelName) {
+		if (engineNameEl) engineNameEl.innerText = 'Google Gemini API';
+		if (badgeEl) {
+			badgeEl.innerText = 'Active';
+			badgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+		}
+		if (keyIndicatorEl) keyIndicatorEl.innerText = 'Active (Stored on device)';
+		if (modelNameEl) modelNameEl.innerText = modelName;
+		if (descEl) {
+			descEl.innerText = `Connected to Google Gemini API. Daily briefings, memory prompts, and story polishing are powered by ${modelName}.`;
+		}
+
+		if (adminBadgeEl) {
+			adminBadgeEl.innerText = 'Active & Connected';
+			adminBadgeEl.className =
+				'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300';
+		}
+		if (adminEngineEl) adminEngineEl.innerText = 'Google Gemini API';
+		if (adminModelEl) adminModelEl.innerText = modelName;
+		if (adminDetailEl) {
+			adminDetailEl.innerText = `API key is active and successfully connected to Google Gemini API using model ${modelName}.`;
+		}
+	}
 }
 
 function saveCaregiverNotesLocal(notes) {
@@ -2070,6 +2236,9 @@ async function getAvailableGeminiModel(cleanKey) {
 			for (const p of preferredList) {
 				if (supported.includes(p)) {
 					cachedGeminiModel = p;
+					try {
+						localStorage.setItem('smb_gemini_active_model', p);
+					} catch (e) {}
 					return p;
 				}
 			}
@@ -2078,11 +2247,17 @@ async function getAvailableGeminiModel(cleanKey) {
 			const flashModel = supported.find((m) => m.toLowerCase().includes('flash'));
 			if (flashModel) {
 				cachedGeminiModel = flashModel;
+				try {
+					localStorage.setItem('smb_gemini_active_model', flashModel);
+				} catch (e) {}
 				return flashModel;
 			}
 
 			if (supported.length > 0) {
 				cachedGeminiModel = supported[0];
+				try {
+					localStorage.setItem('smb_gemini_active_model', supported[0]);
+				} catch (e) {}
 				return supported[0];
 			}
 		} else {
@@ -2099,6 +2274,10 @@ async function getAvailableGeminiModel(cleanKey) {
 	} finally {
 		clearTimeout(timeoutId);
 	}
+	cachedGeminiModel = 'gemini-3.8-flash';
+	try {
+		localStorage.setItem('smb_gemini_active_model', 'gemini-3.8-flash');
+	} catch (e) {}
 	return 'gemini-3.8-flash';
 }
 
@@ -3893,6 +4072,7 @@ function renderBoard(data) {
 		if (apiKeyEl && document.activeElement !== apiKeyEl) {
 			apiKeyEl.value = userProfile.role === 'ADMIN' ? loadGeminiApiKeyLocal() : '';
 		}
+		updateAiEngineStatusUI({ forceCheck: false, silent: true });
 	}
 
 	// Notify on Medication Completion Transition

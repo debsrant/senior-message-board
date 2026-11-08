@@ -1634,6 +1634,40 @@
 								</span>
 							</div>
 
+							<!-- AI Engine & Model Status Overview -->
+							<div id="ai-engine-status-card" class="p-3.5 sm:p-4 rounded-xl border bg-slate-50 border-slate-200 space-y-2">
+								<div class="flex items-center justify-between flex-wrap gap-2">
+									<div class="flex items-center gap-2 flex-wrap">
+										<span class="text-xs font-bold uppercase tracking-wider text-slate-600">Active Engine:</span>
+										<span id="ai-status-engine-name" class="text-xs sm:text-sm font-black text-slate-900">Checking engine...</span>
+										<span id="ai-status-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
+											Checking...
+										</span>
+									</div>
+									<button
+										type="button"
+										id="btn-refresh-ai-status"
+										onclick="checkAiStatusManually()"
+										class="px-2.5 py-1 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+									>
+										Check Status
+									</button>
+								</div>
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs text-slate-700">
+									<div class="flex items-center gap-1.5">
+										<span class="text-slate-500 font-medium">API Key:</span>
+										<span id="ai-status-key-indicator" class="font-bold text-slate-800">Checking...</span>
+									</div>
+									<div class="flex items-center gap-1.5">
+										<span class="text-slate-500 font-medium">Active Model:</span>
+										<span id="ai-status-model-name" class="font-mono font-bold text-slate-900">Checking...</span>
+									</div>
+								</div>
+								<p id="ai-status-description" class="text-[11px] text-slate-500 pt-0.5">
+									Detecting AI engine and model configuration...
+								</p>
+							</div>
+
 							<!-- Caregiver Prep Rules -->
 							<div>
 								<label class="block text-xs font-semibold mb-1 text-slate-700">
@@ -1759,6 +1793,23 @@
 									</span>
 								</div>
 
+								<!-- Live API Key Status & Engine Details -->
+								<div id="admin-key-status-box" class="p-3 sm:p-3.5 rounded-xl border bg-slate-50 border-slate-200 space-y-1.5">
+									<div class="flex items-center justify-between flex-wrap gap-2">
+										<span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Connection Status</span>
+										<span id="admin-key-status-badge" class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 border border-slate-300">
+											Checking...
+										</span>
+									</div>
+									<div class="text-xs text-slate-600 flex flex-wrap gap-x-4 gap-y-1">
+										<div><span class="text-slate-500">Engine:</span> <strong id="admin-key-engine-name" class="text-slate-900">--</strong></div>
+										<div><span class="text-slate-500">Model:</span> <strong id="admin-key-model-name" class="font-mono text-slate-900">--</strong></div>
+									</div>
+									<p id="admin-key-status-detail" class="text-[11px] text-slate-500">
+										Checking stored API key status...
+									</p>
+								</div>
+
 								<div>
 									<label class="block text-xs font-semibold mb-1 text-slate-700">
 										API Key
@@ -1774,7 +1825,15 @@
 									</p>
 								</div>
 
-								<div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+								<div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+									<button
+										type="button"
+										id="btn-test-gemini-key"
+										onclick="testGeminiApiKeyConnection(false)"
+										class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 border border-slate-300 font-bold rounded-xl text-xs sm:text-sm transition cursor-pointer"
+									>
+										Test Connection
+									</button>
 									<button
 										type="button"
 										id="btn-save-gemini-key"

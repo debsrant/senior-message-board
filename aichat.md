@@ -322,6 +322,18 @@ The Senior Message Board is a specialized, zero-build static web application des
   - Removed the double-nested inner container and inner border/padding (`bg-white/95 rounded-2xl border-2 border-blue-200 shadow-xs`) from `#disp-ai-today-plan`, allowing briefing paragraphs to flow naturally within the primary card.
   - Re-styled `#disp-announcement-container` (when active) as a prominent alert callout within the unified card rather than wrapping the entire page.
 
+#### Turn 87
+- **User Request**:
+  - Update the admin panel AI tab to indicate whether an API key is active or not and what engine/model is being used.
+- **Technical Implementation**:
+  - **Live AI Engine & Model Status Overview (`#ai-engine-status-card`)**: Added a status box in the AI Companion & Prep Rules card (accessible to Admin and Editor roles) showing:
+    - **Active Engine**: `Google Gemini API` (when key active) or `Smart Care Companion` (built-in offline rule engine).
+    - **API Key Status Badge**: Real-time status badge (`Active` [emerald], `Inactive (Built-in)` [slate], `Verifying...` [sky], or `Error (Fallback Active)` [rose]).
+    - **Active Model Name**: Exact engine/model in use (e.g., `gemini-3.8-flash` auto-discovered from Google, or `Rule-Based Care Engine`).
+    - **Manual Check Button (`#btn-refresh-ai-status`)**: Triggers an instant on-demand status probe.
+  - **Admin Gemini Connection Box & Test Tool (`#admin-key-status-box` & `#btn-test-gemini-key`)**: Added a dedicated connection card inside the Admin-Only Gemini API Key section with live status, engine, and model labels, plus a **Test Connection** button that proactively probes Google's `ListModels` API and returns the active model or validation error.
+  - **Model Persistence & Auto-Sync (`updateAiEngineStatusUI`)**: Automatically caches discovered models locally (`smb_gemini_active_model`), syncs on tab navigation, admin login, and API key updates, and safely falls back to the client-side rule engine if keys expire or fail.
+
 ---
 
 ## Current Architecture & File Inventory
