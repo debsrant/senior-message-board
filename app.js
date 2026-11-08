@@ -4048,6 +4048,7 @@ function renderBoard(data) {
 				: (loadCaregiverRulesLocal() || DEFAULT_AI_RULES);
 			aiRulesEl.value = savedRules;
 			saveCaregiverRulesLocal(savedRules);
+			if (latestBoardData) latestBoardData.aiRules = savedRules;
 		}
 		const aiFeedbackEl = document.getElementById('input-ai-feedback');
 		if (aiFeedbackEl && document.activeElement !== aiFeedbackEl) {
@@ -4058,6 +4059,7 @@ function renderBoard(data) {
 			if (data.aiFeedback) {
 				saveCaregiverNotesLocal(data.aiFeedback);
 			}
+			if (latestBoardData) latestBoardData.aiFeedback = savedFeedback || '';
 		}
 		const customQEl = document.getElementById('input-checkin-custom-question');
 		if (customQEl && document.activeElement !== customQEl) {
@@ -4247,10 +4249,13 @@ async function saveAiRulesOnly() {
 			}),
 			new Promise((resolve) => setTimeout(resolve, 6000)),
 		]);
-		showToast('Care rules and caregiver notes saved permanently!');
+		showToast('Caregiver notes saved! Updating Daily Briefing...');
+		// Automatically refresh AI Action Plan so the daily briefing reflects the updated notes
+		await generateAiActionPlan(true);
 	} catch (err) {
 		console.error('Failed to sync AI care rules to Firebase:', err);
-		showToast('Saved locally; syncing to board in background.');
+		showToast('Saved locally; updating Daily Briefing...');
+		await generateAiActionPlan(true);
 	} finally {
 		if (btn) btn.disabled = false;
 	}
@@ -4822,10 +4827,11 @@ function buildSmartRuleBasedPlan(boardData) {
 function buildCreativePersonalizedSuggestion(boardData, seniorResp) {
 	const data = boardData || latestBoardData || {};
 	const favs = getSeniorFavoritesList(data);
+	const feedback = (data.aiFeedback || latestBoardData?.aiFeedback || loadCaregiverNotesLocal() || '').trim();
 	const combinedProfileText = (
 		favs.join(' ') +
 		' ' +
-		(data.aiFeedback || '') +
+		feedback +
 		' ' +
 		(seniorResp && !isOptOutChoice(seniorResp.answer) ? `${seniorResp.answer} ${seniorResp.followupAnswer || ''}` : '')
 	).toLowerCase();
@@ -4854,6 +4860,19 @@ function buildCreativePersonalizedSuggestion(boardData, seniorResp) {
 	}
 	if (/movie|audrey hepburn|musical|gene kelly|james stewart|western|cinema/i.test(combinedProfileText)) {
 		return 'Curling up in your favorite chair with **a classic movie musical or timeless film** would be a wonderful way to spend the afternoon.';
+	}
+	if (/puzzle|crossword|word search|sudoku|jigsaw/i.test(combinedProfileText)) {
+		return 'With an unhurried afternoon ahead, spending a little quiet time with **your favorite puzzles or word games** is a wonderful way to relax.';
+	}
+	if (/knit|crochet|sew|craft|quilt/i.test(combinedProfileText)) {
+		return 'An easy afternoon at home is the perfect time to **work on your favorite knitting or craft projects** in your comfortable chair.';
+	}
+	if (/book|read|reading|magazine|library|story/i.test(combinedProfileText)) {
+		return 'Curling up with **a favorite book or magazine** would make for a peaceful and cozy afternoon.';
+	}
+
+	if (feedback) {
+		return 'Your family hopes you have a wonderful afternoon enjoying the music, quiet pastimes, and memories you love most.';
 	}
 
 	return 'Whenever you feel like reminiscing today, **visit the Memories page** to share a favorite story or pastime.';
@@ -5230,8 +5249,9 @@ async function generateAiActionPlan(options = {}) {
 			'You are a loving, creative family companion writing a single cohesive daily briefing note directly to an 80+ senior ("you") on their home message board, and crafting an engaging memory & favorites spark for her Memories page.\n' +
 			'The senior has early-stage Alzheimer\'s disease. Your voice is warm, gentle, colloquial, and genuinely human.\n' +
 			'STRICT ACCESSIBILITY & CREATIVITY GUIDELINES:\n' +
+			'- CAREGIVER GUIDANCE PRIORITY: If `caregiverNotesAndFeedback` is provided, treat it as direct, mandatory instructions from her family for tone, her personal likes/dislikes, things to avoid, or activities to suggest in the daily briefing note.\n' +
 			'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
-			'- NEVER parrot or quote her raw multiple-choice answers back to her (e.g. NEVER say "We loved your reflection on \'1950s Big Band & Swing\'"). Instead, LEARN from `learnedFavoritesProfile`, `seniorJournalMemories`, and `caregiverNotesAndFeedback` and synthesize creative, fresh activity suggestions (for example, if she likes big band music and it is rainy today, suggest putting on a Glenn Miller or Frank Sinatra record with a warm cup of tea).\n' +
+			'- NEVER parrot or quote her raw multiple-choice answers back to her (e.g. NEVER say "We loved your reflection on \'1950s Big Band & Swing\'"). Instead, LEARN from `caregiverNotesAndFeedback`, `learnedFavoritesProfile`, and `seniorJournalMemories` and synthesize creative, fresh activity suggestions (for example, if caregiver notes mention she loves baking, big band music, or watching birds and it is rainy today, suggest listening to classic records or enjoying a warm bakery treat with tea).\n' +
 			'- Write ONE cohesive summary divided into 2 to 3 short, connected paragraphs (2-3 sentences each) rather than disconnected bullet points.\n' +
 			'- NEVER repeat any detail (such as appointments, reminders, water/hydration, or "take things easy") across multiple paragraphs.\n' +
 			'- The senior ONLY takes morning medication. NEVER mention evening medicine.\n' +
@@ -5241,7 +5261,7 @@ async function generateAiActionPlan(options = {}) {
 			'1. `todayPlan` (ARRAY OF 2 TO 3 COHESIVE PARAGRAPHS):\n' +
 			'   - PARAGRAPH 1 (GREETING, WEATHER FEEL & MORNING MEDICINE): Start with a warm day-of-week greeting, describe how today\'s weather feels naturally WITHOUT ANY numbers, digits, degree symbols, or percentages, and note her morning medication status (if `medsTakenToday` is true, confirm her morning medicine is already logged; if false, remind her to **take your morning medicine with breakfast** and a glass of water).\n' +
 			'   - PARAGRAPH 2 (TODAY\'S FLOW, APPOINTMENTS, WHO IS HELPING & PREP): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep or a reassuring note if the calendar is wide open today.\n' +
-			'   - PARAGRAPH 3 (FAMILY NOTES, CELEBRATIONS & CREATIVE PERSONALIZED ACTIVITY IDEA): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and 1 creative, personalized activity suggestion inspired by her `learnedFavoritesProfile` and `seniorJournalMemories` without quoting raw button text.\n' +
+			'   - PARAGRAPH 3 (FAMILY NOTES, CELEBRATIONS & CREATIVE PERSONALIZED ACTIVITY IDEA): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and 1 creative, personalized activity suggestion inspired directly by her `caregiverNotesAndFeedback`, `learnedFavoritesProfile`, and `seniorJournalMemories` without quoting raw button text.\n' +
 			'2. `dailyQuestion` (CREATIVE MEMORY & FAVORITES PROMPT FOR THE MEMORIES PAGE):\n' +
 			'   - Craft a warm, imaginative question that helps preserve her life memories or discover more about her favorite music, comfort foods, hometown traditions, pets, or pastimes. Build creatively on what you know about her without repeating recent `seniorJournalMemories` prompts.\n' +
 			'   - STRICTLY FORBIDDEN: NEVER ask generic daily questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
@@ -5343,6 +5363,14 @@ async function generateAiActionPlan(options = {}) {
 			]).catch((e) => console.warn('Database save warning:', e));
 		}
 		if (latestBoardData) {
+			latestBoardData.aiSummary = {
+				todayPlan: finalTodayPlan,
+				prepAlerts: finalPrepAlerts,
+				lookAhead: finalLookAhead,
+				source: 'gemini',
+				generatedDate: todayStr,
+				updatedAt: Date.now(),
+			};
 			if (finalAiQuestion) {
 				latestBoardData.aiQuestion = finalAiQuestion;
 				checkinConversationState.useAiQuestion = true;
@@ -5357,6 +5385,16 @@ async function generateAiActionPlan(options = {}) {
 		}
 	} catch (err) {
 		console.error('Gemini AI generation error, falling back to Smart Plan:', err);
+		if (latestBoardData) {
+			latestBoardData.aiSummary = {
+				todayPlan: smartBaseline.todayPlan,
+				prepAlerts: smartBaseline.prepAlerts,
+				lookAhead: smartBaseline.lookAhead,
+				source: 'smart',
+				generatedDate: todayStr,
+				updatedAt: Date.now(),
+			};
+		}
 		renderAiSummaryCard();
 		if (!silent) {
 			alert(

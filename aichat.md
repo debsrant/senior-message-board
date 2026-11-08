@@ -334,6 +334,20 @@ The Senior Message Board is a specialized, zero-build static web application des
   - **Admin Gemini Connection Box & Test Tool (`#admin-key-status-box` & `#btn-test-gemini-key`)**: Added a dedicated connection card inside the Admin-Only Gemini API Key section with live status, engine, and model labels, plus a **Test Connection** button that proactively probes Google's `ListModels` API and returns the active model or validation error.
   - **Model Persistence & Auto-Sync (`updateAiEngineStatusUI`)**: Automatically caches discovered models locally (`smb_gemini_active_model`), syncs on tab navigation, admin login, and API key updates, and safely falls back to the client-side rule engine if keys expire or fail.
 
+#### Turn 88
+- **User Request**:
+  - The daily briefing doesn't seem to be updating after adding caregiver notes in the admin.
+- **Root Cause Identified**:
+  - `saveAiRulesOnly()` saved `aiRules` and `aiFeedback` to Firebase and localStorage, but never invoked `generateAiActionPlan()` or `renderAiSummaryCard()`.
+  - When Gemini generated an action plan, `latestBoardData.aiSummary` was updated in Firebase but was never assigned to `latestBoardData.aiSummary` in local memory before calling `renderAiSummaryCard()`, causing it to immediately re-render the stale summary from memory.
+  - The Gemini system prompt did not explicitly give highest priority to `caregiverNotesAndFeedback` for Paragraph 3 and overall tone, and the offline fallback suggestion engine lacked keywords for popular senior activities like puzzles, crafts, and reading.
+- **Technical Implementation**:
+  - Updated `saveAiRulesOnly()` to automatically call `await generateAiActionPlan(true)` after saving, immediately refreshing and re-rendering the briefing with the new caregiver notes.
+  - Fixed `generateAiActionPlan()` so `latestBoardData.aiSummary` is immediately updated in memory in both the Gemini and fallback branches before `renderAiSummaryCard()` is called.
+  - Synchronized `latestBoardData.aiFeedback` and `latestBoardData.aiRules` in `loadBoardData()` from localStorage when syncing.
+  - Updated Gemini's system instructions to give `caregiverNotesAndFeedback` top priority for daily suggestions and tone.
+  - Expanded `buildCreativePersonalizedSuggestion()` to recognize additional pastimes (puzzles, word games, crafts/knitting, books/magazines, tea/coffee) from caregiver notes.
+
 ---
 
 ## Current Architecture & File Inventory
