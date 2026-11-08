@@ -149,6 +149,13 @@ auth.onAuthStateChanged(async (user) => {
 			if (geminiApiKeySection) geminiApiKeySection.classList.add('hidden');
 		}
 
+		// Clear and disable auth-password input while signed in so password managers never scan it during admin saves
+		const authPass = document.getElementById('auth-password');
+		if (authPass) {
+			authPass.value = '';
+			authPass.disabled = true;
+		}
+
 		updateAiEngineStatusUI({ forceCheck: false, silent: true });
 
 		initBoard();
@@ -159,6 +166,10 @@ auth.onAuthStateChanged(async (user) => {
 		document.getElementById('btn-admin').classList.add('hidden');
 		const badge = document.getElementById('user-info-badge');
 		if (badge) badge.classList.add('hidden');
+		const authPass = document.getElementById('auth-password');
+		if (authPass) {
+			authPass.disabled = false;
+		}
 		document.getElementById('view-auth').classList.remove('hidden');
 	}
 });
@@ -171,13 +182,23 @@ async function handleLogin() {
 
 	try {
 		await auth.signInWithEmailAndPassword(email, pass);
+		const passInput = document.getElementById('auth-password');
+		if (passInput) {
+			passInput.value = '';
+			passInput.disabled = true;
+		}
 	} catch (err) {
 		errEl.innerText = err.message;
 		errEl.classList.remove('hidden');
 	}
 }
 
-			function handleLogout() {
+function handleLogout() {
+	const passInput = document.getElementById('auth-password');
+	if (passInput) {
+		passInput.value = '';
+		passInput.disabled = false;
+	}
 	auth.signOut();
 	location.reload();
 }
@@ -870,6 +891,22 @@ async function saveGeminiApiKeyFromInput() {
 		showToast('Gemini API key removed.');
 	}
 	await updateAiEngineStatusUI({ forceCheck: true, silent: false });
+}
+
+function toggleApiKeyVisibility() {
+	const input = document.getElementById('input-gemini-api-key');
+	const btn = document.getElementById('btn-toggle-key-visibility');
+	if (!input) return;
+	const isMasked = input.style.webkitTextSecurity !== 'none';
+	if (isMasked) {
+		input.style.webkitTextSecurity = 'none';
+		input.style.textSecurity = 'none';
+		if (btn) btn.innerText = 'Hide Key';
+	} else {
+		input.style.webkitTextSecurity = 'disc';
+		input.style.textSecurity = 'disc';
+		if (btn) btn.innerText = 'Show Key';
+	}
 }
 
 function loadDiscoveredGeminiModelLocal() {

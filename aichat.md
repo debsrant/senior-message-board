@@ -421,6 +421,29 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
+#### Turn 93
+- **User Request**:
+  - LastPass and Google ask to save passwords on some of the saves in the admin.
+- **Technical Implementation & Root Cause Resolution**:
+  - **Root Cause**:
+    - In single-page applications (SPAs) without strict `<form>` boundaries, password manager browser extensions (LastPass, Chrome/Google Password Manager, 1Password, Bitwarden) inspect the entire DOM looking for credential fields.
+    - Two triggers caused the unsolicited "Save/Update Password" prompts during admin saves:
+      1. The sign-in password input (`#auth-password`) retained the user's password string in DOM memory even after authentication, causing any later button click or form submit to be interpreted as a password submission.
+      2. The Gemini API Key input (`#input-gemini-api-key`) in Admin Tab 3 was declared as `<input type="password">`, which password managers identified as an account password update, especially when paired with `#input-profile-email` elsewhere in the admin DOM.
+  - **Isolated Login Form Boundaries & Memory Cleanup**:
+    - Wrapped the login screen fields in `<form id="form-board-auth" onsubmit="event.preventDefault(); handleLogin();" autocomplete="on">` with standard attributes (`name="email" autocomplete="username"` and `name="password" autocomplete="current-password"`) and a real `type="submit"` button.
+    - Added security lifecycle hooks in `app.js` (`auth.onAuthStateChanged` and `handleLogin`): immediately cleared `authPass.value = ''` and set `authPass.disabled = true` upon successful sign-in so password managers completely disregard it during board operation. In `handleLogout()`, re-enabled and cleared the field.
+  - **De-Credentialized Gemini API Key Input**:
+    - Changed `input-gemini-api-key` from `type="password"` to `type="text"`.
+    - Applied CSS masking `-webkit-text-security: disc; text-security: disc;` so the API key remains securely obscured visually on screen without triggering browser credential heuristics.
+    - Added an inline `[Show Key]` / `[Hide Key]` button (`#btn-toggle-key-visibility`) with `toggleApiKeyVisibility()` to allow caregivers to easily reveal or conceal the key.
+    - Tagged the input with `name="gemini_api_key_token"`, `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"`, `spellcheck="false"`, `data-lpignore="true"`, `data-1p-ignore="true"`, and `data-form-type="other"`.
+  - **Suppressed Password Managers Across the Entire Admin View**:
+    - Added `data-lpignore="true"`, `data-1p-ignore="true"`, and `data-form-type="other"` directly to the `#view-admin` container.
+    - Explicitly added `autocomplete="off"`, `data-lpignore="true"`, `data-1p-ignore="true"`, and `data-form-type="other"` to `#input-profile-name` and `#input-profile-email` in Admin Tab 4.
+
+---
+
 ## Current Architecture & File Inventory
 
 ### File Inventory
