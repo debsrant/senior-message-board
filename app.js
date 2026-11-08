@@ -826,7 +826,7 @@ const DEFAULT_AI_RULES =
 	'Blood Draw: Drink plenty of water the day before and morning of your lab visit.\n' +
 	'Physical Therapy: Set out comfortable sneakers and loose clothing.';
 
-function saveGeminiApiKeyLocal(key) {
+function saveGeminiApiKeyLocal(key, silent = false) {
 	if (!userProfile || userProfile.role !== 'ADMIN') {
 		alert('Permission Denied: Only ADMIN users can configure the Gemini API key.');
 		const input = document.getElementById('input-gemini-api-key');
@@ -835,14 +835,19 @@ function saveGeminiApiKeyLocal(key) {
 	}
 	try {
 		const trimmed = (key || '').trim();
+		const currentStored = loadGeminiApiKeyLocal();
 		if (trimmed) {
 			localStorage.setItem('smb_gemini_api_key', trimmed);
-			showToast('Gemini API key saved securely on this device.');
+			if (!silent && currentStored !== trimmed) {
+				showToast('Gemini API key saved securely on this device.');
+			}
 		} else {
 			localStorage.removeItem('smb_gemini_api_key');
 			localStorage.removeItem('smb_gemini_active_model');
 			cachedGeminiModel = null;
-			showToast('Gemini API key removed.');
+			if (!silent && currentStored) {
+				showToast('Gemini API key removed.');
+			}
 		}
 	} catch (e) {
 		console.warn('Could not save Gemini API key to localStorage:', e);
@@ -856,8 +861,14 @@ async function saveGeminiApiKeyFromInput() {
 	}
 	const input = document.getElementById('input-gemini-api-key');
 	const key = input ? input.value : '';
+	const currentStored = loadGeminiApiKeyLocal();
 	cachedGeminiModel = null;
-	saveGeminiApiKeyLocal(key);
+	saveGeminiApiKeyLocal(key, true);
+	if ((key || '').trim()) {
+		showToast('Gemini API key saved securely on this device.');
+	} else if (currentStored) {
+		showToast('Gemini API key removed.');
+	}
 	await updateAiEngineStatusUI({ forceCheck: true, silent: false });
 }
 
@@ -2281,6 +2292,33 @@ async function getAvailableGeminiModel(cleanKey) {
 	return 'gemini-3.8-flash';
 }
 
+function sleepWithJitter(baseMs, jitterMs = 400) {
+	const delay = baseMs + Math.floor(Math.random() * jitterMs);
+	return new Promise((resolve) => setTimeout(resolve, delay));
+}
+
+function isTransientGeminiError(status, message) {
+	// 429: Too Many Requests / Resource Exhausted (rate limits / quota spikes)
+	// 503: Service Unavailable / Model is overloaded
+	// 500, 502, 504: Internal server errors / Gateway timeouts
+	// 408: Request Timeout
+	if (status === 429 || status === 503 || status === 500 || status === 502 || status === 504 || status === 408) {
+		return true;
+	}
+	const lower = (message || '').toLowerCase();
+	return (
+		lower.includes('overloaded') ||
+		lower.includes('quota') ||
+		lower.includes('resource_exhausted') ||
+		lower.includes('rate limit') ||
+		lower.includes('too many requests') ||
+		lower.includes('unavailable') ||
+		lower.includes('timed out') ||
+		lower.includes('timeout') ||
+		lower.includes('high demand')
+	);
+}
+
 async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.8-flash') {
 	const cleanKey = (apiKey || '').trim().replace(/^["']|["']$/g, '');
 	if (!cleanKey) throw new Error('No API key provided');
@@ -2290,67 +2328,118 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.
 	try {
 		activeModel = await getAvailableGeminiModel(cleanKey);
 	} catch (discoveryErr) {
-		throw discoveryErr;
+		console.warn('Dynamic model discovery notice:', discoveryErr.message);
 	}
 
-	const modelsToTry = [activeModel, 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
-	const uniqueModels = [...new Set(modelsToTry)];
+	// Comprehensive cascade of preferred, lightweight, and high-capacity fallback models
+	const modelsToTry = [
+		activeModel,
+		'gemini-3.8-flash',
+		'gemini-3.5-flash-lite',
+		'gemini-3.1-flash-lite',
+		'gemini-2.5-flash',
+		'gemini-2.0-flash',
+		'gemini-1.5-flash',
+	];
+	const uniqueModels = [...new Set(modelsToTry.filter(Boolean))];
 
 	let lastError = null;
+
 	for (const model of uniqueModels) {
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout per model attempt
+		// Attempt up to 2 tries per model with exponential backoff on transient demand spikes (429/503/5xx)
+		const MAX_TRIES_PER_MODEL = 2;
 
-		try {
-			const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
-			const response = await fetch(url, {
-				method: 'POST',
-				signal: controller.signal,
-				headers: {
-					'Content-Type': 'application/json',
-					'x-goog-api-key': cleanKey,
-				},
-				body: JSON.stringify(requestPayload),
-			});
+		for (let attempt = 1; attempt <= MAX_TRIES_PER_MODEL; attempt++) {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 22000); // 22-second limit per call
 
-			if (response.ok) {
-				const data = await response.json();
-				const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-				if (text) {
-					cachedGeminiModel = model;
-					return text;
+			try {
+				const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+				const response = await fetch(url, {
+					method: 'POST',
+					signal: controller.signal,
+					headers: {
+						'Content-Type': 'application/json',
+						'x-goog-api-key': cleanKey,
+					},
+					body: JSON.stringify(requestPayload),
+				});
+
+				if (response.ok) {
+					const data = await response.json();
+					const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+					if (text) {
+						cachedGeminiModel = model;
+						try {
+							localStorage.setItem('smb_gemini_active_model', model);
+						} catch (e) {}
+						return text;
+					}
+					throw new Error('Gemini API returned an empty response.');
 				}
-				throw new Error('Gemini API returned an empty response.');
-			}
 
-			const errorData = await response.json().catch(() => null);
-			const errMsg = errorData?.error?.message || `HTTP ${response.status} on ${model}`;
+				const errorData = await response.json().catch(() => null);
+				const errMsg = errorData?.error?.message || `HTTP ${response.status} on ${model}`;
 
-			// If it's a 404 model not found, save error and try next model in fallback list
-			if (response.status === 404) {
-				console.warn(`Model ${model} returned 404 (${errMsg}), trying fallback...`);
-				lastError = new Error(errMsg);
-				continue;
-			}
+				// If hard client authorization error (bad key / permission), throw immediately
+				if (response.status === 400 && (errMsg.includes('API key') || errMsg.includes('API_KEY_INVALID'))) {
+					throw new Error(errMsg);
+				}
+				if (response.status === 401 || response.status === 403) {
+					throw new Error(errMsg);
+				}
 
-			// For any other error (e.g. invalid key, quota, permission), throw immediately
-			throw new Error(errMsg);
-		} catch (err) {
-			lastError = err;
-			if (err.name === 'AbortError') {
-				lastError = new Error(`Connection to model ${model} timed out after 20 seconds.`);
-				console.warn(lastError.message);
-				continue;
+				// If 404 model not found, don't retry this model; cascade immediately to next model
+				if (response.status === 404) {
+					console.warn(`Model ${model} not available (404), cascading to next model.`);
+					lastError = new Error(errMsg);
+					break; // exit retry loop for this model, try next model in cascade
+				}
+
+				// If transient spike (429 rate limit or 503 model overloaded or 5xx)
+				if (isTransientGeminiError(response.status, errMsg)) {
+					lastError = new Error(errMsg);
+					console.warn(`Model ${model} transient spike (status ${response.status}, attempt ${attempt}/${MAX_TRIES_PER_MODEL}): ${errMsg}`);
+					if (attempt < MAX_TRIES_PER_MODEL) {
+						// Wait with exponential backoff and jitter before retrying same model
+						await sleepWithJitter(attempt * 1200, 400);
+						continue;
+					}
+					// If exhausted attempts on this model, break to cascade to next model
+					console.warn(`Model ${model} overloaded after retries, cascading to next model in pool...`);
+					break;
+				}
+
+				// Other error, throw
+				throw new Error(errMsg);
+			} catch (err) {
+				lastError = err;
+				if (err.name === 'AbortError') {
+					console.warn(`Model ${model} timed out on attempt ${attempt}.`);
+					lastError = new Error(`Connection to model ${model} timed out.`);
+					if (attempt < MAX_TRIES_PER_MODEL) {
+						await sleepWithJitter(1000, 300);
+						continue;
+					}
+					break; // cascade to next model
+				}
+				// If hard key error, rethrow immediately
+				if (err.message && (err.message.includes('API_KEY_INVALID') || err.message.includes('API key not valid') || err.message.includes('PERMISSION_DENIED'))) {
+					throw err;
+				}
+				// If transient network failure, retry or cascade
+				if (attempt < MAX_TRIES_PER_MODEL) {
+					await sleepWithJitter(1000, 300);
+					continue;
+				}
+				break;
+			} finally {
+				clearTimeout(timeoutId);
 			}
-			if (err.message && err.message.includes('404')) {
-				continue;
-			}
-			throw err;
-		} finally {
-			clearTimeout(timeoutId);
 		}
 	}
-	throw lastError || new Error('All model requests failed. Please check your Gemini API key in Google AI Studio.');
+
+	throw lastError || new Error('All model requests in the fallback pool failed. Please check your Gemini API key in Google AI Studio.');
 }
 
 async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voice' }) {
@@ -5084,13 +5173,13 @@ function renderAiSummaryCard() {
 }
 
 async function generateAiActionPlan(options = {}) {
-	const silent = !!options.silent;
+	const silent = typeof options === 'boolean' ? options : !!options.silent;
 	const btn = document.getElementById('btn-generate-ai-plan');
 	const btnText = document.getElementById('btn-generate-ai-text');
 	const apiKeyInput = document.getElementById('input-gemini-api-key');
 	const apiKey = (apiKeyInput?.value || loadGeminiApiKeyLocal() || '').trim();
 	if (apiKeyInput && apiKey && userProfile?.role === 'ADMIN') {
-		saveGeminiApiKeyLocal(apiKey);
+		saveGeminiApiKeyLocal(apiKey, true);
 	}
 
 	const rulesEl = document.getElementById('input-ai-rules');

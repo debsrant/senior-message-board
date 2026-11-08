@@ -348,6 +348,16 @@ The Senior Message Board is a specialized, zero-build static web application des
   - Updated Gemini's system instructions to give `caregiverNotesAndFeedback` top priority for daily suggestions and tone.
   - Expanded `buildCreativePersonalizedSuggestion()` to recognize additional pastimes (puzzles, word games, crafts/knitting, books/magazines, tea/coffee) from caregiver notes.
 
+#### Turn 89
+- **User Request**:
+  - The saved API key toast also pops on regenerate AI summary. Is there a way to overcome Gemini errors from high demand spikes?
+- **Technical Implementation**:
+  - **Silenced Unnecessary Key Toast**: Added a `silent = false` parameter to `saveGeminiApiKeyLocal()` and verified that toasts only fire if `currentStored !== trimmed`. Updated `generateAiActionPlan()` to pass `silent = true`, completely eliminating spurious "API key saved" notifications during briefing regenerations.
+  - **High-Demand Spike & Overload Resilience**: Upgraded `callGeminiApi()` to combat transient errors (`429 RESOURCE_EXHAUSTED`, `503 UNAVAILABLE` / model overloaded, and `5xx` gateway blips):
+    - **Exponential Backoff with Jitter**: Automatically retries transient errors on the active model with randomized delays (e.g. 1.2s + jitter, 2.4s + jitter).
+    - **Multi-Model Fallback Cascade**: If the primary model (e.g. `gemini-3.8-flash`) remains saturated during a demand spike, automatically cascades to alternative high-throughput models in the pool (`gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`).
+    - **Offline Smart Companion Fallback**: Seamlessly falls back to the client-side rule engine if all remote Google inference clusters are unreachable, guaranteeing Mom's screen always displays a complete, cohesive briefing.
+
 ---
 
 ## Current Architecture & File Inventory
