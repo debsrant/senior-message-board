@@ -404,6 +404,23 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
+#### Turn 92
+- **User Request**:
+  - Manually refreshing the AI summary generated the error: "Used built-in Smart Plan (Gemini API returned an error: Expected double-quoted property name in JSON at position 2498 (line 34 column 9))." AI summaries sometimes have sentences that don't make sense (looks like coded fallback phrases are just dumped into the middle of the sentence).
+- **Technical Implementation & Root Cause Resolution**:
+  - **JSON SyntaxError Fix**:
+    - **Root Cause**: Gemini occasionally returned trailing commas (e.g. in `followups` or `choices` objects), which caused standard `JSON.parse` to crash with `Expected double-quoted property name in JSON at position ...`.
+    - **Enforced `responseSchema`**: Added strict schema enforcement under `generationConfig.responseSchema` in the Gemini API payload, ensuring Google's token decoding engine constrains output to valid schema-compliant JSON.
+    - **Resilient Multi-Stage Parser (`cleanAndParseGeminiJson`)**: Implemented a robust 5-stage parser that strips markdown fences, slices outermost JSON objects, cleans comments, strips trailing commas before `}` and `]`, and includes a structural regex recovery pass if minor syntax flaws occur.
+    - **Replaced Blocking Alert with Toast**: Replaced the blocking JavaScript `alert()` with a smooth toast notification (`showToast('Daily Briefing refreshed with Smart Daily Plan.')`).
+    - **Updated Model Cascade**: Removed deprecated legacy models (`gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) from `callGeminiApi`, aligning with current active models (`gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-4-argon`).
+  - **Eliminated "Coded Fallback Phrases Dumped in Sentences"**:
+    - **Fixed `syncBriefingMedsStatus`**: Replaced the fragile regex substring replacement (which used to replace mid-clause text, producing garbled phrases like `"Be sure to Your morning medicine is already logged..."`) with sentence-level replacement targeting only Paragraph 0. It cleanly swaps the entire medicine sentence without breaking grammar or clause flow.
+    - **Natural Schedule Prose in `buildSmartRuleBasedPlan`**: Replaced the robotic `core (driver; reminder)` parenthetical structure and awkward `Also, prepAlert` concatenation with clean, human sentences (`You have Dr. Miller scheduled for 10:00 AM today. Sarah is driving. Remember to bring sunglasses.`).
+    - **Natural Family Note Attribution**: Replaced `starting with: "${snippet}"` with natural phrasing (`Sarah and Mike left loving family notes for you: "${snippet}."`).
+
+---
+
 ## Current Architecture & File Inventory
 
 ### File Inventory
@@ -417,14 +434,14 @@ The Senior Message Board is a specialized, zero-build static web application des
   - Page 5 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
   - Page 6 (`disp-page-memories`): Interactive Memory & Favorite Things Spark, Favorite Things & Joys tags, and Your Memory Book keepsake gallery.
   - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Memories`, `AI & Board Settings`, `Contacts & Users`), with event copy, recurrence generator, and smart series deletion.
-- **`app.js`** (~7,250 lines):
+- **`app.js`** (~7,500 lines):
   - Firebase RTDB real-time listeners and multi-user authentication.
   - Kiosk 6-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
-  - Full-day 4-paragraph Daily Briefing engine with live medication sync, full-day weather arc, non-parroting creative activity suggestions (`buildCreativePersonalizedSuggestion`), and selective bolding.
+  - Full-day 4-paragraph Daily Briefing engine with sentence-level live medication sync, full-day weather arc, natural schedule phrasing, non-parroting creative activity suggestions, and selective bolding.
   - Calendar event management: one-click copy/duplicate, recurring series generator (`computeRecurringDatesList`), smart multi-occurrence deletion, and past-event auto-cleanup.
   - Cumulative Learned Favorites & Joys profile (`board/seniorProfile/favorites`) and Kiosk Memory Book renderer (`renderKioskMemoriesPage`).
   - Voice recording engine (Web Speech API) with silence detection and AI polishing.
-  - Gemini API client with auto-discovery, exponential backoff, multi-model fallback cascade, and smart offline fallback.
+  - Gemini API client with `responseSchema` structured outputs, multi-stage resilient JSON parser (`cleanAndParseGeminiJson`), exponential backoff, current model cascade, and smart offline fallback.
   - Open-Meteo weather integration with 3-day daily forecast and zero-number prose helper.
   - Structured CRUD for medications, events, messages, contacts, and journal entries.
 - **`styles.css`**:

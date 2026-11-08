@@ -2331,15 +2331,13 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.
 		console.warn('Dynamic model discovery notice:', discoveryErr.message);
 	}
 
-	// Comprehensive cascade of preferred, lightweight, and high-capacity fallback models
+	// Comprehensive cascade of preferred, lightweight, and high-capacity current models
 	const modelsToTry = [
 		activeModel,
 		'gemini-3.8-flash',
 		'gemini-3.5-flash-lite',
 		'gemini-3.1-flash-lite',
-		'gemini-2.5-flash',
-		'gemini-2.0-flash',
-		'gemini-1.5-flash',
+		'gemini-4-argon',
 	];
 	const uniqueModels = [...new Set(modelsToTry.filter(Boolean))];
 
@@ -2442,6 +2440,128 @@ async function callGeminiApi(apiKey, requestPayload, preferredModel = 'gemini-3.
 	throw lastError || new Error('All model requests in the fallback pool failed. Please check your Gemini API key in Google AI Studio.');
 }
 
+function cleanAndParseGeminiJson(rawText) {
+	if (!rawText || typeof rawText !== 'string') {
+		throw new Error('Empty response from Gemini API.');
+	}
+
+	// 1. Strip markdown code fences
+	let text = rawText.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+
+	// 2. Slice outermost JSON object
+	const firstBrace = text.indexOf('{');
+	const lastBrace = text.lastIndexOf('}');
+	if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+		text = text.slice(firstBrace, lastBrace + 1);
+	}
+
+	// 3. Fast path: standard JSON.parse
+	try {
+		return JSON.parse(text);
+	} catch (primaryErr) {
+		console.warn('Direct JSON.parse failed, running resilient repair pass:', primaryErr.message);
+	}
+
+	// 4. Targeted Repair Pass:
+	// a. Remove single-line JS comments (// ...)
+	let repaired = text.replace(/(^|[^:])\/\/[^\n\r]*/g, '$1');
+	// b. Remove multi-line comments (/* ... */)
+	repaired = repaired.replace(/\/\*[\s\S]*?\*\//g, '');
+	// c. Remove trailing commas before } or ] (the most common LLM JSON formatting error)
+	repaired = repaired.replace(/,(\s*[}\]])/g, '$1');
+
+	try {
+		return JSON.parse(repaired);
+	} catch (secondErr) {
+		console.warn('Trailing comma repair pass failed, running structural recovery:', secondErr.message);
+	}
+
+	// 5. Structural Recovery Pass:
+	// Extract known fields via regex if syntax error persists in deeper nested structures
+	const extracted = {};
+
+	// Extract todayPlan array
+	const planMatch = text.match(/"todayPlan"\s*:\s*\[([\s\S]*?)\]\s*(?:,\s*"|$|\})/);
+	if (planMatch) {
+		const items = [];
+		const stringRegex = /"((?:[^"\\]|\\.)*)"/g;
+		let m;
+		while ((m = stringRegex.exec(planMatch[1])) !== null) {
+			const unescaped = m[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
+			if (unescaped.trim()) items.push(unescaped.trim());
+		}
+		if (items.length >= 2) {
+			extracted.todayPlan = items;
+		}
+	}
+
+	// Extract prepAlerts array
+	const prepMatch = text.match(/"prepAlerts"\s*:\s*\[([\s\S]*?)\]/);
+	if (prepMatch) {
+		const items = [];
+		const stringRegex = /"((?:[^"\\]|\\.)*)"/g;
+		let m;
+		while ((m = stringRegex.exec(prepMatch[1])) !== null) {
+			items.push(m[1].replace(/\\"/g, '"').trim());
+		}
+		extracted.prepAlerts = items;
+	}
+
+	// Extract lookAhead string
+	const lookMatch = text.match(/"lookAhead"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+	if (lookMatch) {
+		extracted.lookAhead = lookMatch[1].replace(/\\"/g, '"').trim();
+	}
+
+	// Extract learnedFavorites array
+	const favMatch = text.match(/"learnedFavorites"\s*:\s*\[([\s\S]*?)\]/);
+	if (favMatch) {
+		const items = [];
+		const stringRegex = /"((?:[^"\\]|\\.)*)"/g;
+		let m;
+		while ((m = stringRegex.exec(favMatch[1])) !== null) {
+			items.push(m[1].replace(/\\"/g, '"').trim());
+		}
+		extracted.learnedFavorites = items;
+	}
+
+	// Extract dailyQuestion
+	const qMatch = text.match(/"question"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+	const choicesMatch = text.match(/"choices"\s*:\s*\[([\s\S]*?)\]/);
+	if (qMatch && choicesMatch) {
+		const choices = [];
+		const stringRegex = /"((?:[^"\\]|\\.)*)"/g;
+		let m;
+		while ((m = stringRegex.exec(choicesMatch[1])) !== null) {
+			choices.push(m[1].replace(/\\"/g, '"').trim());
+		}
+		if (choices.length >= 2) {
+			extracted.dailyQuestion = {
+				question: qMatch[1].replace(/\\"/g, '"').trim(),
+				choices: choices,
+				followups: {},
+			};
+		}
+	}
+
+	// Extract story and title (for polishMemoryStoryWithAI)
+	const titleMatch = text.match(/"title"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+	const storyMatch = text.match(/"story"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+	const summaryMatch = text.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+	if (storyMatch || titleMatch) {
+		if (titleMatch) extracted.title = titleMatch[1].replace(/\\"/g, '"').trim();
+		if (storyMatch) extracted.story = storyMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+		if (summaryMatch) extracted.summary = summaryMatch[1].replace(/\\"/g, '"').trim();
+	}
+
+	if ((extracted.todayPlan && extracted.todayPlan.length >= 2) || extracted.story || extracted.title) {
+		console.log('Successfully recovered valid Gemini data via structural extraction.');
+		return extracted;
+	}
+
+	throw new Error('Gemini API returned malformed JSON.');
+}
+
 async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voice' }) {
 	const raw = (transcript || '').trim();
 	if (!raw) return { title: 'Spoken Memory', story: '', summary: '' };
@@ -2477,8 +2597,7 @@ async function polishMemoryStoryWithAI({ transcript, promptTopic, source = 'voic
 			};
 
 			const textOutput = await callGeminiApi(apiKey, requestPayload, 'gemini-3.8-flash');
-			const cleanJson = textOutput.replace(/```json\n?|\n?```/g, '').trim();
-			const parsed = JSON.parse(cleanJson);
+			const parsed = cleanAndParseGeminiJson(textOutput);
 			if (parsed && (parsed.story || parsed.title)) {
 				return {
 					title: (parsed.title || 'Family Memory').trim(),
@@ -4768,7 +4887,8 @@ function buildSmartRuleBasedPlan(boardData) {
 	} else {
 		medSentence = '**Please take your morning medicine with breakfast** and a full glass of water.';
 		if (medNotes) {
-			medSentence += ` (${medNotes.replace(/[.!]+$/, '')}.)`;
+			const cleanNote = medNotes.replace(/[.!]+$/, '');
+			medSentence += ` Remember to ${cleanNote.charAt(0).toLowerCase() + cleanNote.slice(1)}.`;
 		}
 	}
 	todayPlan.push(`${greeting} ${weatherArc} ${medSentence}`);
@@ -4805,7 +4925,8 @@ function buildSmartRuleBasedPlan(boardData) {
 
 	let paragraph2 = '';
 	if (todayEvents.length > 0) {
-		const evtDescriptions = todayEvents.slice(0, 2).map((evt, idx) => {
+		const schedSentences = [];
+		todayEvents.slice(0, 2).forEach((evt, idx) => {
 			const { category, location } = getEventContext(evt);
 			let timeStr = '';
 			if (evt.time) {
@@ -4818,50 +4939,50 @@ function buildSmartRuleBasedPlan(boardData) {
 			const driverNote = (evt.notes || '').trim().replace(/[.!]+$/, '');
 			const reminderNote = (evt.reminder || '').trim().replace(/[.!]+$/, '');
 
-			let core = '';
+			let mainSent = '';
 			if (category === 'family') {
-				core = location === 'home'
-					? `**${titleStr}${timeStr ? ' is at ' + timeStr : ' is today'}** right at home`
-					: `**You have ${titleStr}${timeStr ? ' at ' + timeStr : ' today'}**`;
+				mainSent = location === 'home'
+					? `You have a family visit with **${titleStr}${timeStr ? ' at ' + timeStr : ''}** right at home.`
+					: `You have a family outing for **${titleStr}${timeStr ? ' at ' + timeStr : ''}** today.`;
 			} else if (category === 'service') {
-				core = `**Home visit for ${titleStr}${timeStr ? ' is scheduled at ' + timeStr : ' today'}**`;
+				mainSent = `A home visit for **${titleStr}${timeStr ? ' is scheduled for ' + timeStr : ' is scheduled today'}**.`;
 			} else {
-				core = `**${titleStr}${timeStr ? ' is scheduled for ' + timeStr : ' is today'}**`;
+				mainSent = `You have **${titleStr}${timeStr ? ' scheduled for ' + timeStr : ''}** today.`;
 			}
 
-			const extras = [];
-			if (driverNote) extras.push(driverNote);
-			if (reminderNote) extras.push(`**remember to ${reminderNote.charAt(0).toLowerCase() + reminderNote.slice(1)}**`);
-			else if (idx === 0 && category !== 'family' && category !== 'service' && location !== 'home') {
-				extras.push('**keep your ID and glasses handy**');
+			if (driverNote) {
+				mainSent += ` ${driverNote.charAt(0).toUpperCase() + driverNote.slice(1)}.`;
 			}
-
-			if (extras.length > 0) {
-				return `${core} (${extras.join('; ')}).`;
+			if (reminderNote) {
+				mainSent += ` **Remember to ${reminderNote.charAt(0).toLowerCase() + reminderNote.slice(1)}**.`;
+			} else if (idx === 0 && category !== 'family' && category !== 'service' && location !== 'home') {
+				mainSent += ' **Keep your ID and glasses handy**.';
 			}
-			return `${core}.`;
+			schedSentences.push(mainSent);
 		});
 
-		paragraph2 = `For today's schedule, ${evtDescriptions.join(', and ')}.`;
 		if (prepAlerts.length > 0) {
-			paragraph2 += ` Also, ${prepAlerts[0].charAt(0).toLowerCase() + prepAlerts[0].slice(1)}`;
+			schedSentences.push(prepAlerts[0]);
 		} else if (lookAheadSentence) {
-			paragraph2 += ` ${lookAheadSentence}`;
+			schedSentences.push(lookAheadSentence);
 		}
+		paragraph2 = schedSentences.join(' ');
 	} else {
+		const openSentences = [];
 		if (todaysHolidays.length > 0) {
-			paragraph2 = `Today is **${todaysHolidays[0].name}**, and your schedule is wide open to relax and enjoy the day at home.`;
+			openSentences.push(`Today is **${todaysHolidays[0].name}**, and your schedule is wide open to relax and enjoy the day at home.`);
 		} else if (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')) {
-			paragraph2 = 'Your calendar is wide open today with nowhere you need to rush off to—a lovely day to enjoy your favorite puzzles, books, or music.';
+			openSentences.push('Your calendar is wide open today with nowhere you need to rush off to—a lovely day to enjoy your favorite puzzles, books, or music.');
 		} else {
-			paragraph2 = 'Your calendar is wide open today with no scheduled appointments, so you can take the day at an easy, unhurried pace.';
+			openSentences.push('Your calendar is wide open today with no scheduled appointments, so you can take the day at an easy, unhurried pace.');
 		}
 
 		if (prepAlerts.length > 0) {
-			paragraph2 += ` ${prepAlerts[0]}`;
+			openSentences.push(prepAlerts[0]);
 		} else if (lookAheadSentence) {
-			paragraph2 += ` ${lookAheadSentence}`;
+			openSentences.push(lookAheadSentence);
 		}
+		paragraph2 = openSentences.join(' ');
 	}
 	todayPlan.push(paragraph2);
 
@@ -4888,10 +5009,10 @@ function buildSmartRuleBasedPlan(boardData) {
 				if (activeMsgs.length > 1) {
 					const secondAuthor = (activeMsgs[1].author || 'family').trim();
 					familyParts.push(
-						`**${authorName} and ${secondAuthor} left ${activeMsgs.length} family notes for you**, starting with: "${snippet}"`
+						`**${authorName} and ${secondAuthor} left loving family notes for you**: "${snippet}."`
 					);
 				} else {
-					familyParts.push(`**${authorName} left a loving note for you**: "${snippet}"`);
+					familyParts.push(`**${authorName} left a loving note for you**: "${snippet}."`);
 				}
 			}
 		}
@@ -4977,19 +5098,38 @@ function buildCreativePersonalizedSuggestion(boardData, seniorResp) {
 
 function syncBriefingMedsStatus(paragraphs, medsTaken) {
 	if (!Array.isArray(paragraphs)) return [];
-	return paragraphs.map((p) => {
+	return paragraphs.map((p, idx) => {
 		if (typeof p !== 'string') return '';
 		let text = p;
 		// Remove any accidental mention of evening medicine (Mom only takes morning medicine)
-		text = text.replace(/[^.!?]*evening\s+(medicine|medication|pills?)[^.!?]*[.!?]?/gi, '').trim();
-		if (medsTaken) {
-			// Replace unlogged morning medicine prompts with live confirmation
-			text = text.replace(
-				/(\*\*[^*]*take your (morning|daily) (medicine|medication|pills?)[^*]*\*\*[^.!?]*[.!?]?|please take your (morning|daily) (medicine|medication|pills?)[^.!?]*[.!?]?|remember to take your (morning|daily) (medicine|medication|pills?)[^.!?]*[.!?]?|take your (morning|daily) (medicine|medication|pills?) with breakfast[^.!?]*[.!?]?)/gi,
-				'Your morning medicine is already logged and taken care of for today.'
-			);
+		text = text.replace(/[^.!?]*\bevening\s+(?:medicine|medication|pills?)\b[^.!?]*[.!?]?/gi, '').trim();
+
+		// Only Paragraph 0 handles morning welcome and medicine status
+		if (idx !== 0) {
+			return text.replace(/\s{2,}/g, ' ').trim();
 		}
-		return text.replace(/\s{2,}/g, ' ').trim();
+
+		// Split Paragraph 0 into clean complete sentences
+		const sentences = text.match(/[^.!?]+[.!?]+(?:\s+|$)|[^.!?]+$/g) || [text];
+		let medSentenceIdx = -1;
+
+		sentences.forEach((s, sIdx) => {
+			if (/\b(medicine|medication|pill|pills|prescription)\b/i.test(s)) {
+				medSentenceIdx = sIdx;
+			}
+		});
+
+		const liveMedsSentence = medsTaken
+			? 'Your morning medicine is already logged and taken care of for today.'
+			: '**Please remember to take your morning medicine with breakfast** and a glass of water.';
+
+		if (medSentenceIdx !== -1) {
+			sentences[medSentenceIdx] = liveMedsSentence;
+		} else {
+			sentences.push(liveMedsSentence);
+		}
+
+		return sentences.map((s) => s.trim()).filter(Boolean).join(' ');
 	}).filter(Boolean);
 }
 
@@ -5402,12 +5542,47 @@ async function generateAiActionPlan(options = {}) {
 			],
 			generationConfig: {
 				responseMimeType: 'application/json',
+				responseSchema: {
+					type: 'OBJECT',
+					properties: {
+						todayPlan: {
+							type: 'ARRAY',
+							items: { type: 'STRING' },
+							description: 'Exactly 4 cohesive full-day paragraphs covering the entire day.',
+						},
+						prepAlerts: {
+							type: 'ARRAY',
+							items: { type: 'STRING' },
+						},
+						lookAhead: {
+							type: 'STRING',
+						},
+						dailyQuestion: {
+							type: 'OBJECT',
+							properties: {
+								question: { type: 'STRING' },
+								choices: {
+									type: 'ARRAY',
+									items: { type: 'STRING' },
+								},
+								followups: {
+									type: 'OBJECT',
+								},
+							},
+							required: ['question', 'choices'],
+						},
+						learnedFavorites: {
+							type: 'ARRAY',
+							items: { type: 'STRING' },
+						},
+					},
+					required: ['todayPlan', 'dailyQuestion'],
+				},
 			},
 		};
 
 		const rawJsonText = await callGeminiApi(apiKey, requestPayload, 'gemini-3.8-flash');
-		const cleanJson = rawJsonText.replace(/```json\n?|\n?```/g, '').trim();
-		const parsed = JSON.parse(cleanJson);
+		const parsed = cleanAndParseGeminiJson(rawJsonText);
 		const finalTodayPlan =
 			Array.isArray(parsed.todayPlan) && parsed.todayPlan.length >= 2
 				? parsed.todayPlan.slice(0, 5)
@@ -5510,11 +5685,7 @@ async function generateAiActionPlan(options = {}) {
 		}
 		renderAiSummaryCard();
 		if (!silent) {
-			alert(
-				'Used built-in Smart Plan (Gemini API returned an error: ' +
-					err.message +
-					').'
-			);
+			showToast('Daily Briefing refreshed with Smart Daily Plan.');
 		}
 	} finally {
 		if (btn) btn.disabled = false;
