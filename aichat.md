@@ -360,26 +360,51 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
+#### Turn 90
+- **User Request**:
+  - Remove the function that rotates through morning, afternoon, and evening. Capture the entire day (including weather) and give an overall game plan for the entire day - a daily briefing. This might mean additional paragraphs for each section of the Today page.
+- **Technical Implementation**:
+  - **Removed Time-of-Day Rotation Engine**:
+    - Completely removed `getTimeOfDayBriefingMeta()`, replacing dynamic time-sliced titles ("Morning/Afternoon/Evening Briefing") with a permanent, reassuring card header: `Daily Briefing` and subtitle: `Today's full-day overview, schedule, and activities`.
+  - **Full-Day Weather Arc (`getFullDayWeatherArcPhrase`)**:
+    - Replaced the single-point weather snippet with a full-day weather narrative that paints the entire arc (morning cool start, afternoon temperature peak and sky conditions, evening wind-down breeze, and comfortable porch windows/attire) with zero raw numbers or digits.
+  - **4-Paragraph Full-Day Game Plan**:
+    - Re-architected both `buildSmartRuleBasedPlan()` and `generateAiActionPlan()` (Gemini system prompt) to output 4 cohesive paragraphs:
+      - **Paragraph 1 (Morning Welcome, Full-Day Weather Arc & Morning Medicine)**: Warm day-of-week greeting, full day's weather arc, and live-synced morning medicine status.
+      - **Paragraph 2 (Daytime Schedule, Appointments & Prep Alerts)**: Daytime appointment flow with times, helper notes, and multi-day prep alerts (or a reassuring open calendar note).
+      - **Paragraph 3 (Afternoon Creative Activities & Memories Game Plan)**: Creative, personalized activity suggestions based on caregiver notes and learned favorites without parrot-quoting, plus an invitation to the Memories page.
+      - **Paragraph 4 (Family Connections, Celebrations & Evening Wind-Down)**: Active family love notes, upcoming birthdays/holidays, and an evening wind-down wishing Mom a restful night.
+  - **Contextual Deep-Link Navigation Pills**:
+    - Refactored `getBriefingParagraphLinks()` to pair with each paragraph's theme:
+      - Paragraph 1: `Weather Forecast ->` and `Morning Medicine ->`
+      - Paragraph 2: `View Calendar ->`
+      - Paragraph 3: `Memories & Favorites ->`
+      - Paragraph 4: `Read Family Notes ->` / `Family & Friends ->`
+  - **Refreshed Fallback Content**:
+    - Updated empty fallback state in `renderAiSummaryCard()` to display 4 peaceful, full-day paragraph cards.
+
+---
+
 ## Current Architecture & File Inventory
 
 ### File Inventory
 - **`index.html`** (~2,075 lines):
   - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" Morning Medicine toggle (compact in landscape).
   - Responsive Kiosk Navigation (`#kiosk-nav-bar`): Left Vertical Sidebar in landscape/desktop, Top Grid on phones/portrait tablets; 6 large tactile buttons (`Today`, `Weather`, `Medicine`, `Calendar`, `Family`, `Memories`).
-  - Page 1 (`disp-page-today`): Hero Announcement and Full-Width Cohesive Morning/Afternoon/Evening Briefing with deep-link pills.
+  - Page 1 (`disp-page-today`): Hero Announcement and Full-Width Cohesive Full-Day `Daily Briefing` with contextual deep-link pills for each time block.
   - Page 2 (`disp-page-weather`): Current conditions, What to Wear comfort guide, Morning/Afternoon/Evening progression, and 3-Day Outlook with calendar tie-ins.
   - Page 3 (`disp-page-meds`): Morning Medicine instructions, schedule cards, and storage notes.
   - Page 4 (`disp-page-events`): Calendar agenda, appointment times, driver notes, and US holidays.
   - Page 5 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
   - Page 6 (`disp-page-memories`): Interactive Memory & Favorite Things Spark, Favorite Things & Joys tags, and Your Memory Book keepsake gallery.
   - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Memories`, `AI & Board Settings`, `Contacts & Users`).
-- **`app.js`** (~6,740 lines):
+- **`app.js`** (~7,015 lines):
   - Firebase RTDB real-time listeners and multi-user authentication.
   - Kiosk 6-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
-  - Cohesive 2–3 paragraph AI briefing engine with live medication sync, non-parroting creative activity suggestions (`buildCreativePersonalizedSuggestion`), and selective bolding.
+  - Full-day 4-paragraph Daily Briefing engine with live medication sync, full-day weather arc, non-parroting creative activity suggestions (`buildCreativePersonalizedSuggestion`), and selective bolding.
   - Cumulative Learned Favorites & Joys profile (`board/seniorProfile/favorites`) and Kiosk Memory Book renderer (`renderKioskMemoriesPage`).
   - Voice recording engine (Web Speech API) with silence detection and AI polishing.
-  - Gemini API client with auto-discovery, timeout protection, and smart offline fallback.
+  - Gemini API client with auto-discovery, exponential backoff, multi-model fallback cascade, and smart offline fallback.
   - Open-Meteo weather integration with 3-day daily forecast and zero-number prose helper.
   - Structured CRUD for medications, events, messages, contacts, and journal entries.
 - **`styles.css`**:

@@ -4574,73 +4574,75 @@ function formatActionBulletHtml(text) {
 	return safe;
 }
 
-function getTimeOfDayBriefingMeta() {
-	const now = new Date();
-	const hour = now.getHours();
-	const weekday = now.toLocaleDateString([], { weekday: 'long' });
-	if (hour < 12) {
-		return {
-			heading: 'Morning Briefing',
-			greeting: `Good morning and happy ${weekday}!`,
-		};
-	}
-	if (hour < 17) {
-		return {
-			heading: 'Afternoon Briefing',
-			greeting: `Good afternoon! Hope you are having a lovely ${weekday}.`,
-		};
-	}
-	return {
-		heading: 'Evening Briefing',
-		greeting: `Good evening! Wishing you a peaceful ${weekday} evening.`,
-	};
-}
-
-function getCohesiveWeatherPhrase(weatherData) {
+function getFullDayWeatherArcPhrase(weatherData) {
 	if (!weatherData) {
-		return 'It is a calm, comfortable day outside.';
+		return 'We have calm, comfortable weather forecast across the entire day today.';
 	}
 
 	const code = typeof weatherData.code === 'number' ? weatherData.code : -1;
 	const high = typeof weatherData.high === 'number' ? weatherData.high : null;
-	const rainChance = typeof weatherData.rainChanceMax === 'number' ? weatherData.rainChanceMax : 0;
 	const desc = (weatherData.desc || '').toLowerCase();
+	const rainTiming = (weatherData.rainTiming || '').toLowerCase();
+	const bestWindow = weatherData.bestWindow ? weatherData.bestWindow.toLowerCase() : 'early afternoon';
 
+	// Severe / Thunder
 	if (code === 95 || code === 96 || code === 99 || desc.includes('thunder')) {
-		return 'Skies are stormy with passing thunderstorms today, making it a great day to stay cozy indoors.';
+		return 'Passing thunderstorms and stormy skies will move through at times today, so plan for a cozy full day staying safe and comfortable indoors.';
 	}
+	// Snow
 	if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86) || desc.includes('snow') || desc.includes('flurr')) {
-		return 'It is wintry and cold with snow outside today, so **wear warm layers and non-slip shoes** if stepping out.';
+		return 'Wintry, freezing air with snow flurries will stay with us all day, so **bundle up in warm layers and non-slip boots** if stepping outside.';
 	}
+	// Rain
 	if (
 		(code >= 51 && code <= 67) ||
 		(code >= 80 && code <= 82) ||
-		rainChance >= 60 ||
 		desc.includes('rain') ||
 		desc.includes('drizzle') ||
 		desc.includes('shower')
 	) {
-		return 'Rainy, damp weather is in the forecast today, so **keep an umbrella and non-slip shoes handy** if heading out.';
+		const rainNote = rainTiming.includes('afternoon')
+			? 'Morning will start on the drier side before rain arrives this afternoon'
+			: 'Damp, rainy weather is expected across much of the day';
+		return `${rainNote}, so **keep an umbrella and non-slip shoes handy** whenever stepping out.`;
 	}
+
+	// Temperature arc across morning, afternoon, and evening
+	let morningFeel = 'a crisp and cool morning';
+	let afternoonFeel = 'warming to a mild, comfortable afternoon';
+	let eveningFeel = 'cooling down gently as twilight arrives';
+	let clothing = '**putting on a light sweater or cardigan** will keep you cozy on the porch';
+
 	if (high !== null) {
 		if (high >= 85) {
-			return 'It will be quite warm this afternoon, so enjoy the cooler morning air and stay comfortable indoors during peak heat.';
+			morningFeel = 'a pleasantly cooler morning';
+			afternoonFeel = 'warming up quickly to quite warm afternoon sunshine';
+			eveningFeel = 'cooling down comfortably tonight with twilight breezes';
+			clothing = 'enjoying the porch during the cooler morning air is best before retreating to air conditioning for peak afternoon heat';
+		} else if (high >= 75) {
+			morningFeel = 'a gentle, refreshing morning start';
+			afternoonFeel = 'blooming into warm sunshine and gentle afternoon breezes';
+			eveningFeel = 'settling into a peaceful, mild evening';
+			clothing = `the nicest window to enjoy the sunshine and fresh air is ${bestWindow}`;
+		} else if (high < 45) {
+			morningFeel = 'a brisk, frosty morning';
+			afternoonFeel = 'remaining cold and crisp under cloudy skies through the afternoon';
+			eveningFeel = 'growing chilly early this evening';
+			clothing = '**bundling up in a warm coat, scarf, and gloves** is essential if heading out';
+		} else if (high < 60) {
+			morningFeel = 'a crisp, chilly morning';
+			afternoonFeel = 'reaching cool, refreshing afternoon sunshine';
+			eveningFeel = 'dipping back into brisk evening temperatures';
+			clothing = `**wearing a warm fleece or knit cardigan** will keep you comfortable, and ${bestWindow} will be the warmest time to sit on the porch`;
+		} else {
+			morningFeel = 'a calm, comfortable morning';
+			afternoonFeel = 'warming to pleasant afternoon sunshine with fair skies';
+			eveningFeel = 'closing with a quiet, mild evening';
+			clothing = `the most pleasant time to step onto the porch for fresh air is ${bestWindow}`;
 		}
-		if (high >= 75) {
-			return 'Warm, pleasant sunshine is on the way today with a comfortable afternoon breeze.';
-		}
-		if (high < 45) {
-			return 'It is brisk and cold outside today, so **bundle up in a warm coat** if you step out for fresh air.';
-		}
-		if (high < 60) {
-			return 'The air is crisp and cool today, so **put on a cozy sweater or cardigan** if sitting out on the porch.';
-		}
-		if (code === 0 || code === 1 || desc.includes('clear') || desc.includes('sun')) {
-			return 'It is mild, bright, and sunny outside today—lovely weather for some fresh air on the porch.';
-		}
-		return 'Weather outside is mild and comfortable today with gentle cloud cover.';
 	}
-	return 'Weather outside looks calm and comfortable today.';
+
+	return `Expect ${morningFeel} ${afternoonFeel}, before ${eveningFeel}. ${clothing.charAt(0).toUpperCase() + clothing.slice(1)}.`;
 }
 
 function buildSmartRuleBasedPlan(boardData) {
@@ -4750,9 +4752,11 @@ function buildSmartRuleBasedPlan(boardData) {
 		});
 	});
 
-	// ================= PARAGRAPH 1: COHESIVE GREETING, WEATHER & MORNING MEDICINE =================
-	const { greeting } = getTimeOfDayBriefingMeta();
-	const weatherPhrase = getCohesiveWeatherPhrase(lastWeatherData);
+	// ================= PARAGRAPH 1: MORNING WELCOME, FULL-DAY WEATHER ARC & MORNING MEDICINE =================
+	const now = new Date();
+	const weekday = now.toLocaleDateString([], { weekday: 'long' });
+	const greeting = `Good morning and happy ${weekday}!`;
+	const weatherArc = getFullDayWeatherArcPhrase(lastWeatherData);
 	const medNotes = (data.medicationNotes || '').trim();
 	let medSentence = '';
 	if (data.medsTaken) {
@@ -4763,9 +4767,9 @@ function buildSmartRuleBasedPlan(boardData) {
 			medSentence += ` (${medNotes.replace(/[.!]+$/, '')}.)`;
 		}
 	}
-	todayPlan.push(`${greeting} ${weatherPhrase} ${medSentence}`);
+	todayPlan.push(`${greeting} ${weatherArc} ${medSentence}`);
 
-	// ================= PARAGRAPH 2: TODAY'S FLOW, SCHEDULE, WHO IS HELPING & LOOK-AHEAD =================
+	// ================= PARAGRAPH 2: DAYTIME SCHEDULE & APPOINTMENTS GAME PLAN =================
 	const upcomingSoonEvents = futureEvents.filter((e) => e.diffDays <= 5);
 	const upcomingSoonHolidays = (upcomingHolidays || []).filter((h) => {
 		const d = getDaysFromToday(h.date);
@@ -4834,7 +4838,7 @@ function buildSmartRuleBasedPlan(boardData) {
 			return `${core}.`;
 		});
 
-		paragraph2 = evtDescriptions.join(' ');
+		paragraph2 = `For today's schedule, ${evtDescriptions.join(', and ')}.`;
 		if (prepAlerts.length > 0) {
 			paragraph2 += ` Also, ${prepAlerts[0].charAt(0).toLowerCase() + prepAlerts[0].slice(1)}`;
 		} else if (lookAheadSentence) {
@@ -4842,7 +4846,7 @@ function buildSmartRuleBasedPlan(boardData) {
 		}
 	} else {
 		if (todaysHolidays.length > 0) {
-			paragraph2 = `Today is **${todaysHolidays[0].name}**, and your schedule is wide open to relax and enjoy the day.`;
+			paragraph2 = `Today is **${todaysHolidays[0].name}**, and your schedule is wide open to relax and enjoy the day at home.`;
 		} else if (feedback.includes('puzzle') || feedback.includes('no walk') || feedback.includes('avoid walk')) {
 			paragraph2 = 'Your calendar is wide open today with nowhere you need to rush off to—a lovely day to enjoy your favorite puzzles, books, or music.';
 		} else {
@@ -4857,7 +4861,13 @@ function buildSmartRuleBasedPlan(boardData) {
 	}
 	todayPlan.push(paragraph2);
 
-	// ================= PARAGRAPH 3: FAMILY CONNECTION, CELEBRATIONS & CREATIVE ACTIVITY SUGGESTION =================
+	// ================= PARAGRAPH 3: AFTERNOON ACTIVITIES & MEMORIES GAME PLAN =================
+	const creativeSuggestion = buildCreativePersonalizedSuggestion(data, seniorResp);
+	const memoryInvite = 'Whenever you feel like reminiscing today, **visit your Memories page** to explore your favorite topics or share a story for your memory book.';
+	const afternoonParagraph = creativeSuggestion ? `${creativeSuggestion} ${memoryInvite}` : memoryInvite;
+	todayPlan.push(afternoonParagraph);
+
+	// ================= PARAGRAPH 4: FAMILY CONNECTIONS, CELEBRATIONS & EVENING WIND-DOWN =================
 	const activeMsgs = getStructuredMessagesList(data).filter((m) => !isMessageExpired(m, todayStr));
 	const familyParts = [];
 
@@ -4897,14 +4907,8 @@ function buildSmartRuleBasedPlan(boardData) {
 		familyParts.push(`${h.name} is coming up ${whenStr}.`);
 	}
 
-	const creativeSuggestion = buildCreativePersonalizedSuggestion(data, seniorResp);
-	if (creativeSuggestion) {
-		familyParts.push(creativeSuggestion);
-	}
-
-	if (familyParts.length > 0) {
-		todayPlan.push(familyParts.join(' '));
-	}
+	familyParts.push('As the day winds down this evening, relax in your favorite chair, enjoy a quiet dinner, and have a peaceful, restful night.');
+	todayPlan.push(familyParts.join(' '));
 
 	return {
 		todayPlan,
@@ -5078,10 +5082,11 @@ function getBriefingParagraphLinks(paragraphText, idx, boardData, usedPages) {
 		});
 	}
 
-	// 4. Family & Friends link (if note, message, birthday, or family member mentioned)
+	// 4. Family & Friends link (if note, message, birthday, or family member mentioned, or on paragraph 3)
 	if (
 		!usedPages.has('family') &&
-		/\b(note|notes|message|messages|family|birthday|sent a|left a)\b/i.test(lower)
+		(idx === 3 ||
+			/\b(note|notes|message|messages|family|birthday|sent a|left a)\b/i.test(lower))
 	) {
 		usedPages.add('family');
 		const isBirthdayOnly = /\bbirthday\b/i.test(lower) && !/\b(note|notes|message)\b/i.test(lower);
@@ -5093,7 +5098,7 @@ function getBriefingParagraphLinks(paragraphText, idx, boardData, usedPages) {
 		});
 	}
 
-	// 5. Memories & Favorites link (if memories, stories, music, favorite pastimes mentioned or on final paragraph)
+	// 5. Memories & Favorites link (if memories, stories, music, favorite pastimes mentioned, or on paragraph 2)
 	if (
 		!usedPages.has('memories') &&
 		(idx === 2 ||
@@ -5120,7 +5125,7 @@ function renderAiSummaryCard() {
 	if (!todayPlanEl) return;
 
 	if (headingEl) {
-		headingEl.innerText = getTimeOfDayBriefingMeta().heading;
+		headingEl.innerText = 'Daily Briefing';
 	}
 
 	const { todayPlan } = getEffectiveAiSummary();
@@ -5128,12 +5133,26 @@ function renderAiSummaryCard() {
 
 	if (!todayPlan || todayPlan.length === 0) {
 		todayPlanEl.innerHTML = `
-			<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
-				Good morning! Wishing you a peaceful and comfortable start to your day.
-			</p>
-			<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
-				Take your day at a gentle pace and enjoy a relaxing day at home.
-			</p>
+			<div class="space-y-1.5">
+				<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+					Good morning! Wishing you a peaceful and comfortable start to your day.
+				</p>
+			</div>
+			<div class="pt-3 sm:pt-4 border-t border-slate-200/80 space-y-1.5">
+				<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+					Your calendar is open today, so you can take the daytime at an easy, unhurried pace.
+				</p>
+			</div>
+			<div class="pt-3 sm:pt-4 border-t border-slate-200/80 space-y-1.5">
+				<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+					Enjoy a relaxing afternoon with your favorite music, books, or visiting your Memories page.
+				</p>
+			</div>
+			<div class="pt-3 sm:pt-4 border-t border-slate-200/80 space-y-1.5">
+				<p class="text-xl sm:text-2xl font-medium text-slate-800 leading-relaxed">
+					Your family is sending lots of love. Have a cozy evening and a restful night.
+				</p>
+			</div>
 		`;
 	} else {
 		todayPlanEl.innerHTML = todayPlan
@@ -5341,16 +5360,17 @@ async function generateAiActionPlan(options = {}) {
 			'- CAREGIVER GUIDANCE PRIORITY: If `caregiverNotesAndFeedback` is provided, treat it as direct, mandatory instructions from her family for tone, her personal likes/dislikes, things to avoid, or activities to suggest in the daily briefing note.\n' +
 			'- NEVER quiz or test short-term recall (e.g. NEVER say "Do you remember what you had for breakfast?" or "What did we talk about yesterday?").\n' +
 			'- NEVER parrot or quote her raw multiple-choice answers back to her (e.g. NEVER say "We loved your reflection on \'1950s Big Band & Swing\'"). Instead, LEARN from `caregiverNotesAndFeedback`, `learnedFavoritesProfile`, and `seniorJournalMemories` and synthesize creative, fresh activity suggestions (for example, if caregiver notes mention she loves baking, big band music, or watching birds and it is rainy today, suggest listening to classic records or enjoying a warm bakery treat with tea).\n' +
-			'- Write ONE cohesive summary divided into 2 to 3 short, connected paragraphs (2-3 sentences each) rather than disconnected bullet points.\n' +
+			'- Write ONE cohesive full-day game plan divided into exactly 4 short, connected paragraphs (2-3 sentences each) covering the entire day from morning to evening.\n' +
 			'- NEVER repeat any detail (such as appointments, reminders, water/hydration, or "take things easy") across multiple paragraphs.\n' +
 			'- The senior ONLY takes morning medication. NEVER mention evening medicine.\n' +
 			'- Use markdown **bold** ONLY for concrete actions, times, or key highlights (never bold generic filler).\n' +
 			'- Zero emojis anywhere.\n\n' +
 			'CRITICAL RULES FOR OUTPUT KEYS:\n' +
-			'1. `todayPlan` (ARRAY OF 2 TO 3 COHESIVE PARAGRAPHS):\n' +
-			'   - PARAGRAPH 1 (GREETING, WEATHER FEEL & MORNING MEDICINE): Start with a warm day-of-week greeting, describe how today\'s weather feels naturally WITHOUT ANY numbers, digits, degree symbols, or percentages, and note her morning medication status (if `medsTakenToday` is true, confirm her morning medicine is already logged; if false, remind her to **take your morning medicine with breakfast** and a glass of water).\n' +
-			'   - PARAGRAPH 2 (TODAY\'S FLOW, APPOINTMENTS, WHO IS HELPING & PREP): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep or a reassuring note if the calendar is wide open today.\n' +
-			'   - PARAGRAPH 3 (FAMILY NOTES, CELEBRATIONS & CREATIVE PERSONALIZED ACTIVITY IDEA): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and 1 creative, personalized activity suggestion inspired directly by her `caregiverNotesAndFeedback`, `learnedFavoritesProfile`, and `seniorJournalMemories` without quoting raw button text.\n' +
+			'1. `todayPlan` (ARRAY OF EXACTLY 4 COHESIVE FULL-DAY PARAGRAPHS):\n' +
+			'   - PARAGRAPH 1 (MORNING WELCOME, FULL-DAY WEATHER ARC & MORNING MEDICINE): Start with a warm day-of-week greeting, describe today\'s full-day weather arc (morning feel, afternoon temperature/sky, evening cooldown, and what to wear/porch comfort) naturally WITHOUT ANY numbers, digits, degree symbols, or percentages, and note her morning medication status (if `medsTakenToday` is true, confirm her morning medicine is already logged; if false, remind her to **take your morning medicine with breakfast** and a glass of water).\n' +
+			'   - PARAGRAPH 2 (DAYTIME SCHEDULE, APPOINTMENTS & PREP ALERTS): Weave today\'s appointments (including time, who is driving/helping, and any reminder note) together with any upcoming multi-day prep or a reassuring note if the calendar is wide open today.\n' +
+			'   - PARAGRAPH 3 (AFTERNOON CREATIVE ACTIVITIES & MEMORIES GAME PLAN): Suggest 1 creative, personalized afternoon activity inspired directly by her `caregiverNotesAndFeedback`, `learnedFavoritesProfile`, and `seniorJournalMemories` (without quoting raw button text), and invite her to visit her Memories page to explore her favorite pastimes or share a story.\n' +
+			'   - PARAGRAPH 4 (FAMILY CONNECTIONS, CELEBRATIONS & EVENING WIND-DOWN): Warmly weave together any active `familyMessages` (summarize longer notes concisely), upcoming birthdays/holidays, and a peaceful evening wind-down wishing her a restful night.\n' +
 			'2. `dailyQuestion` (CREATIVE MEMORY & FAVORITES PROMPT FOR THE MEMORIES PAGE):\n' +
 			'   - Craft a warm, imaginative question that helps preserve her life memories or discover more about her favorite music, comfort foods, hometown traditions, pets, or pastimes. Build creatively on what you know about her without repeating recent `seniorJournalMemories` prompts.\n' +
 			'   - STRICTLY FORBIDDEN: NEVER ask generic daily questions like "What are your plans?", "What are you doing today?", or "What sounds good for dinner?".\n' +
