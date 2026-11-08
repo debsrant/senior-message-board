@@ -385,10 +385,29 @@ The Senior Message Board is a specialized, zero-build static web application des
 
 ---
 
+#### Turn 91
+- **User Request**:
+  - Create an easy way to copy event items or make recurring events in the admin panel.
+- **Technical Implementation**:
+  - **Easy Event Copy / Duplicate Engine**:
+    - **Admin List Action**: Added a dedicated `Copy` action button next to `Edit` and `Delete` on every scheduled appointment card in the Admin panel.
+    - **One-Click Pre-fill**: `copyCalendarEvent(eventId)` pre-populates all event properties (title, category, location, time, driver notes, AI reminder prep) into the form and selects the date picker for immediate adjustment.
+    - **Visual Copy Mode**: Switches the form to a purple theme (`border-purple-400 bg-purple-50/40`), adds a `"Copy Mode"` badge, updates the heading to `Copy Appointment: [Title]`, and sets the action button to `+ Add Copied Appointment`.
+    - **"Copy as New" from Edit Mode**: Added a `btn-copy-from-edit` button in the appointment form so caregivers editing an existing appointment can instantly branch off a copy instead of modifying the original.
+  - **Recurring Events Engine**:
+    - **Recurrence Controls**: Added `#input-event-repeat` (Does not repeat, Every week, Every 2 weeks, Every month, Daily) and `#input-event-repeat-count` (2, 3, 4, 6, 8, 12, 26 occurrences).
+    - **Live Series Preview**: Real-time preview card (`#event-repeat-preview`) computes and displays the exact upcoming human-readable dates (e.g. `Will create 4 scheduled weekly events on Tuesdays: Nov 10, Nov 17, Nov 24, Dec 1`).
+    - **Multi-Day Span Preservation**: If a multi-day event has an `endDate`, recurring instances preserve the multi-day duration across every occurrence.
+    - **Linked Series ID**: Recurring instances are tagged with `seriesId: 'series_' + Date.now()` and written to Firebase RTDB in an atomic batch update via `database.ref().update(...)`.
+    - **Admin List Recurring Indicator**: Displays a purple `Recurring` badge next to the category label in the scheduled list.
+    - **Smart Deletion**: Clicking `Delete` on a recurring event detects other occurrences in the series and prompts the caregiver: click OK to remove ALL appointments in the recurring series, or Cancel to remove only that single occurrence.
+
+---
+
 ## Current Architecture & File Inventory
 
 ### File Inventory
-- **`index.html`** (~2,075 lines):
+- **`index.html`** (~2,120 lines):
   - Kiosk Header: 60/40 Date-Time & Giant "I Took My Meds" Morning Medicine toggle (compact in landscape).
   - Responsive Kiosk Navigation (`#kiosk-nav-bar`): Left Vertical Sidebar in landscape/desktop, Top Grid on phones/portrait tablets; 6 large tactile buttons (`Today`, `Weather`, `Medicine`, `Calendar`, `Family`, `Memories`).
   - Page 1 (`disp-page-today`): Hero Announcement and Full-Width Cohesive Full-Day `Daily Briefing` with contextual deep-link pills for each time block.
@@ -397,11 +416,12 @@ The Senior Message Board is a specialized, zero-build static web application des
   - Page 4 (`disp-page-events`): Calendar agenda, appointment times, driver notes, and US holidays.
   - Page 5 (`disp-page-family`): Love Notes from Family postcards and Family & Friends contact directory.
   - Page 6 (`disp-page-memories`): Interactive Memory & Favorite Things Spark, Favorite Things & Joys tags, and Your Memory Book keepsake gallery.
-  - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Memories`, `AI & Board Settings`, `Contacts & Users`).
-- **`app.js`** (~7,015 lines):
+  - Admin Panel (`view-admin`): 4 in-page tabs (`Daily Updates`, `Memories`, `AI & Board Settings`, `Contacts & Users`), with event copy, recurrence generator, and smart series deletion.
+- **`app.js`** (~7,250 lines):
   - Firebase RTDB real-time listeners and multi-user authentication.
   - Kiosk 6-page navigation engine with `navigateFromBriefing` spotlight deep-linking and 90-second Alzheimer's safety return timer.
   - Full-day 4-paragraph Daily Briefing engine with live medication sync, full-day weather arc, non-parroting creative activity suggestions (`buildCreativePersonalizedSuggestion`), and selective bolding.
+  - Calendar event management: one-click copy/duplicate, recurring series generator (`computeRecurringDatesList`), smart multi-occurrence deletion, and past-event auto-cleanup.
   - Cumulative Learned Favorites & Joys profile (`board/seniorProfile/favorites`) and Kiosk Memory Book renderer (`renderKioskMemoriesPage`).
   - Voice recording engine (Web Speech API) with silence detection and AI polishing.
   - Gemini API client with auto-discovery, exponential backoff, multi-model fallback cascade, and smart offline fallback.

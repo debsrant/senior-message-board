@@ -4468,10 +4468,14 @@ function getEventContext(evt) {
 
 function setupEventFormAutoDetect() {
 	const titleInput = document.getElementById('input-event-title');
+	const dateInput = document.getElementById('input-event-date');
+	if (dateInput && !dateInput.value) {
+		dateInput.value = getTodayDateString();
+	}
 	if (titleInput && !titleInput.dataset.listenerAttached) {
 		titleInput.dataset.listenerAttached = 'true';
 		titleInput.addEventListener('input', () => {
-			if (editingEventId) return; // Do not overwrite when editing an existing event
+			if (editingEventId || copyingEventId) return; // Do not overwrite when editing or copying an event
 			const detectedCat = detectEventCategory(titleInput.value);
 			const detectedLoc = detectEventLocation(titleInput.value, detectedCat);
 			const catSelect = document.getElementById('input-event-category');
@@ -6342,6 +6346,7 @@ function formatEventDate(dateStr, timeStr, endDateStr) {
 }
 
 let editingEventId = null;
+let copyingEventId = null;
 let currentEventsMap = {};
 let upcomingHolidays = [];
 
@@ -6621,6 +6626,8 @@ function renderEvents(eventsObj) {
 					<div class="p-3 rounded-xl border ${
 						isEditingThis
 							? 'bg-blue-50/70 border-blue-300 ring-1 ring-blue-300'
+							: copyingEventId === evt.id
+							? 'bg-purple-50/70 border-purple-300 ring-1 ring-purple-300'
 							: 'bg-slate-50 border-slate-200'
 					} flex items-center justify-between gap-3 transition">
 						<div class="space-y-0.5 min-w-0">
@@ -6632,10 +6639,20 @@ function renderEvents(eventsObj) {
 					const map = { medical: 'Medical', family: 'Visit', errand: 'Errand', service: 'Service', other: 'Other' };
 					return map[c.category] || 'Event';
 				})()}</span>
+								${
+									evt.seriesId
+										? '<span class="text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200">Recurring</span>'
+										: ''
+								}
 								<span class="font-bold text-slate-800 text-sm truncate">${escapeHtml(evt.title)}</span>
 								${
 									isEditingThis
 										? '<span class="text-[10px] font-bold uppercase tracking-wider bg-blue-600 text-white px-1.5 py-0.5 rounded">Editing</span>'
+										: ''
+								}
+								${
+									copyingEventId === evt.id
+										? '<span class="text-[10px] font-bold uppercase tracking-wider bg-purple-600 text-white px-1.5 py-0.5 rounded">Copied</span>'
 										: ''
 								}
 							</div>
@@ -6653,8 +6670,16 @@ function renderEvents(eventsObj) {
 						<div class="flex items-center gap-1 shrink-0">
 							<button
 								type="button"
+								onclick="copyCalendarEvent('${evt.id}')"
+								class="text-purple-700 hover:text-purple-800 text-xs font-semibold px-2 py-1.5 rounded-lg hover:bg-purple-50 transition"
+								title="Duplicate this appointment or copy to another date"
+							>
+								Copy
+							</button>
+							<button
+								type="button"
 								onclick="startEditCalendarEvent('${evt.id}')"
-								class="text-blue-600 hover:text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition"
+								class="text-blue-600 hover:text-blue-700 text-xs font-semibold px-2 py-1.5 rounded-lg hover:bg-blue-50 transition"
 							>
 								Edit
 							</button>
@@ -6674,11 +6699,100 @@ function renderEvents(eventsObj) {
 	}
 }
 
-function startEditCalendarEvent(eventId) {
+function onEventRepeatChanged() {
+	const repeatInput = document.getElementById('input-event-repeat');
+	const countContainer = document.getElementById('container-event-repeat-count');
+	const previewBox = document.getElementById('event-repeat-preview');
+	const isRepeating = repeatInput && repeatInput.value !== 'none';
+
+	if (countContainer) {
+		countContainer.classList.toggle('hidden', !isRepeating);
+	}
+	if (previewBox) {
+		previewBox.classList.toggle('hidden', !isRepeating);
+	}
+	if (isRepeating) {
+		updateRepeatHelperText();
+	}
+}
+
+function computeRecurringDatesList(startDate, frequency, count) {
+	if (!startDate || frequency === 'none' || count < 1) return [];
+	const [y, m, d] = startDate.split('-').map(Number);
+	const startDt = new Date(y, m - 1, d, 12, 0, 0);
+	const dates = [];
+
+	for (let i = 0; i < count; i++) {
+		let dt;
+		if (frequency === 'daily') {
+			dt = new Date(startDt.getFullYear(), startDt.getMonth(), startDt.getDate() + i, 12, 0, 0);
+		} else if (frequency === 'weekly') {
+			dt = new Date(startDt.getFullYear(), startDt.getMonth(), startDt.getDate() + (i * 7), 12, 0, 0);
+		} else if (frequency === 'biweekly') {
+			dt = new Date(startDt.getFullYear(), startDt.getMonth(), startDt.getDate() + (i * 14), 12, 0, 0);
+		} else if (frequency === 'monthly') {
+			const targetMonth = startDt.getMonth() + i;
+			const targetDay = startDt.getDate();
+			const temp = new Date(startDt.getFullYear(), targetMonth, 1, 12, 0, 0);
+			const maxDays = new Date(temp.getFullYear(), temp.getMonth() + 1, 0).getDate();
+			temp.setDate(Math.min(targetDay, maxDays));
+			dt = temp;
+		} else {
+			dt = startDt;
+		}
+		const pad = (n) => String(n).padStart(2, '0');
+		dates.push(`${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`);
+	}
+	return dates;
+}
+
+function updateRepeatHelperText() {
+	const repeatInput = document.getElementById('input-event-repeat');
+	const repeatCountInput = document.getElementById('input-event-repeat-count');
+	const dateInput = document.getElementById('input-event-date');
+	const previewText = document.getElementById('event-repeat-preview-text');
+	if (!repeatInput || !repeatCountInput || !dateInput || !previewText) return;
+
+	const freq = repeatInput.value;
+	if (freq === 'none') {
+		previewText.innerText = '';
+		return;
+	}
+
+	const count = parseInt(repeatCountInput.value, 10) || 4;
+	const startDate = dateInput.value || getTodayDateString();
+	const dates = computeRecurringDatesList(startDate, freq, count);
+
+	if (dates.length === 0) {
+		previewText.innerText = '';
+		return;
+	}
+
+	const formattedDates = dates.map((dStr) => {
+		const [y, m, d] = dStr.split('-').map(Number);
+		const dt = new Date(y, m - 1, d, 12, 0, 0);
+		return dt.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+	});
+
+	const freqLabels = {
+		weekly: 'weekly events',
+		biweekly: 'bi-weekly events',
+		monthly: 'monthly events',
+		daily: 'daily events',
+	};
+
+	const label = freqLabels[freq] || 'events';
+	const previewList = formattedDates.slice(0, 4).join(', ') + (formattedDates.length > 4 ? ` (and ${formattedDates.length - 4} more)` : '');
+	previewText.innerText = `Will create ${count} scheduled ${label}: ${previewList}.`;
+}
+
+function copyCalendarEvent(eventId) {
 	const evt = currentEventsMap[eventId];
 	if (!evt) return;
 
-	editingEventId = eventId;
+	// Exit edit mode and activate copy mode
+	editingEventId = null;
+	copyingEventId = eventId;
 
 	const titleInput = document.getElementById('input-event-title');
 	const categoryInput = document.getElementById('input-event-category');
@@ -6688,6 +6802,79 @@ function startEditCalendarEvent(eventId) {
 	const timeInput = document.getElementById('input-event-time');
 	const notesInput = document.getElementById('input-event-notes');
 	const reminderInput = document.getElementById('input-event-reminder');
+	const repeatInput = document.getElementById('input-event-repeat');
+	const repeatCountInput = document.getElementById('input-event-repeat-count');
+
+	const ctx = getEventContext(evt);
+	if (titleInput) titleInput.value = evt.title || '';
+	if (categoryInput) categoryInput.value = evt.category || ctx.category || 'medical';
+	if (locationInput) locationInput.value = evt.location || ctx.location || 'outing';
+	if (dateInput) {
+		const todayStr = getTodayDateString();
+		dateInput.value = evt.date && evt.date >= todayStr ? evt.date : todayStr;
+	}
+	if (endDateInput) endDateInput.value = evt.endDate || '';
+	if (timeInput) timeInput.value = evt.time || '';
+	if (notesInput) notesInput.value = evt.notes || '';
+	if (reminderInput) reminderInput.value = evt.reminder || '';
+	if (repeatInput) repeatInput.value = 'none';
+	if (repeatCountInput) repeatCountInput.value = '4';
+	onEventRepeatChanged();
+
+	const formContainer = document.getElementById('event-form-container');
+	const formHeading = document.getElementById('event-form-heading');
+	const editingBadge = document.getElementById('event-editing-badge');
+	const copyingBadge = document.getElementById('event-copying-badge');
+	const cancelBtn = document.getElementById('btn-cancel-edit-event');
+	const copyFromEditBtn = document.getElementById('btn-copy-from-edit');
+	const submitBtnText = document.getElementById('btn-submit-event-text');
+
+	if (formContainer) {
+		formContainer.className =
+			'p-3.5 sm:p-4 bg-purple-50/40 rounded-xl border-2 border-purple-400 space-y-3 transition-colors';
+		formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	}
+	if (formHeading) {
+		formHeading.innerText = `Copy Appointment: ${evt.title}`;
+		formHeading.className = 'text-xs font-bold text-purple-700 uppercase tracking-wider truncate';
+	}
+	if (editingBadge) editingBadge.classList.add('hidden');
+	if (copyingBadge) copyingBadge.classList.remove('hidden');
+	if (cancelBtn) cancelBtn.classList.remove('hidden');
+	if (copyFromEditBtn) copyFromEditBtn.classList.add('hidden');
+	if (submitBtnText) submitBtnText.innerText = '+ Add Copied Appointment';
+
+	renderEvents(currentEventsMap);
+	showToast('Appointment copied! Pick a date and click + Add Copied Appointment.');
+	if (dateInput) {
+		dateInput.focus();
+		dateInput.select();
+	}
+}
+
+function copyCurrentEditingEvent() {
+	if (editingEventId) {
+		copyCalendarEvent(editingEventId);
+	}
+}
+
+function startEditCalendarEvent(eventId) {
+	const evt = currentEventsMap[eventId];
+	if (!evt) return;
+
+	editingEventId = eventId;
+	copyingEventId = null;
+
+	const titleInput = document.getElementById('input-event-title');
+	const categoryInput = document.getElementById('input-event-category');
+	const locationInput = document.getElementById('input-event-location');
+	const dateInput = document.getElementById('input-event-date');
+	const endDateInput = document.getElementById('input-event-end-date');
+	const timeInput = document.getElementById('input-event-time');
+	const notesInput = document.getElementById('input-event-notes');
+	const reminderInput = document.getElementById('input-event-reminder');
+	const repeatInput = document.getElementById('input-event-repeat');
+	const repeatCountInput = document.getElementById('input-event-repeat-count');
 
 	const ctx = getEventContext(evt);
 	if (titleInput) titleInput.value = evt.title || '';
@@ -6698,11 +6885,16 @@ function startEditCalendarEvent(eventId) {
 	if (timeInput) timeInput.value = evt.time || '';
 	if (notesInput) notesInput.value = evt.notes || '';
 	if (reminderInput) reminderInput.value = evt.reminder || '';
+	if (repeatInput) repeatInput.value = 'none';
+	if (repeatCountInput) repeatCountInput.value = '4';
+	onEventRepeatChanged();
 
 	const formContainer = document.getElementById('event-form-container');
 	const formHeading = document.getElementById('event-form-heading');
 	const editingBadge = document.getElementById('event-editing-badge');
+	const copyingBadge = document.getElementById('event-copying-badge');
 	const cancelBtn = document.getElementById('btn-cancel-edit-event');
+	const copyFromEditBtn = document.getElementById('btn-copy-from-edit');
 	const submitBtnText = document.getElementById('btn-submit-event-text');
 
 	if (formContainer) {
@@ -6715,7 +6907,9 @@ function startEditCalendarEvent(eventId) {
 		formHeading.className = 'text-xs font-bold text-blue-700 uppercase tracking-wider';
 	}
 	if (editingBadge) editingBadge.classList.remove('hidden');
+	if (copyingBadge) copyingBadge.classList.add('hidden');
 	if (cancelBtn) cancelBtn.classList.remove('hidden');
+	if (copyFromEditBtn) copyFromEditBtn.classList.remove('hidden');
 	if (submitBtnText) submitBtnText.innerText = 'Save Event Changes';
 
 	renderEvents(currentEventsMap);
@@ -6724,6 +6918,7 @@ function startEditCalendarEvent(eventId) {
 
 function cancelEditCalendarEvent() {
 	editingEventId = null;
+	copyingEventId = null;
 
 	const titleInput = document.getElementById('input-event-title');
 	const categoryInput = document.getElementById('input-event-category');
@@ -6733,6 +6928,8 @@ function cancelEditCalendarEvent() {
 	const timeInput = document.getElementById('input-event-time');
 	const notesInput = document.getElementById('input-event-notes');
 	const reminderInput = document.getElementById('input-event-reminder');
+	const repeatInput = document.getElementById('input-event-repeat');
+	const repeatCountInput = document.getElementById('input-event-repeat-count');
 
 	if (titleInput) titleInput.value = '';
 	if (categoryInput) categoryInput.value = 'medical';
@@ -6742,11 +6939,16 @@ function cancelEditCalendarEvent() {
 	if (timeInput) timeInput.value = '';
 	if (notesInput) notesInput.value = '';
 	if (reminderInput) reminderInput.value = '';
+	if (repeatInput) repeatInput.value = 'none';
+	if (repeatCountInput) repeatCountInput.value = '4';
+	onEventRepeatChanged();
 
 	const formContainer = document.getElementById('event-form-container');
 	const formHeading = document.getElementById('event-form-heading');
 	const editingBadge = document.getElementById('event-editing-badge');
+	const copyingBadge = document.getElementById('event-copying-badge');
 	const cancelBtn = document.getElementById('btn-cancel-edit-event');
+	const copyFromEditBtn = document.getElementById('btn-copy-from-edit');
 	const submitBtnText = document.getElementById('btn-submit-event-text');
 
 	if (formContainer) {
@@ -6758,7 +6960,9 @@ function cancelEditCalendarEvent() {
 		formHeading.className = 'text-xs font-bold text-slate-700 uppercase tracking-wider';
 	}
 	if (editingBadge) editingBadge.classList.add('hidden');
+	if (copyingBadge) copyingBadge.classList.add('hidden');
 	if (cancelBtn) cancelBtn.classList.add('hidden');
+	if (copyFromEditBtn) copyFromEditBtn.classList.add('hidden');
 	if (submitBtnText) submitBtnText.innerText = '+ Add Event';
 
 	renderEvents(currentEventsMap);
@@ -6773,6 +6977,8 @@ async function addCalendarEvent() {
 	const timeInput = document.getElementById('input-event-time');
 	const notesInput = document.getElementById('input-event-notes');
 	const reminderInput = document.getElementById('input-event-reminder');
+	const repeatInput = document.getElementById('input-event-repeat');
+	const repeatCountInput = document.getElementById('input-event-repeat-count');
 
 	const title = titleInput.value.trim();
 	const category = categoryInput ? categoryInput.value : 'medical';
@@ -6782,6 +6988,8 @@ async function addCalendarEvent() {
 	const time = timeInput.value;
 	const notes = notesInput.value.trim();
 	const reminder = reminderInput ? reminderInput.value.trim() : '';
+	const repeatFreq = repeatInput ? repeatInput.value : 'none';
+	const repeatCount = repeatCountInput ? parseInt(repeatCountInput.value, 10) || 1 : 1;
 
 	if (!title) {
 		alert('Please enter an event or appointment title (e.g. "Dr. Miller - Eye Exam" or "Sarah Visiting").');
@@ -6800,10 +7008,26 @@ async function addCalendarEvent() {
 	}
 	const endDate = rawEndDate && rawEndDate > date ? rawEndDate : '';
 
+	// Calculate multi-day duration in days if endDate is provided
+	let durationDays = 0;
+	if (endDate) {
+		const [sy, sm, sd] = date.split('-').map(Number);
+		const [ey, em, ed] = endDate.split('-').map(Number);
+		const sDt = new Date(sy, sm - 1, sd, 12, 0, 0);
+		const eDt = new Date(ey, em - 1, ed, 12, 0, 0);
+		durationDays = Math.max(1, Math.round((eDt.getTime() - sDt.getTime()) / (1000 * 60 * 60 * 24)));
+	}
+
+	// 1. If EDITING an existing event:
 	if (editingEventId) {
 		const targetId = editingEventId;
+		const existingEvt = currentEventsMap[targetId] || {};
+		const existingSeriesId = existingEvt.seriesId;
+
 		try {
-			await database.ref(`board/events/${targetId}`).update({
+			const updates = {};
+			updates[`board/events/${targetId}`] = {
+				...existingEvt,
 				title,
 				category,
 				location,
@@ -6814,7 +7038,39 @@ async function addCalendarEvent() {
 				reminder: reminder || '',
 				updatedAt: Date.now(),
 				updatedBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
-			});
+			};
+
+			// If user chose to make this edited event recurring going forward
+			if (repeatFreq !== 'none' && repeatCount > 1) {
+				const seriesId = existingSeriesId || ('series_' + Date.now());
+				updates[`board/events/${targetId}`].seriesId = seriesId;
+				const futureDates = computeRecurringDatesList(date, repeatFreq, repeatCount).slice(1);
+				futureDates.forEach((instDate, idx) => {
+					let instEndDate = '';
+					if (durationDays > 0) {
+						const [iy, im, iday] = instDate.split('-').map(Number);
+						const iEnd = new Date(iy, im - 1, iday + durationDays, 12, 0, 0);
+						const pad = (n) => String(n).padStart(2, '0');
+						instEndDate = `${iEnd.getFullYear()}-${pad(iEnd.getMonth() + 1)}-${pad(iEnd.getDate())}`;
+					}
+					const newId = `evt_${Date.now()}_${idx + 1}`;
+					updates[`board/events/${newId}`] = {
+						title,
+						category,
+						location,
+						date: instDate,
+						endDate: instEndDate,
+						time: time || '',
+						notes: notes || '',
+						reminder: reminder || '',
+						seriesId,
+						createdAt: Date.now(),
+						createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
+					};
+				});
+			}
+
+			await database.ref().update(updates);
 			cancelEditCalendarEvent();
 			if (latestBoardData?.aiAutoRefresh !== false) {
 				generateAiActionPlan({ silent: true });
@@ -6827,33 +7083,53 @@ async function addCalendarEvent() {
 		return;
 	}
 
-	const eventId = 'evt_' + Date.now();
-	const newEvent = {
-		title,
-		category,
-		location,
-		date,
-		endDate,
-		time: time || '',
-		notes: notes || '',
-		reminder: reminder || '',
-		createdAt: Date.now(),
-		createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
-	};
-
+	// 2. NEW EVENT OR COPIED EVENT:
 	try {
-		await database.ref(`board/events/${eventId}`).set(newEvent);
-		titleInput.value = '';
-		if (categoryInput) categoryInput.value = 'medical';
-		if (locationInput) locationInput.value = 'outing';
-		if (endDateInput) endDateInput.value = '';
-		timeInput.value = '';
-		notesInput.value = '';
-		if (reminderInput) reminderInput.value = '';
+		const isRecurring = repeatFreq !== 'none' && repeatCount > 1;
+		const seriesId = isRecurring ? ('series_' + Date.now()) : undefined;
+		const dates = isRecurring ? computeRecurringDatesList(date, repeatFreq, repeatCount) : [date];
+		const updates = {};
+
+		dates.forEach((instDate, idx) => {
+			let instEndDate = '';
+			if (durationDays > 0) {
+				const [iy, im, iday] = instDate.split('-').map(Number);
+				const iEnd = new Date(iy, im - 1, iday + durationDays, 12, 0, 0);
+				const pad = (n) => String(n).padStart(2, '0');
+				instEndDate = `${iEnd.getFullYear()}-${pad(iEnd.getMonth() + 1)}-${pad(iEnd.getDate())}`;
+			}
+			const eventId = `evt_${Date.now()}_${idx}`;
+			const eventObj = {
+				title,
+				category,
+				location,
+				date: instDate,
+				endDate: instEndDate,
+				time: time || '',
+				notes: notes || '',
+				reminder: reminder || '',
+				createdAt: Date.now(),
+				createdBy: userProfile?.displayName || currentUser?.email || 'Caregiver',
+			};
+			if (seriesId) {
+				eventObj.seriesId = seriesId;
+			}
+			updates[`board/events/${eventId}`] = eventObj;
+		});
+
+		await database.ref().update(updates);
+		const wasCopying = !!copyingEventId;
+		cancelEditCalendarEvent();
 		if (latestBoardData?.aiAutoRefresh !== false) {
 			generateAiActionPlan({ silent: true });
 		}
-		showToast(`Event "${title}" added to calendar!`);
+		if (isRecurring) {
+			showToast(`Created ${dates.length} recurring appointments for "${title}"!`);
+		} else if (wasCopying) {
+			showToast(`Copied appointment "${title}" added to calendar!`);
+		} else {
+			showToast(`Event "${title}" added to calendar!`);
+		}
 	} catch (err) {
 		console.error('Failed to add calendar event:', err);
 		alert('Error adding event: ' + err.message);
@@ -6863,8 +7139,44 @@ async function addCalendarEvent() {
 async function deleteCalendarEvent(eventId) {
 	const evt = currentEventsMap[eventId];
 	const title = evt ? evt.title : 'this appointment';
-	const proceed = confirm(`Remove "${title}" from the calendar?`);
-	if (!proceed) return;
+
+	// Check if this event belongs to a recurring series with multiple occurrences
+	if (evt && evt.seriesId) {
+		const seriesMatches = Object.entries(currentEventsMap || {}).filter(
+			([_, e]) => e && e.seriesId === evt.seriesId
+		);
+		if (seriesMatches.length > 1) {
+			const deleteAll = confirm(
+				`"${title}" is part of a recurring series (${seriesMatches.length} occurrences scheduled).\n\nClick OK to remove ALL appointments in this recurring series.\nClick Cancel to remove ONLY this single appointment.`
+			);
+			if (deleteAll) {
+				try {
+					if (editingEventId === eventId) {
+						cancelEditCalendarEvent();
+					}
+					const updates = {};
+					seriesMatches.forEach(([id]) => {
+						updates[`board/events/${id}`] = null;
+					});
+					await database.ref().update(updates);
+					if (latestBoardData?.aiAutoRefresh !== false) {
+						generateAiActionPlan({ silent: true });
+					}
+					showToast(`Removed all ${seriesMatches.length} appointments in this series.`);
+				} catch (err) {
+					console.error('Failed to remove recurring series:', err);
+					alert('Error removing appointments: ' + err.message);
+				}
+				return;
+			}
+			// If caregiver clicked Cancel on deleting all, ask if they want to delete this single occurrence
+			const deleteSingle = confirm(`Remove only this single appointment on ${evt.date}?`);
+			if (!deleteSingle) return;
+		}
+	} else {
+		const proceed = confirm(`Remove "${title}" from the calendar?`);
+		if (!proceed) return;
+	}
 
 	try {
 		if (editingEventId === eventId) {
